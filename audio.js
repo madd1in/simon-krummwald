@@ -1,6 +1,6 @@
 /* ============================================================
-   audio.js – prozedurale Musik, Soundeffekte und Sprachausgabe
-   Kein einziges externes Audiofile: alles wird synthetisiert.
+   audio.js – MP3-Soundtrack, prozedurale Musik, Soundeffekte
+   und Sprachausgabe. Die Synth-Musik bleibt als Fallback aktiv.
    ============================================================ */
 
 var AU = {
@@ -8,13 +8,18 @@ var AU = {
   master: null, musicBus: null, sfxBus: null,
   musicOn: true, sfxOn: true, speechOn: true,
   track: null, nextNote: 0, step: 0, timer: null,
-  voice: null, utter: null, ready: false
+  voice: null, utter: null, ready: false,
+  song: null, songPlaying: false, songUnavailable: false, songMix: 0.26
 };
 
 /* ---------------- Initialisierung (nach erster Geste) ---------------- */
 
 function audioInit() {
-  if (AU.ctx) { if (AU.ctx.state === 'suspended') AU.ctx.resume(); return; }
+  if (AU.ctx) {
+    if (AU.ctx.state === 'suspended') AU.ctx.resume();
+    startExternalMusic();
+    return;
+  }
   var AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return;
   AU.ctx = new AC();
@@ -42,12 +47,43 @@ function audioInit() {
   AU.delay.connect(AU.delayMix); AU.delayMix.connect(AU.master);
 
   AU.ready = true;
+  startExternalMusic();
   pickVoice();
   if (window.speechSynthesis) speechSynthesis.onvoiceschanged = pickVoice;
 }
 
 function now() { return AU.ctx ? AU.ctx.currentTime : 0; }
 function hz(n) { return 440 * Math.pow(2, (n - 69) / 12); }
+
+/* ---------------- MP3-Soundtrack ---------------- */
+
+function startExternalMusic() {
+  if (AU.songUnavailable || !AU.musicOn) return;
+  if (!AU.song) {
+    AU.song = new Audio('assets/mosswing-path.mp3');
+    AU.song.loop = true;
+    AU.song.preload = 'auto';
+    AU.song.volume = AU.songMix;
+    AU.song.addEventListener('error', function () {
+      AU.songUnavailable = true;
+      AU.songPlaying = false;
+    });
+  }
+  AU.song.volume = AU.musicOn ? AU.songMix : 0;
+  var p = AU.song.play();
+  if (p && p.then) {
+    p.then(function () { AU.songPlaying = true; })
+      .catch(function () { AU.songPlaying = false; });
+  }
+}
+
+function songMixForScene(id) {
+  if (id === 'hoehle') return 0.17;
+  if (id === 'sumpf' || id === 'steinkreis') return 0.22;
+  if (id === 'wirtshaus') return 0.28;
+  if (id === 'ende') return 0.32;
+  return 0.26;
+}
 
 /* ---------------- Ton-Bausteine ---------------- */
 
@@ -125,6 +161,9 @@ var TRACKS = {
 
 function playMusic(id) {
   if (!AU.ctx) return;
+  AU.songMix = songMixForScene(id);
+  if (AU.song) AU.song.volume = AU.musicOn ? AU.songMix : 0;
+  startExternalMusic();
   if (AU.trackId === id) return;
   AU.trackId = id;
   AU.track = TRACKS[id] || TRACKS.lichtung;
@@ -136,6 +175,10 @@ function playMusic(id) {
 
 function schedule() {
   if (!AU.ctx || !AU.track) return;
+  if (AU.songPlaying && !AU.songUnavailable) {
+    AU.nextNote = Math.max(AU.nextNote, now() + 0.1);
+    return;
+  }
   if (!AU.musicOn) { AU.nextNote = Math.max(AU.nextNote, now()); return; }
   var spb = 60 / AU.track.bpm / 2;      /* Achtelnoten */
   while (AU.nextNote < now() + 0.45) {
@@ -174,6 +217,8 @@ function playStep(s, t, spb) {
 function setMusic(on) {
   AU.musicOn = on;
   if (AU.musicBus) AU.musicBus.gain.setTargetAtTime(on ? 0.30 : 0.0, now(), 0.1);
+  if (AU.song) AU.song.volume = on ? AU.songMix : 0;
+  if (on) startExternalMusic();
 }
 
 /* ---------------- Sprachausgabe ---------------- */

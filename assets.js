@@ -19,6 +19,9 @@ var FRAMES = {};          /* name -> {x,y,w,h,ox,oy} */
 var TILE = 16;            /* Kachelgröße */
 var TILES = {};           /* name -> Index im Tileset */
 var TILE_LIST = [];
+var TILE_KINDS = ['gras', 'gras_dunkel', 'pfad', 'kopfstein', 'holzboden', 'fels', 'moor', 'nachtgras',
+                  'erde', 'kies', 'blumenwiese', 'moorwasser', 'laub', 'dielen', 'kristallfels', 'runengras',
+                  'moospflaster', 'sumpfschlamm', 'asche', 'sternengras'];
 var atlasReady = false;
 
 /* ---------- kleiner Zeilen-Packer ---------- */
@@ -129,22 +132,73 @@ function tilePixels(kind, seed) {
       R(4, 7, 3, 1, 'rgba(150,190,150,.2)');
       for (i = 0; i < 8; i++) { x = rnd(seed + i * 2.3) * TILE; y = rnd(seed + i * 5.1) * TILE; R(x, y, 1, 1, '#3d4630'); }
       break;
+    case 'laub':
+      R(0, 0, TILE, TILE, '#416c2d');
+      for (i = 0; i < 13; i++) {
+        x = rnd(seed + i * 3.9) * TILE; y = rnd(seed + i * 6.7) * TILE;
+        P([x - 1, y, x + 2, y - 1, x + 1, y + 2], i % 3 ? '#8a6630' : '#b17a33');
+      }
+      for (i = 0; i < 7; i++) { x = rnd(seed + i * 8.1) * TILE; y = rnd(seed + i * 2.7) * TILE; R(x, y, 1, 2, '#315b27'); }
+      break;
+    case 'dielen':
+      R(0, 0, TILE, TILE, '#4e3926');
+      R(0, 4, TILE, 1, '#2e2219'); R(0, 9, TILE, 1, '#2e2219'); R(0, 14, TILE, 1, '#2e2219');
+      R(5, 0, 1, 4, '#695038'); R(12, 5, 1, 4, '#695038'); R(3, 10, 1, 4, '#695038');
+      for (i = 0; i < 8; i++) { x = rnd(seed + i * 3.2) * TILE; y = rnd(seed + i * 7.1) * TILE; R(x, y, 2, 1, '#78583a'); }
+      break;
+    case 'kristallfels':
+      R(0, 0, TILE, TILE, '#3b3347');
+      for (i = 0; i < 15; i++) { x = rnd(seed + i * 3.1) * TILE; y = rnd(seed + i * 5.7) * TILE; E(x, y, 1 + rnd(seed + i) * 2, 1, i % 3 ? '#4c4258' : '#2e2838'); }
+      P([3, 13, 5, 7, 7, 13], '#6f45a9'); R(5, 8, 1, 4, '#b18ae8');
+      R(12, 3, 1, 2, '#9362cf');
+      break;
+    case 'runengras':
+      R(0, 0, TILE, TILE, '#2e3e2b');
+      for (i = 0; i < 14; i++) { x = rnd(seed + i * 3.3) * TILE; y = rnd(seed + i * 2.7) * TILE; R(x, y, 1, 2, '#263523'); }
+      L(5, 11, 8, 5, '#6f62a5', 1); L(8, 5, 11, 11, '#6f62a5', 1); L(6, 9, 10, 9, '#9b83d2', 1);
+      break;
+    case 'moospflaster':
+      R(0, 0, TILE, TILE, '#67685a');
+      for (i = 0; i < 8; i++) {
+        x = (i % 3) * 5 + (Math.floor(i / 3) % 2) * 2; y = Math.floor(i / 3) * 5;
+        R(x + 1, y + 1, 4, 4, i % 2 ? '#737468' : '#5d6054');
+        R(x + 1, y + 1, 4, 1, '#838579');
+      }
+      R(0, 5, 5, 1, '#3f6738'); R(10, 10, 6, 1, '#4a7440');
+      R(4, 6, 1, 3, '#558348'); R(12, 11, 1, 2, '#558348');
+      break;
+    case 'sumpfschlamm':
+      R(0, 0, TILE, TILE, '#4b4934');
+      for (i = 0; i < 16; i++) { x = rnd(seed + i * 4.2) * TILE; y = rnd(seed + i * 1.9) * TILE; E(x, y, 2 + rnd(seed + i) * 3, 1, i % 3 ? '#56543b' : '#393b2c'); }
+      E(5, 6, 3, 1.5, '#252e27'); E(12, 12, 2.5, 1.2, '#30382d');
+      break;
+    case 'asche':
+      R(0, 0, TILE, TILE, '#39343c');
+      for (i = 0; i < 22; i++) { x = rnd(seed + i * 2.4) * TILE; y = rnd(seed + i * 5.6) * TILE; R(x, y, 1 + (i % 2), 1, i % 4 ? '#443e47' : '#5d4a43'); }
+      R(3, 10, 5, 1, '#2b282f'); R(11, 4, 3, 1, '#6a5046');
+      break;
+    case 'sternengras':
+      R(0, 0, TILE, TILE, '#293b31');
+      for (i = 0; i < 14; i++) { x = rnd(seed + i * 3.8) * TILE; y = rnd(seed + i * 2.4) * TILE; R(x, y, 1, 2, '#355043'); }
+      for (i = 0; i < 3; i++) {
+        x = 3 + rnd(seed + i * 7.7) * 10; y = 3 + rnd(seed + i * 9.1) * 10;
+        R(x - 1, y, 3, 1, '#8d79c6'); R(x, y - 1, 1, 3, '#b29be8');
+      }
+      break;
   }
 }
 
 function bakeTiles() {
-  var kinds = ['gras', 'gras_dunkel', 'pfad', 'kopfstein', 'holzboden', 'fels', 'moor', 'nachtgras',
-               'erde', 'kies', 'blumenwiese', 'moorwasser'];
-  for (var k = 0; k < kinds.length; k++) {
+  for (var k = 0; k < TILE_KINDS.length; k++) {
     /* mehrere Varianten, damit die Böden nicht sichtbar kacheln */
     for (var v = 0; v < 4; v++) {
       (function (kind, variant) {
         bake('tile_' + kind + '_' + variant, TILE, TILE, 0, 0, function () {
           tilePixels(kind, kind.length * 13.7 + variant * 41.3);
         });
-      })(kinds[k], v);
+      })(TILE_KINDS[k], v);
     }
-    TILES[kinds[k]] = kinds[k];
+    TILES[TILE_KINDS[k]] = TILE_KINDS[k];
   }
 }
 
@@ -162,7 +216,9 @@ function tileFill(kind, x0, y0, x1, y1) {
 var TILE_COL = {
   gras: '#4a8531', gras_dunkel: '#3f7129', pfad: '#ac9463', kopfstein: '#6f6a5d',
   holzboden: '#6e5637', fels: '#4a4152', moor: '#4b5439', nachtgras: '#33452f',
-  erde: '#6b5334', kies: '#7d786c', blumenwiese: '#4a8531', moorwasser: '#4b5439'
+  erde: '#6b5334', kies: '#7d786c', blumenwiese: '#4a8531', moorwasser: '#4b5439',
+  laub: '#416c2d', dielen: '#4e3926', kristallfels: '#3b3347', runengras: '#2e3e2b',
+  moospflaster: '#67685a', sumpfschlamm: '#4b4934', asche: '#39343c', sternengras: '#293b31'
 };
 
 /* Eine echte Tilemap: Zeilen aus Zeichen, Legende ordnet Kachelnamen zu */
@@ -215,15 +271,17 @@ function tilemapEdges(map, legend, x0, y0) {
 /* ---------- Figuren & Icons backen ---------- */
 
 function bakeCharacters() {
-  var frames = [0, 1, 3];
+  var poses = (typeof SIMON_POSE_IDS !== 'undefined' && SIMON_POSE_IDS.length)
+    ? SIMON_POSE_IDS : ['idle0', 'walk1', 'walk4'];
   for (var h = 0; h < 2; h++) {
     for (var b = 0; b < 2; b++) {
-      for (var f = 0; f < frames.length; f++) {
-        (function (hat, blink, fr) {
-          bake('simon_' + hat + '_' + blink + '_' + fr, 26, 64, 13, 62, function (ox, oy) {
-            _rawSimon(ox, oy, 1, fr, 1, !!hat, !!blink);
+      for (var f = 0; f < poses.length; f++) {
+        (function (hat, blink, pose) {
+          bake('simonpose_' + hat + '_' + blink + '_' + pose, 30, 66, 15, 64, function (ox, oy) {
+            if (_rawSimonPose) _rawSimonPose(ox, oy, 1, pose, 1, !!hat, !!blink);
+            else _rawSimon(ox, oy, 1, pose === 'walk1' ? 1 : (pose === 'walk4' ? 3 : 0), 1, !!hat, !!blink);
           });
-        })(h, b, frames[f]);
+        })(h, b, poses[f]);
       }
     }
   }
@@ -277,6 +335,7 @@ function bakeAtlas() {
 
   /* Originalfunktionen sichern, bevor sie ersetzt werden */
   _rawSimon = drawSimon; _rawIcon = drawIcon;
+  _rawSimonPose = (typeof drawSimonPose === 'function') ? drawSimonPose : null;
   _rawBruno = drawBruno; _rawMathilda = drawMathilda;
   _rawTroll = drawTroll; _rawElster = drawElster; _rawDrache = drawDrache;
   _rawGrete = drawGrete;
@@ -288,8 +347,11 @@ function bakeAtlas() {
 
   /* ---- ab jetzt: Blits statt Neuzeichnen ---- */
   drawSimon = function (x, y, s, frame, face, hat, blink) {
-    var fr = (frame === 1) ? 1 : (frame === 3 ? 3 : 0);
-    sprite('simon_' + (hat ? 1 : 0) + '_' + (blink ? 1 : 0) + '_' + fr, x, y, s, face < 0);
+    var pose = 'idle' + (Math.abs(frame || 0) % 3);
+    if (frame >= 10 && frame <= 15) pose = 'walk' + (frame - 10);
+    else if (frame === 1) pose = 'walk1';
+    else if (frame === 3) pose = 'walk4';
+    sprite('simonpose_' + (hat ? 1 : 0) + '_' + (blink ? 1 : 0) + '_' + pose, x, y, s, face < 0);
   };
   drawIcon = function (id, x, y) { sprite('item_' + id, x, y, 1, false); };
   drawBruno = function (x, y, t) { sprite('bruno_' + (Math.floor(t / 40) % 3), x, y, 1, false); };
@@ -302,7 +364,7 @@ function bakeAtlas() {
   atlasReady = true;
 }
 
-var _rawSimon, _rawIcon, _rawBruno, _rawMathilda, _rawTroll, _rawElster, _rawDrache, _rawGrete;
+var _rawSimon, _rawSimonPose, _rawIcon, _rawBruno, _rawMathilda, _rawTroll, _rawElster, _rawDrache, _rawGrete;
 
 /* ---------- Atlas als PNG exportieren ---------- */
 function exportAtlas() {
@@ -310,5 +372,25 @@ function exportAtlas() {
   var a = document.createElement('a');
   a.download = 'krummwald-atlas.png';
   a.href = ATLAS.toDataURL('image/png');
+  a.click();
+}
+
+/* Nur die Kacheln als übersichtliches 4-Spalten-Tileset exportieren. */
+function exportTileset() {
+  if (!ATLAS) return;
+  var out = document.createElement('canvas');
+  out.width = TILE * 4;
+  out.height = TILE * TILE_KINDS.length;
+  var og = out.getContext('2d');
+  og.imageSmoothingEnabled = false;
+  for (var k = 0; k < TILE_KINDS.length; k++) {
+    for (var v = 0; v < 4; v++) {
+      var f = FRAMES['tile_' + TILE_KINDS[k] + '_' + v];
+      if (f) og.drawImage(ATLAS, f.x, f.y, f.w, f.h, v * TILE, k * TILE, TILE, TILE);
+    }
+  }
+  var a = document.createElement('a');
+  a.download = 'krummwald-tileset.png';
+  a.href = out.toDataURL('image/png');
   a.click();
 }

@@ -11,68 +11,71 @@
    M Moor  · H Holzboden   · F Fels  · N Nachtgras
    ------------------------------------------------------------ */
 var LEG = { G: 'gras', D: 'gras_dunkel', P: 'pfad', K: 'kopfstein',
-            M: 'moor', H: 'holzboden', F: 'fels', N: 'nachtgras' };
+            M: 'moor', H: 'holzboden', F: 'fels', N: 'nachtgras',
+            B: 'blumenwiese', W: 'moorwasser', E: 'erde', I: 'kies',
+            L: 'laub', X: 'dielen', C: 'kristallfels', R: 'runengras',
+            O: 'moospflaster', S: 'sumpfschlamm', A: 'asche', T: 'sternengras' };
 
 var MAP_LICHTUNG = [
-  'GGGGGGGGPPGGGGGGGGGG',
-  'GGGGGGGGPPPGGGGGGGGP',
-  'PGGGDGGGPPPGGGGGGGPP',
-  'PGGGGGGGPPPPGGGGGGGP',
-  'GGGGGGGGPPPPGGGGDGGG',
-  'GGGGGGGGGPPPGGGGGGGG',
-  'GGGGDGGGGPPPGGGGGGGG'
+  'GGGGBGGGPPGGGLGGGGGG',
+  'GGGGGGGGPPPGGGBGGGGP',
+  'PGGGLGGGPPPGGGGGGGPP',
+  'PGGGBGGGPPPPGGGGLGGP',
+  'GGGGGGGGPPPPGGGBDGGG',
+  'GGLGGGGGGPPPGBGGGGGG',
+  'GGGGBGGGGPPPGGGGLGGG'
 ];
 var MAP_DORF = [
-  'GKKKKKKKKKKKKKKKKKKG',
-  'GKKKKKKKKKKKKKKKKKKK',
-  'KKKKKKKKKKKKKKKKKKKK',
-  'KKKKKKKKKKKKKKKKKKKK',
-  'KKKKKKKKKKKKKKKKKKKK',
-  'KKKKKKKKKKKKKKKKKKKK',
-  'KKKKKKKKKKKKKKKKKKKK'
+  'GKKKOKKKKKKKIKKKKKKG',
+  'GKKKKKKIKKKKKKKIKKKK',
+  'KKIKKKKKKKOKKKKKKKKK',
+  'KKKKKIKKKKKKKIKKKKKK',
+  'OKKKKKKKIKKKKKKKKKIK',
+  'KKKIKKKKKKKKIKKKKKKK',
+  'KKKKKKIKKKKKKKKIKKKK'
 ];
 var MAP_SUMPF = [
-  'MMMMMMMPPPMMMMMMMMMM',
-  'MMMMMMMMPPMMMMMMMMMM',
-  'MMMMMMMMMMMMMMMMMMMM',
-  'MMMMMMMMMMMMMMMMMMMM',
-  'MMMMMMMMMMMMMMMMMMMM',
-  'MMMMMMMMMMMMMMMMMMMM',
-  'MMMMMMMMMMMMMMMMMMMM'
+  'MSWMMMMPPPMMMMWMMMMM',
+  'MMMMWMMMPPMMMMMMMWMM',
+  'MWMMMMMSMMMMWMMMMMMM',
+  'MMMMMMWMMMMMMMMWMMMM',
+  'MSWMMMMMMMMWMMMMMMWM',
+  'MMMMWMMMMMMMMMMWMMMM',
+  'WMMMMMMWMMMMWMMMMMMM'
 ];
 var MAP_HUETTE = [
-  'HHHHHHHHHHHHHHHHHHHH',
-  'HHHHHHHHHHHHHHHHHHHH',
-  'HHHHHHHHHHHHHHHHHHHH',
-  'HHHHHHHHHHHHHHHHHHHH',
-  'HHHHHHHHHHHHHHHHHHHH',
-  'HHHHHHHHHHHHHHHHHHHH'
+  'HHHHXHHHHHHXHHHHHHHX',
+  'XHHHHHHXHHHHHHHXHHHH',
+  'HHXHHHHHHHHXHHHHHHHH',
+  'HHHHHXHHHHHHHHXHHHHH',
+  'XHHHHHHHHXHHHHHHHHXH',
+  'HHHXHHHHHHHHHXHHHHHH'
 ];
 var MAP_WIRTSHAUS = [
-  'HHHHHHHHHHHHHHHHHHHH',
-  'HHHHHHHHHHHHHHHHHHHH',
-  'HHHHHHHHHHHHHHHHHHHH',
-  'HHHHHHHHHHHHHHHHHHHH',
-  'HHHHHHHHHHHHHHHHHHHH',
-  'HHHHHHHHHHHHHHHHHHHH'
+  'HXHHHHHHXHHHHHHHXHHH',
+  'HHHHXHHHHHHHXHHHHHHH',
+  'XHHHHHHHXHHHHHHHHXHH',
+  'HHHXHHHHHHHHXHHHHHHH',
+  'HHHHHHXHHHHHHHHXHHHH',
+  'HXHHHHHHHHXHHHHHHHHX'
 ];
 var MAP_HOEHLE = [
-  'FFFFFFFFFFFFFFFFFFFF',
-  'FFFFFFFFFFFFFFFFFFFF',
-  'FFFFFFFFFFFFFFFFFFFF',
-  'FFFFFFFFFFFFFFFFFFFF',
-  'FFFFFFFFFFFFFFFFFFFF',
-  'FFFFFFFFFFFFFFFFFFFF',
-  'FFFFFFFFFFFFFFFFFFFF'
+  'AFFFCFFFFFFFCFFFFFFF',
+  'FFFFFFCFFFFFFFFCFFFF',
+  'FFCFFFAFFFFCFFFFFFFF',
+  'FFFFFFFCFFFFFFFFCFFF',
+  'ACFFFFFFFFFFCFFFFFFF',
+  'FFFFFCFFFFFFFFFFCFFF',
+  'CFFFFFFFFCFFFFFFFFFF'
 ];
 var MAP_STEINKREIS = [
-  'NNNNNNNNNNNNNNNNNNNN',
-  'NNNNNNNNNPPNNNNNNNNN',
-  'NNNNNNNNPPPPNNNNNNNN',
-  'NNNNNNNNPPPPNNNNNNNN',
-  'NNNNNNNPPPPPNNNNNNNN',
-  'NNNNNNNPPPPPNNNNNNNN',
-  'NNNNNNPPPPPPNNNNNNNN'
+  'NTNRNNNNNNNNRNNNNNNN',
+  'NNNNNNNNNPPNNNNRNNNN',
+  'NNRNNNTNPPPPNNNNNNNN',
+  'NNNNNNNNPPPPNNRNNNNN',
+  'RNNNNNNPPPPPNNNNNTNN',
+  'NNNNRNNPPPPPNNNNNNNN',
+  'NNNNNNPPPPPPRNNNNNNN'
 ];
 
 /* ------------------------------------------------------------
@@ -155,6 +158,8 @@ function bgLichtung(t, F) {
   prop('blumen', 232, 150);
   prop('stein1', 268, 142, .9);
   prop('farn', 88, 162);
+  prop('pilzring', 120, 168, .85);
+  prop('wegstein', 198, 144, .8);
   prop('busch1', 300, 158);
   prop('blumen', 150, 176);
   prop('stein2', 58, 184);
@@ -234,6 +239,7 @@ function bgDorf(t, F) {
   prop('kiste', 122, 190, 1.1);
   prop('blumen', 232, 172);
   prop('stein2', 168, 166, .8);
+  prop('wegfahne', 306, 146, .75);
 
   /* --- Wirtshaus links --- */
   R(6, 34, 96, 68, '#d8cdb0');                       /* Fachwerkwand */
@@ -348,6 +354,10 @@ function bgSumpf(t, F) {
   prop('schilfbusch', 286, 194, 1.15);
   prop('seerose', 118, 128, .9);
   prop('seerose', 152, 132);
+  prop('gluehpilz', 188, 166, .75);
+  prop('gluehpilz', 216, 188, .55);
+  prop('spinnennetz', 22, 94, .75);
+  prop('lichtkugel', 92 + Math.sin(t * .025) * 5, 126 + Math.cos(t * .03) * 3, .65);
 
   /* Sumpftümpel vorne */
   E(134, 126, 66, 15, '#2a3128');
@@ -450,6 +460,9 @@ function bgHuette(t, F) {
   prop('truhe', 42, 190);
   prop('buecher', 292, 192, 1.2);
   prop('kerze', 214, 176, 1.1);
+  prop('kraeuter', 230, 78, .8);
+  prop('spinnennetz', 168, 52, .9);
+  prop('lichtkugel', 178 + Math.sin(t * .03) * 8, 84 + Math.cos(t * .025) * 4, .8);
 
   /* Fenster links mit Sumpflicht */
   R(12, 20, 34, 30, '#2e2318');
@@ -656,6 +669,7 @@ function bgHoehle(t, F, lit) {
 
   /* Höhlenfunde */
   prop('kristallader', 22, 132, .9);
+  prop('gluehpilz', 62, 144, .55);
   prop('stalagmit', 46, 156);
   prop('knochen', 132, 150);
   prop('goldhaufen', 262, 150);
@@ -663,6 +677,10 @@ function bgHoehle(t, F, lit) {
   prop('stalagmit', 304, 182, 1.2);
   prop('truhe', 176, 194, 1.1);
   prop('knochen', 232, 188, 1.2);
+  for (var bat = 0; bat < 3; bat++) {
+    var bx = ((t * (.34 + bat * .05) + bat * 117) % 380) - 30;
+    prop('fledermaus', bx, 34 + bat * 15 + Math.sin(t * .06 + bat) * 7, .7 + bat * .08, bat % 2);
+  }
   for (var r = 0; r < 40; r++) {
     var rx = rnd(r * 3.1) * VW, ry = 100 + rnd(r + 7) * 40;
     E(rx, ry, 2 + rnd(r + 1) * 4, 1.5 + rnd(r + 2) * 2, rnd(r + 5) > .5 ? '#5c5266' : '#382f42');
@@ -722,6 +740,7 @@ function bgSteinkreis(t, F) {
 
   /* Opfergaben und Gestein */
   prop('stein1', 62, 148, .9);
+  prop('runenstein', 82, 160, .75);
   prop('kerze', 132, 142);
   prop('kerze', 192, 144);
   prop('stein2', 248, 152);
@@ -730,6 +749,10 @@ function bgSteinkreis(t, F) {
   prop('kerze', 104, 186, 1.2);
   prop('kerze', 220, 190, 1.2);
   prop('stein1', 286, 196, 1.1);
+  prop('runenstein', 270, 188, .6);
+  prop('wegfahne', 156, 118, .62);
+  prop('lichtkugel', 112 + Math.sin(t * .025) * 8, 92 + Math.cos(t * .031) * 5, .75);
+  prop('lichtkugel', 212 + Math.cos(t * .022) * 10, 78 + Math.sin(t * .027) * 6, .55);
 
   /* Steinkreis (hinten kleiner) */
   var stones = [[36, 108, 16, 44], [78, 102, 13, 36], [126, 98, 11, 30],
