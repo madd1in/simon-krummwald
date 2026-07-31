@@ -1,0 +1,233 @@
+/* ============================================================
+   assets.js – Asset-Pipeline: Sprite-Atlas und Tileset
+
+   Alle Grafiken werden beim Start EINMAL in einen Atlas
+   gebacken (ein einziges Offscreen-Canvas). Danach zeichnet
+   das Spiel nur noch Blits daraus – echte Sprites, echte
+   Kacheln, echte Tilemaps.
+
+   bakeAtlas() ersetzt anschließend drawSimon/drawIcon/NPC-
+   Funktionen durch Atlas-Blits, damit der restliche Code
+   unverändert weiterläuft.
+
+   Der fertige Atlas lässt sich mit exportAtlas() als PNG
+   herunterladen (Taste A im Spiel).
+   ============================================================ */
+
+var ATLAS = null, AX = null;
+var FRAMES = {};          /* name -> {x,y,w,h,ox,oy} */
+var TILE = 16;            /* Kachelgröße */
+var TILES = {};           /* name -> Index im Tileset */
+var TILE_LIST = [];
+var atlasReady = false;
+
+/* ---------- kleiner Zeilen-Packer ---------- */
+var packX = 0, packY = 0, packRow = 0;
+function packAlloc(w, h) {
+  if (packX + w > ATLAS.width) { packX = 0; packY += packRow + 1; packRow = 0; }
+  var r = { x: packX, y: packY, w: w, h: h };
+  packX += w + 1;
+  if (h > packRow) packRow = h;
+  return r;
+}
+
+/* Zeichnet fn() in eine frisch reservierte Atlas-Zelle.
+   fn bekommt einen verschobenen Ursprung (ox,oy = Ankerpunkt). */
+function bake(name, w, h, ox, oy, fn) {
+  var cell = packAlloc(w, h);
+  var save = g;
+  g = AX;
+  AX.save();
+  AX.translate(cell.x, cell.y);
+  fn(ox, oy);
+  AX.restore();
+  g = save;
+  FRAMES[name] = { x: cell.x, y: cell.y, w: w, h: h, ox: ox, oy: oy };
+}
+
+/* ---------- Blit ---------- */
+
+function sprite(name, x, y, s, flip) {
+  var f = FRAMES[name];
+  if (!f) return;
+  s = s || 1;
+  g.save();
+  g.translate(x, y);
+  if (s !== 1 || flip) g.scale(flip ? -s : s, s);
+  g.drawImage(ATLAS, f.x, f.y, f.w, f.h, -f.ox, -f.oy, f.w, f.h);
+  g.restore();
+}
+
+/* ---------- Tileset ---------- */
+
+function tilePixels(kind, seed) {
+  /* malt eine 16x16-Kachel; g zeigt bereits auf die Atlas-Zelle */
+  var i, x, y, r;
+  switch (kind) {
+    case 'gras':
+      R(0, 0, TILE, TILE, '#4a8531');
+      for (i = 0; i < 20; i++) {
+        r = rnd(seed + i * 3.7); x = r * TILE; y = rnd(seed + i * 1.3) * TILE;
+        R(x, y, 1, 1, r > .5 ? '#457c2d' : '#508d36');
+      }
+      for (i = 0; i < 3; i++) { x = rnd(seed + i * 9.1) * TILE; y = rnd(seed + i * 5.5) * TILE; R(x, y, 1, 2, '#57953b'); }
+      break;
+    case 'gras_dunkel':
+      R(0, 0, TILE, TILE, '#3f7129');
+      for (i = 0; i < 18; i++) { x = rnd(seed + i * 2.9) * TILE; y = rnd(seed + i * 4.1) * TILE; R(x, y, 1, 1, rnd(seed + i) > .5 ? '#396827' : '#457c2d'); }
+      break;
+    case 'pfad':
+      R(0, 0, TILE, TILE, '#ac9463');
+      for (i = 0; i < 22; i++) { x = rnd(seed + i * 2.3) * TILE; y = rnd(seed + i * 3.9) * TILE; R(x, y, 1 + (i % 2), 1, rnd(seed + i * 5) > .5 ? '#a48c5c' : '#b59d6b'); }
+      for (i = 0; i < 3; i++) { x = rnd(seed + i * 7.3) * TILE; y = rnd(seed + i * 8.1) * TILE; E(x, y, 1.4, 1, '#9a8354'); }
+      break;
+    case 'kopfstein':
+      R(0, 0, TILE, TILE, '#6f6a5d');
+      for (i = 0; i < 8; i++) {
+        x = (i % 3) * 5 + (Math.floor(i / 3) % 2) * 2, y = Math.floor(i / 3) * 5;
+        R(x + 1, y + 1, 4, 4, rnd(seed + i * 3.3) > .5 ? '#7a7365' : '#6d675b');
+        R(x + 1, y + 1, 4, 1, '#847d6e');
+      }
+      break;
+    case 'holzboden':
+      R(0, 0, TILE, TILE, '#6e5637');
+      R(0, 5, TILE, 1, '#4d3a24'); R(0, 11, TILE, 1, '#4d3a24');
+      for (i = 0; i < 14; i++) { x = rnd(seed + i * 4.7) * TILE; y = rnd(seed + i * 2.1) * TILE; R(x, y, 2, 1, rnd(seed + i) > .5 ? '#7d6340' : '#5f4a2f'); }
+      break;
+    case 'fels':
+      R(0, 0, TILE, TILE, '#4a4152');
+      for (i = 0; i < 18; i++) { x = rnd(seed + i * 3.1) * TILE; y = rnd(seed + i * 5.7) * TILE; E(x, y, 1 + rnd(seed + i) * 2, 1, rnd(seed + i * 2) > .5 ? '#5c5266' : '#3a3244'); }
+      break;
+    case 'moor':
+      R(0, 0, TILE, TILE, '#4b5439');
+      for (i = 0; i < 20; i++) { x = rnd(seed + i * 2.7) * TILE; y = rnd(seed + i * 6.3) * TILE; R(x, y, 2, 1, rnd(seed + i) > .5 ? '#3d4630' : '#5b6644'); }
+      for (i = 0; i < 3; i++) { x = rnd(seed + i * 9.7) * TILE; y = rnd(seed + i * 4.3) * TILE; E(x, y, 2, 1, '#2f3a28'); }
+      break;
+    case 'nachtgras':
+      R(0, 0, TILE, TILE, '#33452f');
+      for (i = 0; i < 20; i++) { x = rnd(seed + i * 3.3) * TILE; y = rnd(seed + i * 2.7) * TILE; R(x, y, 1, 2, rnd(seed + i) > .5 ? '#2a3a26' : '#40593a'); }
+      break;
+  }
+}
+
+function bakeTiles() {
+  var kinds = ['gras', 'gras_dunkel', 'pfad', 'kopfstein', 'holzboden', 'fels', 'moor', 'nachtgras'];
+  for (var k = 0; k < kinds.length; k++) {
+    /* mehrere Varianten, damit die Böden nicht sichtbar kacheln */
+    for (var v = 0; v < 4; v++) {
+      (function (kind, variant) {
+        bake('tile_' + kind + '_' + variant, TILE, TILE, 0, 0, function () {
+          tilePixels(kind, kind.length * 13.7 + variant * 41.3);
+        });
+      })(kinds[k], v);
+    }
+    TILES[kinds[k]] = kinds[k];
+  }
+}
+
+/* Zeichnet eine Kachelfläche mit variierenden Varianten */
+function tileFill(kind, x0, y0, x1, y1) {
+  for (var y = y0; y < y1; y += TILE) {
+    for (var x = x0; x < x1; x += TILE) {
+      var v = Math.floor(rnd(x * 0.37 + y * 1.71) * 4);
+      sprite('tile_' + kind + '_' + v, x, y, 1, false);
+    }
+  }
+}
+
+/* Eine echte Tilemap: Zeilen aus Zeichen, Legende ordnet Kachelnamen zu */
+function drawTilemap(map, legend, x0, y0) {
+  for (var r = 0; r < map.length; r++) {
+    var row = map[r];
+    for (var c = 0; c < row.length; c++) {
+      var kind = legend[row[c]];
+      if (!kind) continue;
+      var v = Math.floor(rnd(c * 3.3 + r * 7.1) * 4);
+      sprite('tile_' + kind + '_' + v, x0 + c * TILE, y0 + r * TILE, 1, false);
+    }
+  }
+}
+
+/* ---------- Figuren & Icons backen ---------- */
+
+function bakeCharacters() {
+  var frames = [0, 1, 3];
+  for (var h = 0; h < 2; h++) {
+    for (var b = 0; b < 2; b++) {
+      for (var f = 0; f < frames.length; f++) {
+        (function (hat, blink, fr) {
+          bake('simon_' + hat + '_' + blink + '_' + fr, 26, 64, 13, 62, function (ox, oy) {
+            _rawSimon(ox, oy, 1, fr, 1, !!hat, !!blink);
+          });
+        })(h, b, frames[f]);
+      }
+    }
+  }
+  for (var p = 0; p < 3; p++) {
+    (function (ph) {
+      var t = ph * 40;
+      bake('bruno_' + ph, 30, 48, 15, 46, function (ox, oy) { _rawBruno(ox, oy, t); });
+      bake('mathilda_' + ph, 26, 56, 13, 54, function (ox, oy) { _rawMathilda(ox, oy, t); });
+      bake('grombold_' + ph, 46, 56, 23, 54, function (ox, oy) { _rawTroll(ox, oy, t); });
+      bake('elster_' + ph, 26, 18, 13, 9, function (ox, oy) { _rawElster(ox, oy, t, 1); });
+    })(p);
+  }
+  for (var d = 0; d < 2; d++) {
+    (function (ph) {
+      bake('drache_' + ph, 120, 60, 62, 58, function (ox, oy) { _rawDrache(ox, oy, ph * 52, true); });
+    })(d);
+  }
+}
+
+function bakeIcons() {
+  var ids = Object.keys(ITEMS);
+  for (var i = 0; i < ids.length; i++) {
+    (function (id) {
+      bake('item_' + id, 20, 20, 0, 0, function () { _rawIcon(id, 0, 0); });
+    })(ids[i]);
+  }
+}
+
+/* ---------- Hauptaufruf ---------- */
+
+function bakeAtlas() {
+  ATLAS = document.createElement('canvas');
+  ATLAS.width = 1024; ATLAS.height = 512;
+  AX = ATLAS.getContext('2d');
+  AX.imageSmoothingEnabled = false;
+  packX = 0; packY = 0; packRow = 0;
+
+  /* Originalfunktionen sichern, bevor sie ersetzt werden */
+  _rawSimon = drawSimon; _rawIcon = drawIcon;
+  _rawBruno = drawBruno; _rawMathilda = drawMathilda;
+  _rawTroll = drawTroll; _rawElster = drawElster; _rawDrache = drawDrache;
+
+  bakeTiles();
+  bakeCharacters();
+  bakeIcons();
+
+  /* ---- ab jetzt: Blits statt Neuzeichnen ---- */
+  drawSimon = function (x, y, s, frame, face, hat, blink) {
+    var fr = (frame === 1) ? 1 : (frame === 3 ? 3 : 0);
+    sprite('simon_' + (hat ? 1 : 0) + '_' + (blink ? 1 : 0) + '_' + fr, x, y, s, face < 0);
+  };
+  drawIcon = function (id, x, y) { sprite('item_' + id, x, y, 1, false); };
+  drawBruno = function (x, y, t) { sprite('bruno_' + (Math.floor(t / 40) % 3), x, y, 1, false); };
+  drawMathilda = function (x, y, t) { sprite('mathilda_' + (Math.floor(t / 45) % 3), x, y, 1, false); };
+  drawTroll = function (x, y, t) { sprite('grombold_' + (Math.floor(t / 55) % 3), x, y, 1, false); };
+  drawElster = function (x, y, t) { sprite('elster_' + (Math.floor(t / 12) % 3), x, y, 1, false); };
+  drawDrache = function (x, y, t, sleeping) { sprite('drache_' + (Math.floor(t / 60) % 2), x, y, 1, false); };
+
+  atlasReady = true;
+}
+
+var _rawSimon, _rawIcon, _rawBruno, _rawMathilda, _rawTroll, _rawElster, _rawDrache;
+
+/* ---------- Atlas als PNG exportieren ---------- */
+function exportAtlas() {
+  if (!ATLAS) return;
+  var a = document.createElement('a');
+  a.download = 'krummwald-atlas.png';
+  a.href = ATLAS.toDataURL('image/png');
+  a.click();
+}

@@ -1,0 +1,543 @@
+/* ============================================================
+   scenes.js – die sechs Schauplätze von Krummwald
+   Jede Funktion malt einen kompletten Hintergrund in den
+   320x200-Puffer (Spielfläche: y 0..142).
+   t = Frame-Zähler, F = Flags-Objekt des Spielstands
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   TILEMAPS  (20 Spalten x 3 Reihen à 16px, ab y=96)
+   G Gras · D dunkles Gras · P Pfad · K Kopfstein
+   M Moor  · H Holzboden   · F Fels  · N Nachtgras
+   ------------------------------------------------------------ */
+var LEG = { G: 'gras', D: 'gras_dunkel', P: 'pfad', K: 'kopfstein',
+            M: 'moor', H: 'holzboden', F: 'fels', N: 'nachtgras' };
+
+var MAP_LICHTUNG = [
+  'DDGGGGGGPPGGGGGGGGGD',
+  'PGGGGGGGPPPGGGGGGGPP',
+  'PPGGDGGGPPPPGGGGGGPP'
+];
+var MAP_DORF = [
+  'GKKKKKKKKKKKKKKKKKKG',
+  'GKKKKKKKKKKKKKKKKKKK',
+  'KKKKKKKKKKKKKKKKKKKK'
+];
+var MAP_SUMPF = [
+  'MMDDMMMPPPMMDDMMMMMM',
+  'MMMDMMMMPPMMMMDDMMMM',
+  'DMMMMMDDMMMMMMMMMDDM'
+];
+var MAP_HUETTE = [
+  'HHHHHHHHHHHHHHHHHHHH',
+  'HHHHHHHHHHHHHHHHHHHH',
+  'HHHHHHHHHHHHHHHHHHHH'
+];
+var MAP_HOEHLE = [
+  'FFFFFFFFFFFFFFFFFFFF',
+  'FFFFFFFFFFFFFFFFFFFF',
+  'FFFFFFFFFFFFFFFFFFFF'
+];
+var MAP_STEINKREIS = [
+  'NNNNNNNNNNNNNNNNNNNN',
+  'NNNNNNNNPPPPNNNNNNNN',
+  'NNNNNNNPPPPPPNNNNNNN'
+];
+
+/* ------------------------------------------------------------
+   1. LICHTUNG
+   ------------------------------------------------------------ */
+function bgLichtung(t, F) {
+  band(0, 92, '#4f9fd8', '#b8e2f5');
+  cloud(58, 16, 1.1, 'rgba(255,255,255,.85)');
+  cloud(210, 12, .85, 'rgba(255,255,255,.7)');
+  cloud(268, 30, .6, 'rgba(255,255,255,.55)');
+
+  /* ferner Waldrand */
+  for (var i = 0; i < 26; i++) {
+    var x = i * 13 + rnd(i) * 8;
+    E(x, 82 + rnd(i + 9) * 4, 12, 14 + rnd(i + 3) * 8, '#20401f');
+  }
+  R(0, 88, VW, 8, '#25491f');
+
+  /* Wiese als Tilemap */
+  drawTilemap(MAP_LICHTUNG, LEG, 0, 96);
+  groundShade(96, 142, .30, -.05);
+  grassTufts(0, VW, 96, 140, 4.2, '#2f6323', '#6ba43c');
+
+  /* Büsche */
+  bush(292, 104, 13, '#2f6b28');
+  bush(18, 100, 11, '#356f2b');
+  bush(112, 100, 8, '#2e6626');
+
+  /* Große Eiche links */
+  var bx = 52;
+  R(bx - 9, 40, 18, 66, '#5b3d20');
+  R(bx - 9, 40, 4, 66, '#6f4c28');
+  R(bx + 5, 40, 4, 66, '#442d17');
+  for (var k = 0; k < 9; k++) R(bx - 8, 46 + k * 7, 16, 1, '#3d2915');
+  P([bx - 20, 106, bx + 20, 106, bx + 9, 96, bx - 9, 96], '#5b3d20');   /* Wurzeln */
+  L(bx + 6, 58, bx + 26, 46, '#5b3d20', 3);
+  L(bx - 6, 50, bx - 24, 40, '#5b3d20', 3);
+  E(bx, 30, 40, 24, '#1f4a1c');
+  E(bx - 22, 34, 20, 15, '#2a5c22');
+  E(bx + 24, 32, 19, 14, '#2a5c22');
+  E(bx - 6, 16, 24, 15, '#356f2b');
+  E(bx + 18, 18, 17, 12, '#3d7b30');
+  E(bx - 26, 22, 14, 10, '#2a5c22');
+
+  /* Nest mit Hut */
+  var nx = 46, ny = 26;
+  E(nx, ny, 11, 6, '#6b4a26');
+  E(nx, ny - 2, 9, 4, '#7d5a2e');
+  for (var q = 0; q < 12; q++) L(nx - 10 + q * 1.8, ny - 3 + rnd(q) * 5, nx - 6 + q * 1.6, ny - 1 + rnd(q + 5) * 4, '#54381c', 1);
+  if (!F.hut) {
+    P([nx - 7, ny - 3, nx + 6, ny - 3, nx - 1, ny - 15], '#5e2f8e');
+    R(nx - 8, ny - 4, 15, 2, '#7b3fb5');
+    E(nx - 1, ny - 15, 1.4, 1.4, '#ffd94a');
+  }
+  if (!F.hut) drawElster(nx + 14, ny - 4, t, 1);
+
+  /* Wegweiser */
+  R(238, 96, 4, 26, '#7d5a2e');
+  P([224, 88, 262, 88, 262, 97, 224, 97], '#a3763a');
+  P([226, 99, 256, 99, 256, 107, 226, 107], '#a3763a');
+  R(224, 88, 38, 2, '#c49355');
+
+  /* Stock am Boden */
+  if (!F.stockWeg) {
+    L(146, 130, 162, 126, '#8a5a2b', 3);
+    L(158, 127, 164, 130, '#8a5a2b', 2);
+  }
+}
+
+/* ------------------------------------------------------------
+   2. DORF KRUMMWALD
+   ------------------------------------------------------------ */
+function bgDorf(t, F) {
+  band(0, 98, '#5aa8dd', '#cfe9f6');
+  cloud(120, 14, .9, 'rgba(255,255,255,.8)');
+  cloud(250, 22, .7, 'rgba(255,255,255,.6)');
+
+  /* Hügel hinten */
+  E(60, 96, 90, 26, '#4a7f33');
+  E(250, 98, 100, 24, '#437730');
+
+  /* Boden als Tilemap */
+  drawTilemap(MAP_DORF, LEG, 0, 96);
+  groundShade(96, 142, .26, -.04);
+
+  /* --- Wirtshaus links --- */
+  R(6, 34, 96, 68, '#d8cdb0');                       /* Fachwerkwand */
+  for (var i = 0; i < 5; i++) R(6, 40 + i * 14, 96, 3, '#5e4429');
+  R(28, 34, 3, 68, '#5e4429'); R(64, 34, 3, 68, '#5e4429');
+  P([0, 36, 108, 36, 96, 12, 12, 12], '#7d3c2c');     /* Dach */
+  for (var r = 0; r < 6; r++) P([2 + r * 2, 36 - r * 4, 106 - r * 2, 36 - r * 4, 104 - r * 2, 33 - r * 4, 4 + r * 2, 33 - r * 4], '#6a3225');
+  R(74, 4, 12, 16, '#6a6258'); R(72, 2, 16, 4, '#807868');  /* Schornstein */
+  for (var sm = 0; sm < 4; sm++) {
+    var sp = (t * .03 + sm * .25) % 1;
+    E(80 + Math.sin(sp * 6 + sm) * 6, 2 - sp * 14, 2 + sp * 4, 2 + sp * 4, 'rgba(210,210,215,' + (.5 - sp * .5) + ')');
+  }
+  R(20, 52, 20, 18, '#3a4a5c'); R(20, 52, 20, 18, '#4a6076');  /* Fenster */
+  L(30, 52, 30, 70, '#5e4429', 2); L(20, 61, 40, 61, '#5e4429', 2);
+  R(70, 50, 20, 18, '#4a6076'); L(80, 50, 80, 68, '#5e4429', 2); L(70, 59, 90, 59, '#5e4429', 2);
+  /* Tür */
+  R(44, 62, 22, 40, '#3a2a1c');
+  R(46, 64, 18, 36, '#2b1e12');
+  drawBruno(55, 102, t);
+  R(62, 80, 2, 2, '#c8a44a');
+  /* Wirtshausschild */
+  L(102, 40, 118, 40, '#4a3a28', 2);
+  R(106, 41, 22, 16, '#7d5a2e'); R(107, 42, 20, 14, '#a3763a');
+  R(112, 45, 4, 8, '#e8e2cf'); R(116, 47, 3, 4, '#e8e2cf');
+
+  /* --- Haus hinten mitte --- */
+  R(120, 56, 52, 44, '#c9bfa4');
+  P([116, 58, 176, 58, 168, 38, 124, 38], '#5c6a7d');
+  R(130, 66, 14, 14, '#4a6076'); R(150, 66, 14, 14, '#4a6076');
+  R(120, 56, 52, 2, '#5e4429');
+
+  /* --- Marktstand rechts --- */
+  R(196, 62, 4, 40, '#7d5a2e'); R(286, 62, 4, 40, '#7d5a2e');
+  for (var st = 0; st < 9; st++) R(194 + st * 10, 54, 10, 10, st % 2 ? '#c8483a' : '#f0e6cf');
+  P([190, 64, 294, 64, 294, 68, 190, 68], '#8a6a3a');
+  drawMathilda(236, 108, t);                          /* Trödlerin hinter dem Tisch */
+  R(196, 86, 94, 6, '#8a6a3a');                       /* Tischplatte */
+  R(196, 92, 94, 10, '#6b4f2a');
+  /* Krimskrams auf dem Tisch */
+  E(210, 83, 5, 4, '#8b8f99');
+  R(224, 78, 8, 8, '#7a63aa'); R(225, 79, 6, 3, '#9c86cc');
+  E(246, 82, 6, 5, '#a3763a');
+  R(262, 79, 10, 7, '#5c4a86');
+  if (!F.knopfWeg) { E(276, 82, 4, 3.5, '#b8bfcc'); E(276, 81.5, 3, 2.6, '#e6ecf7'); R(275, 80, 2, 1, '#fff'); }
+
+  /* --- Brunnen vorne mitte --- */
+  var wx = 148, wy = 128;
+  E(wx, wy, 26, 11, '#6a6258');
+  E(wx, wy - 3, 24, 10, '#8b8172');
+  E(wx, wy - 4, 18, 7, '#3a3830');
+  for (var b = 0; b < 14; b++) {
+    var a = b / 14 * 6.283;
+    R(wx + Math.cos(a) * 21 - 2, wy - 4 + Math.sin(a) * 8, 5, 4, b % 2 ? '#9b9182' : '#7d7466');
+  }
+  R(wx - 20, wy - 30, 4, 27, '#6b4a26'); R(wx + 16, wy - 30, 4, 27, '#6b4a26');
+  P([wx - 26, wy - 30, wx + 26, wy - 30, wx + 14, wy - 42, wx - 14, wy - 42], '#7d3c2c');
+  L(wx - 18, wy - 28, wx + 18, wy - 28, '#4a3a28', 2);
+  if (F.brunnenRep) {
+    /* reparierte Kurbel */
+    R(wx + 12, wy - 30, 3, 3, '#8b8f99');
+    L(wx + 13, wy - 29, wx + 19, wy - 25, '#8b8f99', 2);
+  } else {
+    R(wx + 12, wy - 30, 3, 3, '#5a5f68');
+  }
+  if (!F.eimerWeg) {
+    L(wx - 1, wy - 28, wx - 1, wy - 20, '#6b6252', 1);
+    P([wx - 5, wy - 20, wx + 5, wy - 20, wx + 4, wy - 12, wx - 4, wy - 12], '#8a7a5e');
+    R(wx - 5, wy - 20, 10, 2, '#a3937a');
+  }
+  /* Inschrift */
+  R(wx - 14, wy - 2, 12, 1, '#5a5348'); R(wx - 12, wy + 1, 8, 1, '#5a5348');
+
+  /* Fässer + Kiste */
+  R(112, 106, 14, 20, '#7d5a2e'); R(112, 110, 14, 2, '#4a3a28'); R(112, 120, 14, 2, '#4a3a28');
+  E(119, 106, 7, 3, '#8f6a36');
+  R(300, 100, 18, 16, '#6b4f2a'); R(300, 100, 18, 2, '#8a6a3a');
+
+  grassTufts(0, 30, 116, 140, 9.1, '#3f6a26', '#5f8f38');
+}
+
+/* ------------------------------------------------------------
+   3. NEBELSUMPF
+   ------------------------------------------------------------ */
+function bgSumpf(t, F) {
+  band(0, 96, '#5d6b62', '#9aa892');
+  /* Nebelschwaden */
+  for (var n = 0; n < 5; n++) {
+    var nx = ((t * .12 + n * 70) % 400) - 40;
+    E(nx, 70 + n * 5, 46, 7, 'rgba(200,210,195,.16)');
+  }
+
+  /* toter Wald hinten */
+  for (var i = 0; i < 9; i++) {
+    var dx = 96 + i * 26 + rnd(i) * 10;
+    deadTree(dx, 94 + rnd(i + 6) * 6, 24 + rnd(i + 2) * 26, i % 2 ? '#39402f' : '#454b3a');
+  }
+
+  /* Boden als Tilemap */
+  drawTilemap(MAP_SUMPF, LEG, 0, 92);
+  groundShade(92, 142, .34, .02);
+
+  /* Sumpftümpel vorne */
+  E(134, 126, 66, 15, '#2a3128');
+  E(134, 125, 62, 13, '#17251f');
+  E(134, 124, 58, 11, '#20342a');
+  for (var w = 0; w < 8; w++) {
+    var ww = Math.sin(t * .05 + w * 1.7) * 4;
+    R(104 + w * 9 + ww, 119 + (w % 4) * 3, 9, 1, 'rgba(140,180,150,.22)');
+  }
+  E(110, 128, 6, 2.5, '#3d5a34'); E(160, 121, 5, 2, '#3d5a34');  /* Algen */
+  for (var bb = 0; bb < 4; bb++) {
+    var bp = ((t * .02 + bb * .3) % 1);
+    E(116 + bb * 15, 127 - bp * 5, 1 + bp, 1 + bp, 'rgba(160,200,140,' + (.5 - bp * .5) + ')');
+  }
+
+  /* Schilf */
+  for (var s = 0; s < 22; s++) {
+    var sx = 80 + rnd(s * 1.7) * 110, sy = 118 + rnd(s + 4) * 14;
+    var sw = Math.sin(t * .04 + s) * 2;
+    L(sx, sy, sx + sw, sy - 12 - rnd(s + 8) * 8, '#7d8a4a', 1);
+    E(sx + sw, sy - 13 - rnd(s + 8) * 8, 1.2, 3, '#6b5a2e');
+  }
+
+  /* Fliegenpilz */
+  if (!F.pilzWeg) {
+    R(206, 124, 4, 8, '#e8e0cb');
+    E(208, 123, 8, 5, '#c8342f');
+    R(204, 121, 2, 2, '#fff'); R(209, 120, 3, 2, '#fff'); R(212, 123, 2, 2, '#fff');
+  }
+
+  /* --- Hütte des Zauberers links --- */
+  R(8, 58, 66, 46, '#6b543a');
+  for (var pl = 0; pl < 9; pl++) R(8, 58 + pl * 5, 66, 1, '#54432e');
+  P([2, 60, 80, 60, 70, 34, 12, 34], '#4a3a52');
+  for (var rr = 0; rr < 5; rr++) P([4 + rr * 2, 60 - rr * 5, 78 - rr * 2, 60 - rr * 5, 76 - rr * 2, 57 - rr * 5, 6 + rr * 2, 57 - rr * 5], '#3d3045');
+  R(52, 18, 9, 18, '#5a5348'); R(50, 16, 13, 4, '#6e675a');
+  P([50, 16, 63, 16, 66, 10, 47, 10], '#6e675a');
+  for (var sm2 = 0; sm2 < 3; sm2++) {
+    var sp2 = (t * .022 + sm2 * .33) % 1;
+    E(56 + Math.sin(sp2 * 7 + sm2) * 7, 10 - sp2 * 12, 2 + sp2 * 4, 2 + sp2 * 4, 'rgba(140,180,140,' + (.45 - sp2 * .45) + ')');
+  }
+  /* Fenster mit grünem Licht */
+  R(16, 68, 16, 14, '#22301f');
+  R(17, 69, 14, 12, 'rgb(' + (60 + Math.sin(t * .06) * 20 | 0) + ',' + (140 + Math.sin(t * .06) * 30 | 0) + ',70)');
+  L(24, 68, 24, 82, '#3d3028', 2); L(16, 75, 32, 75, '#3d3028', 2);
+  /* Tür */
+  R(44, 70, 22, 34, '#3a2c1e');
+  R(46, 72, 18, 30, F.huetteOffen ? '#20180f' : '#54402a');
+  if (!F.huetteOffen) {
+    E(62, 88, 2.5, 2.5, '#c8a44a');
+    /* magisches Schlosssymbol */
+    var gl = .5 + Math.sin(t * .08) * .35;
+    E(55, 84, 5, 5, 'rgba(120,220,160,' + (gl * .35) + ')');
+    R(53, 82, 4, 1, 'rgba(180,255,200,' + gl + ')');
+    R(54, 84, 2, 4, 'rgba(180,255,200,' + gl + ')');
+    R(52, 87, 6, 1, 'rgba(180,255,200,' + gl + ')');
+  }
+  E(38, 104, 40, 6, '#3f4a30');
+
+  /* Felswand mit Höhleneingang hinter der Brücke */
+  P([288, 104, 320, 104, 320, 40, 300, 52], '#3f4440');
+  P([296, 104, 320, 104, 320, 48, 304, 58], '#4a5049');
+  E(313, 92, 15, 20, '#12120f');
+  E(313, 92, 11, 16, '#08080a');
+
+  /* --- Brücke rechts --- */
+  R(232, 100, 88, 6, '#6b4f2a');
+  R(232, 106, 88, 3, '#54401f');
+  for (var pk = 0; pk < 9; pk++) R(234 + pk * 10, 100, 2, 6, '#8a6a3a');
+  R(238, 106, 4, 22, '#5c4525'); R(300, 106, 4, 22, '#5c4525');
+  L(238, 94, 238, 106, '#6b4f2a', 2); L(268, 92, 268, 106, '#6b4f2a', 2); L(300, 94, 300, 106, '#6b4f2a', 2);
+  L(238, 94, 300, 94, '#6b4f2a', 2);
+
+  /* Pfad nach Norden zur Lichtung */
+  P([150, 92, 178, 92, 186, 104, 142, 104], '#6b7a4a');
+
+  grassTufts(0, VW, 100, 140, 6.6, '#333d24', '#5e6b34');
+
+  /* Troll auf der Brücke */
+  if (!F.trollWeg) drawTroll(266, 100, t);
+}
+
+/* ------------------------------------------------------------
+   4. HÜTTE DES ZAUBERERS (innen)
+   ------------------------------------------------------------ */
+function bgHuette(t, F) {
+  /* Bretterwand */
+  band(0, 108, '#4a3826', '#3a2c1e');
+  for (var i = 0; i < 16; i++) { R(i * 20, 0, 1, 108, '#2e2318'); R(i * 20 + 1, 0, 18, 1, 'rgba(255,220,180,.05)'); }
+  /* Dielenboden als Tilemap */
+  drawTilemap(MAP_HUETTE, LEG, 0, 104);
+  groundShade(104, 142, .34, .04);
+
+  /* Fenster links mit Sumpflicht */
+  R(12, 20, 34, 30, '#2e2318');
+  R(14, 22, 30, 26, '#5d7a55');
+  R(14, 22, 30, 8, '#7d9a6f');
+  L(29, 22, 29, 48, '#2e2318', 2); L(14, 35, 44, 35, '#2e2318', 2);
+  P([10, 18, 48, 18, 44, 14, 14, 14], '#5c4525');
+
+  /* Regal mit Flaschen */
+  R(66, 26, 82, 4, '#6b4f2a'); R(66, 52, 82, 4, '#6b4f2a');
+  var cols = ['#4fa3d8', '#c8483a', '#8fd14f', '#e0b13a', '#9b5de5', '#3ad1c0'];
+  for (var b = 0; b < 7; b++) {
+    var bx = 72 + b * 11, cc = cols[b % 6];
+    R(bx, 14, 6, 12, shade(cc, .8)); R(bx + 1, 16, 4, 9, cc);
+    R(bx + 2, 10, 2, 5, '#8f8578'); R(bx + 1, 9, 4, 2, '#6b6252');
+    R(bx + 1, 17, 1, 4, 'rgba(255,255,255,.4)');
+  }
+  for (var b2 = 0; b2 < 5; b2++) {
+    var bx2 = 78 + b2 * 13;
+    R(bx2, 40, 8, 12, '#5c6a4a'); R(bx2 + 1, 42, 6, 9, cols[(b2 + 2) % 6]);
+    R(bx2 + 2, 36, 3, 5, '#8f8578');
+  }
+
+  /* Standuhr rechts */
+  R(258, 24, 34, 82, '#4a2f18');
+  R(262, 28, 26, 78, '#6b4526');
+  R(264, 32, 22, 22, '#2a1e12');
+  E(275, 43, 10, 10, '#e8dcc0'); E(275, 43, 8.5, 8.5, '#f4ecd8');
+  for (var h = 0; h < 12; h++) { var a = h / 12 * 6.283; R(275 + Math.sin(a) * 7 - .5, 43 - Math.cos(a) * 7 - .5, 1, 1, '#3a2c1e'); }
+  if (F.zahnradWeg) {
+    R(275, 43, 1, 1, '#8c1d1d');
+  } else {
+    L(275, 43, 275 + Math.sin(t * .02) * 5, 43 - Math.cos(t * .02) * 5, '#3a2c1e', 1);
+    L(275, 43, 275 + Math.sin(t * .006) * 4, 43 - Math.cos(t * .006) * 4, '#3a2c1e', 2);
+  }
+  R(264, 60, 22, 40, F.zahnradWeg ? '#1a120a' : '#3a2c1e');
+  if (F.zahnradWeg) {
+    /* offene Uhr, Innenleben sichtbar */
+    E(275, 74, 6, 6, '#5a5f68'); E(281, 84, 4, 4, '#5a5f68');
+  } else {
+    L(275, 62, 275 + Math.sin(t * .07) * 7, 92, '#8a7a4a', 2);
+    E(275 + Math.sin(t * .07) * 7, 94, 5, 5, '#c8a44a');
+  }
+  P([254, 24, 296, 24, 290, 14, 260, 14], '#4a2f18');
+
+  /* Kessel in der Mitte über dem Feuer */
+  var kx = 168, ky = 118;
+  R(kx - 22, ky + 4, 44, 3, '#3a3128');
+  for (var lg = 0; lg < 3; lg++) L(kx - 14 + lg * 14, ky + 4, kx - 8 + lg * 10, ky - 4, '#5c4525', 2);
+  flame(kx - 8, ky + 3, 9, t, true);
+  flame(kx + 6, ky + 3, 7, t * 1.3 + 5, true);
+  E(kx, ky - 12, 24, 16, '#2e3138');
+  E(kx, ky - 18, 24, 8, '#3d4149');
+  E(kx, ky - 18, 20, 6, F.kesselFertig ? '#b48ce8' : (F.kesselWasser ? '#4d7a3a' : '#1b1d22'));
+  if (F.kesselWasser || F.kesselFertig) {
+    for (var bl = 0; bl < 5; bl++) {
+      var bp = ((t * .03 + bl * .2) % 1);
+      E(kx - 14 + bl * 7, ky - 19 - bp * 6, 1 + bp * 2, 1 + bp * 2,
+        (F.kesselFertig ? 'rgba(220,190,255,' : 'rgba(160,210,120,') + (.6 - bp * .6) + ')');
+    }
+  }
+  L(kx - 24, ky - 20, kx + 24, ky - 20, '#4a4f58', 2);
+
+  /* Tisch links vorne mit Buch, Lumpen, Feuerstein */
+  R(24, 108, 68, 5, '#7d5a2e');
+  R(28, 113, 5, 22, '#5c4525'); R(84, 113, 5, 22, '#5c4525');
+  if (!F.buchWeg) {
+    P([36, 100, 62, 100, 62, 108, 36, 108], '#6b2f7a');
+    R(36, 100, 4, 8, '#4a1f57');
+    R(42, 102, 16, 1, '#e8d78e'); R(42, 104, 16, 1, '#e8d78e'); R(42, 106, 10, 1, '#e8d78e');
+    E(52, 104, 2.5, 2.5, 'rgba(255,210,60,' + (.5 + Math.sin(t * .09) * .4) + ')');
+  }
+  if (!F.feuersteinWeg) {
+    P([70, 103, 76, 100, 82, 103, 80, 108, 72, 108], '#7d8390');
+    R(73, 103, 4, 2, '#a9b0bb');
+  }
+  /* Lumpen am Haken */
+  if (!F.lumpenWeg) {
+    R(214, 24, 2, 6, '#5a5f68');
+    P([206, 30, 224, 30, 226, 48, 216, 56, 204, 46], '#b9ac8e');
+    P([210, 34, 220, 33, 222, 44, 214, 50], '#d2c6a8');
+  }
+
+  /* Tür rechts unten */
+  R(300, 62, 20, 46, '#3a2c1e');
+  R(302, 64, 16, 42, '#5a4028');
+  E(305, 86, 2, 2, '#c8a44a');
+
+  /* Spinnweben */
+  L(0, 0, 26, 22, 'rgba(220,220,220,.25)', 1);
+  L(0, 12, 20, 22, 'rgba(220,220,220,.18)', 1);
+  L(12, 0, 24, 16, 'rgba(220,220,220,.18)', 1);
+}
+
+/* ------------------------------------------------------------
+   5. DRACHENHÖHLE
+   ------------------------------------------------------------ */
+function bgHoehle(t, F, lit) {
+  if (!lit) {
+    R(0, 0, VW, 142, '#07070a');
+    /* zwei glimmende Augen */
+    var gl = .55 + Math.sin(t * .05) * .25;
+    E(196, 70, 5, 3, 'rgba(255,190,40,' + gl + ')');
+    E(214, 70, 5, 3, 'rgba(255,190,40,' + gl + ')');
+    E(196, 70, 2, 1.4, '#1a1414'); E(214, 70, 2, 1.4, '#1a1414');
+    /* Lichtschein vom Eingang */
+    P([0, 40, 30, 60, 30, 120, 0, 132], 'rgba(120,140,120,.10)');
+    return;
+  }
+
+  band(0, 100, '#2a2430', '#3b3340');
+  /* Felswände */
+  for (var i = 0; i < 22; i++) {
+    var x = i * 16, hh = 14 + rnd(i) * 22;
+    P([x, 0, x + 18, 0, x + 14, hh, x + 4, hh - 6], '#241f2b');
+  }
+  /* Stalaktiten */
+  for (var s = 0; s < 9; s++) {
+    var sx = 14 + s * 36 + rnd(s) * 10, sh = 12 + rnd(s + 3) * 20;
+    P([sx - 5, 0, sx + 5, 0, sx, sh], '#4a4152');
+    P([sx - 2, 0, sx + 2, 0, sx, sh * .7], '#5c5266');
+  }
+  /* Höhlenboden als Tilemap */
+  drawTilemap(MAP_HOEHLE, LEG, 0, 96);
+  groundShade(96, 142, .40, .10);
+  for (var r = 0; r < 40; r++) {
+    var rx = rnd(r * 3.1) * VW, ry = 100 + rnd(r + 7) * 40;
+    E(rx, ry, 2 + rnd(r + 1) * 4, 1.5 + rnd(r + 2) * 2, rnd(r + 5) > .5 ? '#5c5266' : '#382f42');
+  }
+
+  /* Ausgang links */
+  E(6, 108, 24, 34, '#0d0d12');
+  P([0, 78, 26, 92, 26, 130, 0, 140], 'rgba(150,170,150,.12)');
+
+  /* Goldhaufen */
+  for (var gd = 0; gd < 46; gd++) {
+    var gx = 150 + rnd(gd * 2.7) * 150, gy = 116 + rnd(gd + 3) * 20;
+    E(gx, gy, 2.5, 1.8, rnd(gd + 9) > .5 ? '#e9b54a' : '#c98a30');
+  }
+  E(240, 126, 8, 4, '#c4c9d4'); E(268, 132, 7, 3.5, '#e9b54a');
+
+  /* Kristall auf Felssockel vorne links */
+  if (!F.kristallWeg) {
+    var cx = 92, cy = 122;
+    E(cx, cy + 6, 16, 6, '#3d3546');
+    P([cx - 12, cy + 6, cx + 12, cy + 6, cx + 8, cy - 4, cx - 8, cy - 4], '#4a4152');
+    var pu = .55 + Math.sin(t * .06) * .3;
+    E(cx, cy - 12, 18, 14, 'rgba(155,93,229,' + (pu * .22) + ')');
+    P([cx, cy - 26, cx + 9, cy - 12, cx, cy - 2, cx - 9, cy - 12], '#9b5de5');
+    P([cx, cy - 26, cx, cy - 2, cx - 9, cy - 12], '#c48bff');
+    P([cx, cy - 26, cx + 4, cy - 14, cx, cy - 8], '#e6d0ff');
+    E(cx - 3, cy - 18, 1.6, 2.4, 'rgba(255,255,255,' + pu + ')');
+  }
+
+  /* Drache */
+  drawDrache(228, 118, t, true);
+}
+
+/* ------------------------------------------------------------
+   6. STEINKREIS
+   ------------------------------------------------------------ */
+function bgSteinkreis(t, F) {
+  band(0, 100, '#141a34', '#3d3358');
+  /* Sterne */
+  for (var s = 0; s < 60; s++) {
+    var sx = rnd(s * 5.3) * VW, sy = rnd(s * 2.1) * 80;
+    var tw = .35 + Math.abs(Math.sin(t * .04 + s)) * .65;
+    R(sx, sy, 1, 1, 'rgba(255,255,255,' + tw + ')');
+  }
+  /* Mond */
+  E(268, 26, 15, 15, '#f4eec8'); E(263, 22, 3, 3, '#ded8b4'); E(272, 30, 4, 3, '#ded8b4');
+  E(268, 26, 22, 22, 'rgba(244,238,200,.10)');
+
+  /* Hügelsilhouette */
+  E(60, 104, 100, 26, '#1e2a24');
+  E(230, 106, 110, 24, '#1a2620');
+
+  /* Boden als Tilemap */
+  drawTilemap(MAP_STEINKREIS, LEG, 0, 94);
+  groundShade(94, 142, .42, .10);
+  grassTufts(0, VW, 98, 140, 12.3, '#22331f', '#40592f');
+
+  /* Steinkreis (hinten kleiner) */
+  var stones = [[36, 108, 16, 44], [78, 102, 13, 36], [126, 98, 11, 30],
+                [196, 98, 11, 30], [246, 102, 13, 36], [288, 108, 16, 44]];
+  for (var i = 0; i < stones.length; i++) {
+    var st = stones[i], x = st[0], y = st[1], ww = st[2], hh = st[3];
+    P([x - ww / 2, y, x + ww / 2, y, x + ww / 2 - 1, y - hh, x - ww / 2 + 2, y - hh + 2], '#5a5a64');
+    P([x - ww / 2, y, x - ww / 2 + 4, y, x - ww / 2 + 5, y - hh + 2, x - ww / 2 + 2, y - hh + 2], '#71717c');
+    P([x + ww / 2 - 3, y, x + ww / 2, y, x + ww / 2 - 1, y - hh], '#43434d');
+    E(x, y, ww * .7, 3, '#20281e');
+    /* Runen */
+    if (F.kristallPlatziert) {
+      var ru = .4 + Math.sin(t * .07 + i) * .35;
+      R(x - 2, y - hh * .6, 4, 1, 'rgba(180,140,255,' + ru + ')');
+      R(x - 1, y - hh * .5, 2, 3, 'rgba(180,140,255,' + ru + ')');
+      R(x - 3, y - hh * .35, 6, 1, 'rgba(180,140,255,' + ru + ')');
+    }
+  }
+
+  /* Altar in der Mitte */
+  var ax = 162, ay = 118;
+  E(ax, ay + 4, 30, 7, '#20281e');
+  P([ax - 24, ay + 4, ax + 24, ay + 4, ax + 20, ay - 8, ax - 20, ay - 8], '#5a5a64');
+  P([ax - 20, ay - 8, ax + 20, ay - 8, ax + 22, ay - 12, ax - 22, ay - 12], '#7a7a86');
+  P([ax - 24, ay + 4, ax - 18, ay + 4, ax - 15, ay - 8, ax - 20, ay - 8], '#6c6c78');
+  R(ax - 16, ay - 4, 32, 1, '#43434d');
+
+  if (F.kristallPlatziert) {
+    var pu = .5 + Math.sin(t * .07) * .35;
+    E(ax, ay - 20, 24, 20, 'rgba(155,93,229,' + (pu * .2) + ')');
+    P([ax, ay - 32, ax + 8, ay - 20, ax, ay - 11, ax - 8, ay - 20], '#9b5de5');
+    P([ax, ay - 32, ax, ay - 11, ax - 8, ay - 20], '#c48bff');
+    P([ax, ay - 32, ax + 4, ay - 22, ax, ay - 16], '#e6d0ff');
+    /* Lichtstrahl */
+    P([ax - 5, ay - 30, ax + 5, ay - 30, ax + 16, 0, ax - 16, 0], 'rgba(180,140,255,' + (pu * .16) + ')');
+    for (var p = 0; p < 10; p++) {
+      var pp = ((t * .02 + p * .1) % 1);
+      E(ax + Math.sin(t * .05 + p * 2) * 14, ay - 20 - pp * 60, 1.2, 1.2, 'rgba(220,190,255,' + (.7 - pp * .7) + ')');
+    }
+  }
+
+}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0d14">
+<title>Simon der Zauberer – Der Fluch von Krummwald</title>
+<style>
+  html,body{margin:0;padding:0;background:#07080d;height:100%;overflow:hidden;
+            font-family:"Segoe UI",Tahoma,sans-serif;color:#cbd3e6;
+            -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+            overscroll-behavior:none;touch-action:none;}
+  #wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  canvas{image-rendering:pixelated;image-rendering:crisp-edges;
+         box-shadow:0 0 0 2px #2a3050, 0 0 60px #000;cursor:crosshair;
+         background:#000;touch-action:none;display:block;}
+  #hint{position:absolute;bottom:4px;left:0;right:0;text-align:center;
+        font-size:12px;opacity:.4;pointer-events:none;}
+  body.mobile #hint{display:none;}
+</style>
+</head>
+<body>
+  <div id="wrap"><canvas id="cv"></canvas></div>
+  <div id="hint">Linksklick = Aktion &nbsp;·&nbsp; Rechtsklick = Anschauen &nbsp;·&nbsp; Tasten 1–6 = Verben &nbsp;·&nbsp; H = Hinweis &nbsp;·&nbsp; F5 = Neustart</div>
+
+  <script>
+  /* Lädt die Spieldateien der Reihe nach.
+     Mit "?dev" in der Adresse wird der Browser-Cache umgangen. */
+  (function () {
+    var files = ['audio.js', 'art.js', 'assets.js', 'scenes.js', 'engine.js', 'game.js'];
+    var BUILD = 5;   /* bei Änderungen erhöhen, damit Browser neu laden */
+    var bust = /dev/i.test(location.href) ? '?v=' + Date.now() : '?v=' + BUILD;
+    (function next(i) {
+      if (i >= files.length) return;
+      var s = document.createElement('script');
+      s.src = files[i] + bust;
+      s.onload = function () { next(i + 1); };
+      s.onerror = function () { document.getElementById('hint').textContent = 'Fehler beim Laden von ' + files[i]; };
+      document.body.appendChild(s);
+    })(0);
+  })();
+  </script>
+</body>
+</html>

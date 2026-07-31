@@ -1,0 +1,417 @@
+/* ============================================================
+   Simon der Zauberer – Der Fluch von Krummwald
+   art.js  –  Zeichen-Primitive, Figuren und Inventar-Icons
+   Alles wird prozedural in einen 320x200-Puffer gemalt.
+   ============================================================ */
+
+/* ---------- Primitive (arbeiten auf dem globalen Kontext g) ---------- */
+
+function R(x, y, w, h, c) { g.fillStyle = c; g.fillRect(x | 0, y | 0, Math.max(1, w | 0), Math.max(1, h | 0)); }
+
+function E(cx, cy, rx, ry, c) {
+  g.fillStyle = c; g.beginPath(); g.ellipse(cx, cy, Math.max(0.5, rx), Math.max(0.5, ry), 0, 0, 7); g.fill();
+}
+
+function P(pts, c) {
+  g.fillStyle = c; g.beginPath(); g.moveTo(pts[0], pts[1]);
+  for (var i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]);
+  g.closePath(); g.fill();
+}
+
+function L(x1, y1, x2, y2, c, lw) {
+  g.strokeStyle = c; g.lineWidth = lw || 1;
+  g.beginPath(); g.moveTo(x1 + .5, y1 + .5); g.lineTo(x2 + .5, y2 + .5); g.stroke();
+}
+
+/* deterministischer Pseudo-Zufall, damit Grasbüschel & Co. nicht flackern */
+function rnd(seed) { var x = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+
+/* Farbverlauf in horizontalen Bändern (pixelig, aber hübsch) */
+function band(y0, y1, cTop, cBot) {
+  var a = hex2rgb(cTop), b = hex2rgb(cBot), n = Math.max(1, y1 - y0);
+  for (var i = 0; i < n; i++) {
+    var t = i / n;
+    R(0, y0 + i, VW, 1, 'rgb(' + ((a[0] + (b[0] - a[0]) * t) | 0) + ',' +
+      ((a[1] + (b[1] - a[1]) * t) | 0) + ',' + ((a[2] + (b[2] - a[2]) * t) | 0) + ')');
+  }
+}
+
+function hex2rgb(h) {
+  h = h.replace('#', '');
+  return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)];
+}
+
+function shade(h, f) {
+  var c = hex2rgb(h);
+  return 'rgb(' + Math.min(255, c[0] * f | 0) + ',' + Math.min(255, c[1] * f | 0) + ',' + Math.min(255, c[2] * f | 0) + ')';
+}
+
+/* ---------- Landschafts-Bausteine ---------- */
+
+function grassTufts(x0, x1, y0, y1, seed, c1, c2) {
+  for (var i = 0; i < 70; i++) {
+    var s = seed + i * 3.3;
+    var x = x0 + rnd(s) * (x1 - x0), y = y0 + rnd(s + 1) * (y1 - y0);
+    var h = 2 + (rnd(s + 2) * 3 | 0);
+    R(x, y, 1, h, rnd(s + 3) > .5 ? c1 : c2);
+  }
+}
+
+function bush(cx, cy, r, c) {
+  E(cx, cy, r, r * .72, shade(c, .78));
+  E(cx - r * .4, cy - r * .25, r * .6, r * .5, c);
+  E(cx + r * .45, cy - r * .15, r * .55, r * .45, shade(c, 1.12));
+}
+
+function tree(x, baseY, h, cTrunk, cLeaf) {
+  var tw = Math.max(3, h * .11);
+  R(x - tw / 2, baseY - h * .62, tw, h * .62, cTrunk);
+  R(x - tw / 2, baseY - h * .62, 1, h * .62, shade(cTrunk, 1.3));
+  var cy = baseY - h * .78;
+  E(cx_(x), cy, h * .34, h * .27, shade(cLeaf, .74));
+  E(x - h * .18, cy - h * .1, h * .24, h * .2, cLeaf);
+  E(x + h * .2, cy - h * .05, h * .22, h * .18, shade(cLeaf, 1.15));
+  E(x, cy - h * .2, h * .2, h * .17, shade(cLeaf, 1.05));
+  function cx_(v) { return v; }
+}
+
+function deadTree(x, baseY, h, c) {
+  var lean = (rnd(x) - .5) * h * .22;
+  P([x - 2, baseY, x + 2, baseY, x + lean + 1, baseY - h, x + lean - 1, baseY - h], c);
+  L(x + lean * .7, baseY - h * .7, x + lean - h * .32, baseY - h * .92, c, 1);
+  L(x + lean * .5, baseY - h * .5, x + lean + h * .3, baseY - h * .78, c, 1);
+  L(x + lean - h * .2, baseY - h * .8, x + lean - h * .36, baseY - h * .72, c, 1);
+  L(x + lean + h * .22, baseY - h * .7, x + lean + h * .34, baseY - h * .56, c, 1);
+  L(x + lean * .3, baseY - h * .34, x + lean - h * .26, baseY - h * .5, c, 1);
+  E(x, baseY, 4, 1.6, 'rgba(28,36,26,.45)');
+}
+
+function cloud(x, y, s, c) {
+  E(x, y, 9 * s, 4 * s, c); E(x - 7 * s, y + 1.5 * s, 6 * s, 3 * s, c);
+  E(x + 7 * s, y + 1.5 * s, 6.5 * s, 3.2 * s, c); E(x + 1 * s, y - 2.5 * s, 5.5 * s, 3.4 * s, c);
+}
+
+/* Tiefenschattierung über eine Kachelfläche: oben dunkel, vorne hell.
+   Nimmt der Tilemap die Flachheit, ohne die Kacheln zu verstecken. */
+function groundShade(y0, y1, topA, botA) {
+  var n = Math.max(1, y1 - y0);
+  for (var i = 0; i < n; i++) {
+    var t = i / n, a = topA + (botA - topA) * t;
+    if (a > 0) R(0, y0 + i, VW, 1, 'rgba(12,18,10,' + a.toFixed(3) + ')');
+    else if (a < 0) R(0, y0 + i, VW, 1, 'rgba(255,245,210,' + (-a).toFixed(3) + ')');
+  }
+}
+
+function cobbles(y0, y1, seed) {
+  for (var i = 0; i < 120; i++) {
+    var s = seed + i * 7.7;
+    var y = y0 + rnd(s) * (y1 - y0);
+    var x = rnd(s + 1) * VW;
+    var w = 3 + rnd(s + 2) * 4, h = 2 + rnd(s + 3) * 2;
+    R(x, y, w, h, rnd(s + 4) > .5 ? '#7d7566' : '#6a6357');
+  }
+}
+
+/* ---------- Feuer / Funken ---------- */
+
+function flame(x, y, s, t, warm) {
+  var f = Math.sin(t * .25) * .5 + Math.sin(t * .41 + 1.3) * .3;
+  var h = s * (1 + f * .16);
+  E(x, y - h * .35, s * .55, h * .55, warm ? '#ff8a1e' : '#ff7a12');
+  E(x + f, y - h * .6, s * .36, h * .45, '#ffc63c');
+  E(x - f * .6, y - h * .8, s * .2, h * .3, '#fff3a8');
+  E(x, y, s * .7, s * .28, 'rgba(255,120,20,.45)');
+}
+
+/* ============================================================
+   SIMON
+   Ursprung: Füße auf (x,y). Einheiten ~ 16 breit, 42 hoch.
+   ============================================================ */
+
+function drawSimon(x, y, s, frame, face, hat, blink) {
+  function Q(dx, dy, dw, dh, c) { R(x + dx * face * s, y + dy * s, dw * s, dh * s, c); }
+  function Qc(dx, dy, dw, dh, c) { R(x + (dx * face - (face < 0 ? dw : 0)) * s, y + dy * s, dw * s, dh * s, c); }
+
+  var SKIN = '#e9b083', SKIN2 = '#cf9066', ROBE = '#3b57b4', ROBE2 = '#2c4290',
+      TROU = '#26305c', BOOT = '#5a3a20', HAIR = '#7a4a1e', HATC = '#5e2f8e', HATC2 = '#472270';
+
+  /* Beinbewegung */
+  var legA = 0, legB = 0, armA = 0;
+  if (frame === 1) { legA = -2; legB = 2; armA = 1.6; }
+  else if (frame === 3) { legA = 2; legB = -2; armA = -1.6; }
+
+  /* Schatten */
+  E(x, y, 8 * s, 2.4 * s, 'rgba(0,0,0,.28)');
+
+  /* Stiefel + Beine */
+  Qc(-6 + legA, -5, 6, 5, BOOT);
+  Qc(1 + legB, -5, 6, 5, BOOT);
+  Qc(-5 + legA * .6, -14, 4, 9, TROU);
+  Qc(1 + legB * .6, -14, 4, 9, TROU);
+
+  /* Robe */
+  P([x + (-8 * face) * s, y - 12 * s, x + (8 * face) * s, y - 12 * s,
+     x + (6 * face) * s, y - 30 * s, x + (-6 * face) * s, y - 30 * s], ROBE);
+  Qc(-8, -18, 16, 6, ROBE2);
+  R(x - 7 * s, y - 21 * s, 14 * s, 2 * s, '#8c6a2a');           /* Gürtel */
+  R(x - 1.5 * s, y - 21.5 * s, 3 * s, 3 * s, '#e6c05a');        /* Schnalle */
+
+  /* Arme */
+  Qc(-9, -29 + armA, 3, 11, ROBE);
+  Qc(6, -29 - armA, 3, 11, ROBE);
+  Qc(-9, -19 + armA, 3, 3, SKIN);
+  Qc(6, -19 - armA, 3, 3, SKIN);
+
+  /* Kragen + Hals */
+  Qc(-4, -32, 8, 2, ROBE2);
+  Qc(-2, -34, 4, 3, SKIN2);
+
+  /* Kopf */
+  Qc(-5, -43, 10, 10, SKIN);
+  Qc(-5, -43, 10, 2, SKIN2);
+
+  /* Haare */
+  Qc(-6, -45, 12, 4, HAIR);
+  Qc(-6, -41, 2, 4, HAIR);
+  Qc(4, -41, 2, 3, HAIR);
+  R(x + (face > 0 ? -6 : 4) * s, y - 46 * s, 3 * s, 2 * s, HAIR);
+
+  /* Gesicht */
+  if (blink) {
+    Q(-3.2, -38.4, 1.8, 1, '#8a6242');
+    Q(1.4, -38.4, 1.8, 1, '#8a6242');
+  } else {
+    Q(-3, -39, 1.4, 1.6, '#1a1414');
+    Q(1.6, -39, 1.4, 1.6, '#1a1414');
+  }
+  Q(-.4, -37, 1.6, 1.4, SKIN2);
+  Q(-2, -35.4, 4, 1, '#8c4a3a');
+
+  /* Zipfelmütze */
+  if (hat) {
+    P([x + (-7 * face) * s, y - 44 * s, x + (7 * face) * s, y - 44 * s,
+       x + (2 * face) * s, y - 58 * s], HATC);
+    P([x + (-7 * face) * s, y - 44 * s, x + (0 * face) * s, y - 44 * s,
+       x + (0.5 * face) * s, y - 52 * s], HATC2);
+    R(x - 7.5 * s, y - 45 * s, 15 * s, 2.5 * s, '#7b3fb5');
+    E(x + 2 * face * s, y - 58 * s, 1.6 * s, 1.6 * s, '#ffd94a');
+  }
+}
+
+/* ============================================================
+   NPCs
+   ============================================================ */
+
+/* Elster im Baum */
+function drawElster(x, y, t, s) {
+  s = s || 1;
+  var bob = Math.sin(t * .08) * 1;
+  E(x, y + bob, 5 * s, 3.4 * s, '#15161c');           /* Körper */
+  E(x + 3 * s, y - 2 * s + bob, 2.6 * s, 2.4 * s, '#15161c'); /* Kopf */
+  E(x - 1 * s, y + 1 * s + bob, 3 * s, 2 * s, '#f2f2f2');     /* weiße Flanke */
+  P([x - 4 * s, y + bob, x - 11 * s, y + 3 * s + bob, x - 3 * s, y + 2 * s + bob], '#20222c'); /* Schwanz */
+  R(x + 5 * s, y - 2 * s + bob, 3 * s, 1 * s, '#e0b03a');     /* Schnabel */
+  R(x + 3.4 * s, y - 3 * s + bob, 1 * s, 1 * s, '#fff');      /* Auge */
+}
+
+/* Wirt Bruno – rundlich, Schürze, Schnauzbart */
+function drawBruno(x, y, t) {
+  var b = Math.sin(t * .04) * .4;
+  E(x, y, 9, 2.5, 'rgba(0,0,0,.25)');
+  R(x - 7, y - 6, 6, 6, '#4a3524'); R(x + 1, y - 6, 6, 6, '#4a3524');
+  R(x - 8, y - 24 + b, 16, 18, '#8d3b32');                 /* Wams */
+  R(x - 8, y - 16 + b, 16, 10, '#d8cdb4');                 /* Schürze */
+  R(x - 8, y - 16 + b, 16, 1, '#b0a488');
+  R(x - 11, y - 23 + b, 4, 13, '#8d3b32'); R(x + 7, y - 23 + b, 4, 13, '#8d3b32');
+  R(x - 11, y - 12 + b, 4, 3, '#e9b083'); R(x + 7, y - 12 + b, 4, 3, '#e9b083');
+  R(x - 5, y - 27 + b, 10, 4, '#e9b083');                  /* Hals */
+  R(x - 6, y - 37 + b, 12, 11, '#e9b083');                 /* Kopf */
+  R(x - 7, y - 39 + b, 14, 3, '#3d3128');                  /* Haare */
+  R(x - 7, y - 36 + b, 2, 4, '#3d3128'); R(x + 5, y - 36 + b, 2, 4, '#3d3128');
+  R(x - 4, y - 33 + b, 2, 2, '#1a1414'); R(x + 2, y - 33 + b, 2, 2, '#1a1414');
+  R(x - 4, y - 29 + b, 8, 2, '#4a3a2a');                   /* Schnauzer */
+  R(x - 1, y - 31 + b, 2, 2, '#cf9066');
+}
+
+/* Trödlerin Mathilda – dünn, Kopftuch, spitze Nase */
+function drawMathilda(x, y, t) {
+  var b = Math.sin(t * .05 + 2) * .5;
+  E(x, y, 8, 2.4, 'rgba(0,0,0,.25)');
+  P([x - 9, y, x + 9, y, x + 6, y - 22 + b, x - 6, y - 22 + b], '#5c4a86');  /* Rock */
+  R(x - 6, y - 32 + b, 12, 11, '#7a63aa');                                    /* Oberteil */
+  R(x - 9, y - 31 + b, 3, 12, '#7a63aa'); R(x + 6, y - 31 + b, 3, 12, '#7a63aa');
+  R(x - 9, y - 20 + b, 3, 3, '#e0a785'); R(x + 6, y - 20 + b, 3, 3, '#e0a785');
+  R(x - 4, y - 35 + b, 8, 4, '#e0a785');
+  R(x - 5, y - 44 + b, 10, 10, '#e0a785');                                    /* Kopf */
+  P([x - 7, y - 44 + b, x + 7, y - 44 + b, x + 5, y - 49 + b, x - 5, y - 49 + b], '#c8482f'); /* Kopftuch */
+  R(x - 7, y - 45 + b, 14, 2, '#c8482f');
+  P([x - 7, y - 43 + b, x - 3, y - 43 + b, x - 8, y - 33 + b], '#c8482f');
+  R(x - 3, y - 41 + b, 2, 2, '#1a1414'); R(x + 2, y - 41 + b, 2, 2, '#1a1414');
+  P([x + 4, y - 40 + b, x + 8, y - 38 + b, x + 4, y - 37 + b], '#e0a785');    /* Nase */
+  R(x - 2, y - 36 + b, 4, 1, '#8c4a3a');
+}
+
+/* Troll Grombold – breit, moosgrün, Hauer */
+function drawTroll(x, y, t) {
+  var b = Math.sin(t * .035) * .8;
+  var GR = '#5e7a3e', GR2 = '#48602f', GR3 = '#748f4c';
+  E(x, y, 15, 3.5, 'rgba(0,0,0,.3)');
+  R(x - 12, y - 7, 10, 7, GR2); R(x + 2, y - 7, 10, 7, GR2);      /* Füße */
+  R(x - 13, y - 34 + b, 26, 28, GR);                              /* Rumpf */
+  R(x - 13, y - 34 + b, 26, 6, GR3);
+  R(x - 10, y - 22 + b, 20, 9, '#6b4a2c');                        /* Lendenschurz */
+  R(x - 19, y - 33 + b, 7, 20, GR); R(x + 12, y - 33 + b, 7, 20, GR);
+  R(x - 20, y - 15 + b, 8, 6, GR3); R(x + 12, y - 15 + b, 8, 6, GR3);
+  R(x - 9, y - 47 + b, 18, 14, GR3);                              /* Kopf */
+  R(x - 11, y - 44 + b, 3, 6, GR); R(x + 8, y - 44 + b, 3, 6, GR);/* Ohren */
+  R(x - 6, y - 43 + b, 4, 3, '#ffee9a'); R(x + 2, y - 43 + b, 4, 3, '#ffee9a');
+  R(x - 5, y - 42 + b, 2, 2, '#1a1414'); R(x + 3, y - 42 + b, 2, 2, '#1a1414');
+  R(x - 8, y - 46 + b, 16, 2, GR2);                               /* Braue */
+  R(x - 6, y - 37 + b, 12, 2, '#3a2a22');                         /* Mund */
+  R(x - 5, y - 36 + b, 2, 3, '#fff'); R(x + 3, y - 36 + b, 2, 3, '#fff'); /* Hauer */
+  R(x - 2, y - 40 + b, 4, 2, GR2);
+}
+
+/* Drache – schlafend, zusammengerollt */
+function drawDrache(x, y, t, sleeping) {
+  var br = Math.sin(t * .03) * 1.2;
+  var D = '#8e2f3c', D2 = '#6b1f2b', D3 = '#b5464f', BEL = '#e0b566';
+  E(x, y, 40, 7, 'rgba(0,0,0,.35)');
+  /* Schwanz */
+  P([x + 22, y - 6, x + 48, y - 2, x + 52, y - 10, x + 26, y - 12], D2);
+  P([x + 46, y - 4, x + 58, y - 12, x + 48, y - 14], D3);
+  /* Körper */
+  E(x, y - 16 + br * .3, 30, 15 + br * .3, D);
+  E(x - 2, y - 11, 24, 9, BEL);
+  /* Rückenzacken */
+  for (var i = -4; i <= 4; i++) {
+    P([x + i * 6 - 3, y - 28 + br * .3, x + i * 6 + 3, y - 28 + br * .3, x + i * 6, y - 35 + br * .3], D3);
+  }
+  /* Flügel */
+  P([x - 4, y - 26 + br, x - 34, y - 42 + br, x - 12, y - 20 + br], D2);
+  P([x - 6, y - 27 + br, x - 24, y - 36 + br, x - 10, y - 24 + br], D3);
+  /* Hals + Kopf */
+  P([x - 22, y - 22, x - 30, y - 34, x - 22, y - 36, x - 14, y - 24], D);
+  E(x - 34, y - 36, 12, 8, D);
+  P([x - 44, y - 36, x - 30, y - 40, x - 30, y - 31], D3);           /* Schnauze */
+  P([x - 30, y - 42, x - 24, y - 50, x - 22, y - 40], D2);           /* Horn */
+  if (sleeping) {
+    R(x - 38, y - 38, 7, 1.5, '#3a1218');                            /* geschlossenes Auge */
+    R(x - 43, y - 34, 3, 1, '#3a1218');
+  } else {
+    R(x - 38, y - 39, 4, 3, '#ffd23c'); R(x - 37, y - 38, 2, 2, '#1a1414');
+  }
+  /* Vorderbein */
+  P([x - 14, y - 8, x - 8, y - 20, x - 2, y - 8], D2);
+  R(x - 16, y - 5, 12, 5, D2);
+  R(x - 16, y - 3, 3, 3, '#e8e2cf'); R(x - 11, y - 3, 3, 3, '#e8e2cf'); R(x - 6, y - 3, 3, 3, '#e8e2cf');
+  /* Schnarch-Bläschen */
+  if (sleeping) {
+    var p = (t * .02) % 1;
+    E(x - 48 - p * 10, y - 40 - p * 12, 1.5 + p * 3, 1.5 + p * 3, 'rgba(255,255,255,' + (.4 - p * .4) + ')');
+  }
+}
+
+/* ============================================================
+   INVENTAR-ICONS  (20x20 Feld, Ursprung links oben)
+   ============================================================ */
+
+function drawIcon(id, x, y) {
+  switch (id) {
+    case 'stock':
+      L(x + 3, y + 17, x + 16, y + 3, '#8a5a2b', 3);
+      L(x + 10, y + 10, x + 15, y + 11, '#8a5a2b', 2);
+      L(x + 4, y + 16, x + 14, y + 5, '#a3703c', 1);
+      break;
+    case 'lumpen':
+      P([x + 3, y + 8, x + 9, y + 4, x + 17, y + 8, x + 15, y + 16, x + 5, y + 15], '#b9ac8e');
+      P([x + 6, y + 9, x + 12, y + 7, x + 14, y + 13, x + 7, y + 13], '#d2c6a8');
+      R(x + 9, y + 12, 2, 2, '#8d8267');
+      break;
+    case 'feuerstein':
+      P([x + 4, y + 12, x + 8, y + 5, x + 15, y + 7, x + 16, y + 14, x + 8, y + 16], '#7d8390');
+      P([x + 7, y + 10, x + 12, y + 8, x + 13, y + 12], '#a9b0bb');
+      R(x + 15, y + 4, 2, 2, '#ffe9a0'); R(x + 17, y + 6, 1, 1, '#ffd23c');
+      break;
+    case 'fackel':
+      L(x + 6, y + 17, x + 12, y + 5, '#7a4d24', 3);
+      R(x + 9, y + 3, 5, 5, '#c9bb96');
+      break;
+    case 'fackel_an':
+      L(x + 6, y + 17, x + 12, y + 6, '#7a4d24', 3);
+      R(x + 9, y + 4, 5, 4, '#c9bb96');
+      E(x + 12, y + 2, 4, 5, '#ff8a1e'); E(x + 12, y + 1, 2.4, 3.4, '#ffd23c'); E(x + 12, y, 1.2, 1.8, '#fff6c8');
+      break;
+    case 'zahnrad':
+      E(x + 10, y + 10, 7, 7, '#8b8f99');
+      for (var i = 0; i < 8; i++) {
+        var a = i * Math.PI / 4;
+        R(x + 10 + Math.cos(a) * 8 - 1.5, y + 10 + Math.sin(a) * 8 - 1.5, 3, 3, '#8b8f99');
+      }
+      E(x + 10, y + 10, 3, 3, '#3a3d45'); E(x + 8, y + 8, 2, 2, '#c2c7d0');
+      break;
+    case 'eimer':
+      P([x + 4, y + 6, x + 16, y + 6, x + 14, y + 17, x + 6, y + 17], '#8a7a5e');
+      R(x + 4, y + 6, 12, 2, '#a3937a');
+      L(x + 5, y + 6, x + 10, y + 1, '#6b6252', 1); L(x + 15, y + 6, x + 10, y + 1, '#6b6252', 1);
+      break;
+    case 'eimer_voll':
+      P([x + 4, y + 6, x + 16, y + 6, x + 14, y + 17, x + 6, y + 17], '#8a7a5e');
+      R(x + 5, y + 8, 10, 3, '#4d6b3a'); R(x + 6, y + 9, 3, 1, '#6f8f4e');
+      R(x + 4, y + 6, 12, 2, '#a3937a');
+      L(x + 5, y + 6, x + 10, y + 1, '#6b6252', 1); L(x + 15, y + 6, x + 10, y + 1, '#6b6252', 1);
+      break;
+    case 'pilz':
+      R(x + 8, y + 10, 4, 8, '#e8e0cb');
+      E(x + 10, y + 9, 8, 5, '#c8342f');
+      R(x + 6, y + 7, 2, 2, '#fff'); R(x + 11, y + 6, 3, 2, '#fff'); R(x + 14, y + 9, 2, 2, '#fff');
+      break;
+    case 'schlafpulver':
+      P([x + 6, y + 8, x + 14, y + 8, x + 16, y + 18, x + 4, y + 18], '#6d5c8e');
+      R(x + 7, y + 4, 6, 5, '#8f7cb5'); R(x + 6, y + 7, 8, 2, '#c8b96f');
+      R(x + 8, y + 12, 2, 2, '#d9cff2'); R(x + 11, y + 14, 2, 2, '#d9cff2'); R(x + 7, y + 15, 2, 2, '#d9cff2');
+      break;
+    case 'buch':
+      P([x + 3, y + 4, x + 17, y + 4, x + 17, y + 17, x + 3, y + 17], '#6b2f7a');
+      R(x + 3, y + 4, 3, 13, '#4a1f57');
+      R(x + 7, y + 7, 8, 1, '#e8d78e'); R(x + 7, y + 10, 8, 1, '#e8d78e'); R(x + 7, y + 13, 5, 1, '#e8d78e');
+      E(x + 11, y + 10, 2.5, 2.5, '#ffd23c');
+      break;
+    case 'bierkrug':
+      R(x + 4, y + 6, 10, 12, '#c9c4b4'); R(x + 4, y + 6, 10, 3, '#e6e2d3');
+      R(x + 5, y + 4, 8, 3, '#f4f1e6');
+      L(x + 15, y + 8, x + 18, y + 12, '#c9c4b4', 2); L(x + 18, y + 12, x + 14, y + 15, '#c9c4b4', 2);
+      R(x + 6, y + 10, 2, 6, '#a8a294');
+      break;
+    case 'muenzen':
+      E(x + 7, y + 13, 5, 4, '#c98a30'); E(x + 7, y + 12, 5, 4, '#e9b54a');
+      E(x + 13, y + 11, 5, 4, '#c98a30'); E(x + 13, y + 10, 5, 4, '#e9b54a');
+      E(x + 10, y + 7, 5, 4, '#c98a30'); E(x + 10, y + 6, 5, 4, '#f0c96a');
+      R(x + 9, y + 5, 2, 2, '#fff2b8');
+      break;
+    case 'knopf':
+      E(x + 10, y + 10, 7, 7, '#b8bfcc'); E(x + 10, y + 10, 5.5, 5.5, '#e6ecf7');
+      R(x + 8, y + 9, 2, 2, '#3a4152'); R(x + 11, y + 11, 2, 2, '#3a4152');
+      R(x + 6, y + 6, 3, 2, '#fff');
+      break;
+    case 'kaesebrot':
+      P([x + 3, y + 12, x + 17, y + 8, x + 17, y + 14, x + 3, y + 17], '#c99a52');
+      P([x + 4, y + 11, x + 16, y + 7, x + 16, y + 9, x + 4, y + 13], '#e8c98a');
+      P([x + 5, y + 9, x + 15, y + 5, x + 16, y + 7, x + 5, y + 11], '#f2d24a');
+      R(x + 8, y + 8, 2, 1, '#d9b62c'); R(x + 12, y + 7, 2, 1, '#d9b62c');
+      break;
+    case 'kristall':
+      P([x + 10, y + 2, x + 16, y + 9, x + 10, y + 18, x + 4, y + 9], '#9b5de5');
+      P([x + 10, y + 2, x + 10, y + 18, x + 4, y + 9], '#c48bff');
+      P([x + 10, y + 2, x + 13, y + 9, x + 10, y + 12], '#e6d0ff');
+      break;
+    case 'hut':
+      P([x + 2, y + 15, x + 18, y + 15, x + 12, y + 2], '#5e2f8e');
+      P([x + 2, y + 15, x + 10, y + 15, x + 11, y + 5], '#472270');
+      R(x + 1, y + 14, 18, 3, '#7b3fb5');
+      E(x + 12, y + 2, 1.6, 1.6, '#ffd94a');
+      break;
+    default:
+      R(x + 4, y + 4, 12, 12, '#d33');
+  }
+}
