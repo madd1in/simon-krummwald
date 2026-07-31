@@ -21,7 +21,9 @@ var TILES = {};           /* name -> Index im Tileset */
 var TILE_LIST = [];
 var TILE_KINDS = ['gras', 'gras_dunkel', 'pfad', 'kopfstein', 'holzboden', 'fels', 'moor', 'nachtgras',
                   'erde', 'kies', 'blumenwiese', 'moorwasser', 'laub', 'dielen', 'kristallfels', 'runengras',
-                  'moospflaster', 'sumpfschlamm', 'asche', 'sternengras'];
+                  'moospflaster', 'sumpfschlamm', 'asche', 'sternengras',
+                  'wurzelboden', 'ziegel', 'magmastein', 'mondpfad',
+                  'pilzmoos', 'schiefer', 'teppich', 'portalboden'];
 var atlasReady = false;
 
 /* ---------- kleiner Zeilen-Packer ---------- */
@@ -185,6 +187,63 @@ function tilePixels(kind, seed) {
         R(x - 1, y, 3, 1, '#8d79c6'); R(x, y - 1, 1, 3, '#b29be8');
       }
       break;
+    case 'wurzelboden':
+      R(0, 0, TILE, TILE, '#51472f');
+      for (i = 0; i < 14; i++) { x = rnd(seed + i * 2.8) * TILE; y = rnd(seed + i * 6.1) * TILE; R(x, y, 1, 1, i % 2 ? '#66563a' : '#3d3828'); }
+      L(-2, 12, 7, 7, '#76583a', 2); L(7, 7, 17, 10, '#5f452f', 2);
+      L(5, 8, 3, 3, '#8b6742', 1); L(10, 8, 13, 4, '#8b6742', 1);
+      break;
+    case 'ziegel':
+      R(0, 0, TILE, TILE, '#745044');
+      for (i = 0; i < 4; i++) {
+        y = i * 4; R(0, y, TILE, 1, '#3f3533');
+        var off = (i % 2) * 4;
+        for (x = off; x < TILE; x += 8) R(x, y, 1, 4, '#493a36');
+      }
+      R(1, 1, 6, 1, '#8a6050'); R(9, 9, 5, 1, '#8a6050');
+      break;
+    case 'magmastein':
+      R(0, 0, TILE, TILE, '#2d2930');
+      for (i = 0; i < 14; i++) { x = rnd(seed + i * 4.1) * TILE; y = rnd(seed + i * 2.9) * TILE; E(x, y, 1 + rnd(seed + i) * 2, 1, '#403942'); }
+      L(2, 4, 7, 8, '#9c3e2c', 1); L(7, 8, 13, 5, '#da6736', 1);
+      L(7, 8, 10, 14, '#7d3027', 1); R(7, 7, 2, 2, '#f0a04b');
+      break;
+    case 'mondpfad':
+      R(0, 0, TILE, TILE, '#555267');
+      for (i = 0; i < 13; i++) { x = rnd(seed + i * 3.6) * TILE; y = rnd(seed + i * 5.4) * TILE; E(x, y, 1 + rnd(seed + i) * 2.2, 1, i % 2 ? '#666279' : '#484657'); }
+      E(6, 7, 3, 2, '#81789c'); R(11, 11, 3, 1, '#aaa0c2');
+      R(3, 3, 1, 1, '#d4c8e8');
+      break;
+    case 'pilzmoos':
+      R(0, 0, TILE, TILE, '#38523a');
+      for (i = 0; i < 18; i++) { x = rnd(seed + i * 3.1) * TILE; y = rnd(seed + i * 6.4) * TILE; E(x, y, 1.8, 1, i % 2 ? '#476746' : '#2d4432'); }
+      for (i = 0; i < 3; i++) {
+        x = 3 + rnd(seed + i * 7.2) * 10; y = 5 + rnd(seed + i * 4.8) * 8;
+        R(x, y, 1, 3, '#c9c2b5'); E(x, y - 1, 2, 1.3, i % 2 ? '#b45357' : '#a883cf');
+      }
+      break;
+    case 'schiefer':
+      R(0, 0, TILE, TILE, '#484d54');
+      for (i = 0; i < 7; i++) {
+        x = (i % 3) * 6 - 1; y = Math.floor(i / 3) * 6;
+        P([x, y + 1, x + 6, y, x + 5, y + 5, x - 1, y + 6], i % 2 ? '#535961' : '#3d4248');
+        L(x, y + 1, x + 6, y, '#697079', 1);
+      }
+      break;
+    case 'teppich':
+      R(0, 0, TILE, TILE, '#61344b');
+      R(1, 1, 14, 14, '#7c405d'); R(2, 2, 12, 12, '#4c2940');
+      P([8, 3, 13, 8, 8, 13, 3, 8], '#b7874d');
+      P([8, 5, 11, 8, 8, 11, 5, 8], '#d0a968');
+      R(0, 0, TILE, 1, '#c7a56d'); R(0, 15, TILE, 1, '#c7a56d');
+      break;
+    case 'portalboden':
+      R(0, 0, TILE, TILE, '#34314a');
+      for (i = 0; i < 11; i++) { x = rnd(seed + i * 4.4) * TILE; y = rnd(seed + i * 2.2) * TILE; R(x, y, 1, 1, '#494466'); }
+      E(8, 8, 6, 6, '#4a416c'); E(8, 8, 4, 4, '#5b4d83'); E(8, 8, 2, 2, '#7560aa');
+      R(7, 2, 2, 3, '#a58bd8'); R(7, 11, 2, 3, '#a58bd8');
+      R(2, 7, 3, 2, '#a58bd8'); R(11, 7, 3, 2, '#a58bd8');
+      break;
   }
 }
 
@@ -218,7 +277,9 @@ var TILE_COL = {
   holzboden: '#6e5637', fels: '#4a4152', moor: '#4b5439', nachtgras: '#33452f',
   erde: '#6b5334', kies: '#7d786c', blumenwiese: '#4a8531', moorwasser: '#4b5439',
   laub: '#416c2d', dielen: '#4e3926', kristallfels: '#3b3347', runengras: '#2e3e2b',
-  moospflaster: '#67685a', sumpfschlamm: '#4b4934', asche: '#39343c', sternengras: '#293b31'
+  moospflaster: '#67685a', sumpfschlamm: '#4b4934', asche: '#39343c', sternengras: '#293b31',
+  wurzelboden: '#51472f', ziegel: '#745044', magmastein: '#2d2930', mondpfad: '#555267',
+  pilzmoos: '#38523a', schiefer: '#484d54', teppich: '#61344b', portalboden: '#34314a'
 };
 
 /* Eine echte Tilemap: Zeilen aus Zeichen, Legende ordnet Kachelnamen zu */
@@ -393,4 +454,25 @@ function exportTileset() {
   a.download = 'krummwald-tileset.png';
   a.href = out.toDataURL('image/png');
   a.click();
+}
+
+/* Aktuelle Szene ohne HUD als 640x400-Pixel-Postkarte speichern. */
+function exportPostcard() {
+  if (typeof world === 'undefined' || !world) return;
+  var restoreInv = (typeof invOpen !== 'undefined') ? invOpen : false;
+  if (restoreInv && typeof render === 'function') {
+    invOpen = false;
+    render();
+  }
+  var out = document.createElement('canvas');
+  out.width = VW * 2; out.height = VH * 2;
+  var og = out.getContext('2d');
+  og.imageSmoothingEnabled = false;
+  og.drawImage(world, 0, 0, out.width, out.height);
+  var a = document.createElement('a');
+  var place = (typeof state !== 'undefined' && state.scene) ? state.scene : 'szene';
+  a.download = 'krummwald-' + place + '-postkarte.png';
+  a.href = out.toDataURL('image/png');
+  a.click();
+  if (restoreInv) invOpen = true;
 }

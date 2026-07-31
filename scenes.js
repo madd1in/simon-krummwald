@@ -14,28 +14,30 @@ var LEG = { G: 'gras', D: 'gras_dunkel', P: 'pfad', K: 'kopfstein',
             M: 'moor', H: 'holzboden', F: 'fels', N: 'nachtgras',
             B: 'blumenwiese', W: 'moorwasser', E: 'erde', I: 'kies',
             L: 'laub', X: 'dielen', C: 'kristallfels', R: 'runengras',
-            O: 'moospflaster', S: 'sumpfschlamm', A: 'asche', T: 'sternengras' };
+            O: 'moospflaster', S: 'sumpfschlamm', A: 'asche', T: 'sternengras',
+            U: 'wurzelboden', Z: 'ziegel', Q: 'magmastein', Y: 'mondpfad',
+            j: 'pilzmoos', v: 'schiefer', q: 'teppich', y: 'portalboden' };
 
 var MAP_LICHTUNG = [
-  'GGGGBGGGPPGGGLGGGGGG',
+  'GGGGBGGGPPGGGjGGGGGG',
   'GGGGGGGGPPPGGGBGGGGP',
-  'PGGGLGGGPPPGGGGGGGPP',
+  'PGGGUGGGPPPGGGGGGGPP',
   'PGGGBGGGPPPPGGGGLGGP',
   'GGGGGGGGPPPPGGGBDGGG',
-  'GGLGGGGGGPPPGBGGGGGG',
+  'GGUGGGGGGPPPGBGGGGGG',
   'GGGGBGGGGPPPGGGGLGGG'
 ];
 var MAP_DORF = [
-  'GKKKOKKKKKKKIKKKKKKG',
+  'GKKKOKKKKKKKZKKKKKKG',
   'GKKKKKKIKKKKKKKIKKKK',
   'KKIKKKKKKKOKKKKKKKKK',
-  'KKKKKIKKKKKKKIKKKKKK',
+  'KKKKKZKKKKKKKIKKKKKK',
   'OKKKKKKKIKKKKKKKKKIK',
   'KKKIKKKKKKKKIKKKKKKK',
-  'KKKKKKIKKKKKKKKIKKKK'
+  'KKKKKKZKKKKKKKIKKKKK'
 ];
 var MAP_SUMPF = [
-  'MSWMMMMPPPMMMMWMMMMM',
+  'MjWMMMMPPPMMMMWMMMMM',
   'MMMMWMMMPPMMMMMMMWMM',
   'MWMMMMMSMMMMWMMMMMMM',
   'MMMMMMWMMMMMMMMWMMMM',
@@ -46,36 +48,36 @@ var MAP_SUMPF = [
 var MAP_HUETTE = [
   'HHHHXHHHHHHXHHHHHHHX',
   'XHHHHHHXHHHHHHHXHHHH',
-  'HHXHHHHHHHHXHHHHHHHH',
+  'HHXHHHHqHHHXHHHHHHHH',
   'HHHHHXHHHHHHHHXHHHHH',
   'XHHHHHHHHXHHHHHHHHXH',
   'HHHXHHHHHHHHHXHHHHHH'
 ];
 var MAP_WIRTSHAUS = [
-  'HXHHHHHHXHHHHHHHXHHH',
+  'HXHHqHHHXHHHHHHHXHHH',
   'HHHHXHHHHHHHXHHHHHHH',
-  'XHHHHHHHXHHHHHHHHXHH',
+  'XHHHHZHHXHHHHHHHHXHH',
   'HHHXHHHHHHHHXHHHHHHH',
-  'HHHHHHXHHHHHHHHXHHHH',
+  'HHHHHHXHHHHqHHHXHHHH',
   'HXHHHHHHHHXHHHHHHHHX'
 ];
 var MAP_HOEHLE = [
-  'AFFFCFFFFFFFCFFFFFFF',
-  'FFFFFFCFFFFFFFFCFFFF',
+  'AFFFCFFFFQFFCFFFFFFF',
+  'FFFFvFCFFFFFFFFCFFFF',
   'FFCFFFAFFFFCFFFFFFFF',
-  'FFFFFFFCFFFFFFFFCFFF',
-  'ACFFFFFFFFFFCFFFFFFF',
+  'FFFFQFFCFFFFFFFFCFFF',
+  'ACFFFFQFFFFFCFFFFFFF',
   'FFFFFCFFFFFFFFFFCFFF',
   'CFFFFFFFFCFFFFFFFFFF'
 ];
 var MAP_STEINKREIS = [
-  'NTNRNNNNNNNNRNNNNNNN',
-  'NNNNNNNNNPPNNNNRNNNN',
+  'NYNRNNNNNNNNRNNNNNNN',
+  'NNNNYNNNNPPNNNNRNNNN',
   'NNRNNNTNPPPPNNNNNNNN',
   'NNNNNNNNPPPPNNRNNNNN',
   'RNNNNNNPPPPPNNNNNTNN',
   'NNNNRNNPPPPPNNNNNNNN',
-  'NNNNNNPPPPPPRNNNNNNN'
+  'NNNNNNPPPPPPyNNNNNNN'
 ];
 
 /* ------------------------------------------------------------
@@ -158,8 +160,14 @@ function bgLichtung(t, F) {
   prop('blumen', 232, 150);
   prop('stein1', 268, 142, .9);
   prop('farn', 88, 162);
+  prop('wurzel', 74, 146, .85);
   prop('pilzring', 120, 168, .85);
   prop('wegstein', 198, 144, .8);
+  prop('ranken', 18, 108, .72);
+  for (var bf = 0; bf < 3; bf++) {
+    prop('schmetterling', 118 + bf * 54 + Math.sin(t * .025 + bf) * 12,
+      92 + bf * 13 + Math.cos(t * .035 + bf * 2) * 7, .65 + bf * .08, bf % 2);
+  }
   prop('busch1', 300, 158);
   prop('blumen', 150, 176);
   prop('stein2', 58, 184);
@@ -240,6 +248,7 @@ function bgDorf(t, F) {
   prop('blumen', 232, 172);
   prop('stein2', 168, 166, .8);
   prop('wegfahne', 306, 146, .75);
+  prop('banner', 184, 104, .72);
 
   /* --- Wirtshaus links --- */
   R(6, 34, 96, 68, '#d8cdb0');                       /* Fachwerkwand */
@@ -358,6 +367,13 @@ function bgSumpf(t, F) {
   prop('gluehpilz', 216, 188, .55);
   prop('spinnennetz', 22, 94, .75);
   prop('lichtkugel', 92 + Math.sin(t * .025) * 5, 126 + Math.cos(t * .03) * 3, .65);
+  prop('pilzlampe', 270, 158, .62);
+  prop('wurzel', 228, 146, .7);
+  prop('ranken', 72, 110, .65);
+  for (var df = 0; df < 2; df++) {
+    prop('libelle', 116 + df * 82 + Math.sin(t * .045 + df) * 22,
+      108 + df * 14 + Math.cos(t * .055 + df) * 6, .72, df % 2);
+  }
 
   /* Sumpftümpel vorne */
   E(134, 126, 66, 15, '#2a3128');
@@ -463,6 +479,13 @@ function bgHuette(t, F) {
   prop('kraeuter', 230, 78, .8);
   prop('spinnennetz', 168, 52, .9);
   prop('lichtkugel', 178 + Math.sin(t * .03) * 8, 84 + Math.cos(t * .025) * 4, .8);
+  prop('flaschen', 116, 84, .8);
+  prop('pilzlampe', 156, 122, .55);
+  prop('alchemieglas', 184, 105, .72);
+  for (var mt = 0; mt < 3; mt++) {
+    prop('motte', 168 + Math.sin(t * .04 + mt * 2) * (16 + mt * 5),
+      80 + Math.cos(t * .05 + mt) * (8 + mt * 3), .55 + mt * .08, mt % 2);
+  }
 
   /* Fenster links mit Sumpflicht */
   R(12, 20, 34, 30, '#2e2318');
@@ -623,6 +646,9 @@ function bgWirtshaus(t, F) {
   prop('krug', 146, 148, 1.1);
   prop('krug', 158, 149, 1);
   prop('krug', 56, 176, 1.2);
+  prop('banner', 214, 88, .78);
+  prop('flaschen', 300, 112, .72);
+  prop('ranken', 314, 82, .55);
 
   /* Figuren */
   drawBruno(60, 118, t);
@@ -677,6 +703,8 @@ function bgHoehle(t, F, lit) {
   prop('stalagmit', 304, 182, 1.2);
   prop('truhe', 176, 194, 1.1);
   prop('knochen', 232, 188, 1.2);
+  prop('kette', 146, 78, .9);
+  prop('pilzlampe', 118, 154, .48);
   for (var bat = 0; bat < 3; bat++) {
     var bx = ((t * (.34 + bat * .05) + bat * 117) % 380) - 30;
     prop('fledermaus', bx, 34 + bat * 15 + Math.sin(t * .06 + bat) * 7, .7 + bat * .08, bat % 2);
@@ -753,6 +781,11 @@ function bgSteinkreis(t, F) {
   prop('wegfahne', 156, 118, .62);
   prop('lichtkugel', 112 + Math.sin(t * .025) * 8, 92 + Math.cos(t * .031) * 5, .75);
   prop('lichtkugel', 212 + Math.cos(t * .022) * 10, 78 + Math.sin(t * .027) * 6, .55);
+  prop('banner', 44, 126, .62);
+  for (var pm = 0; pm < 2; pm++) {
+    prop('motte', 160 + Math.sin(t * .028 + pm * 3) * (48 + pm * 20),
+      78 + Math.cos(t * .035 + pm) * 12, .6 + pm * .1, pm % 2);
+  }
 
   /* Steinkreis (hinten kleiner) */
   var stones = [[36, 108, 16, 44], [78, 102, 13, 36], [126, 98, 11, 30],
