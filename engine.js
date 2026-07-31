@@ -104,9 +104,10 @@ function resize() {
 
   var sContain = Math.min(availW / VW, availH / VH);
   var sCover = Math.max(availW / VW, availH / VH);
-  /* Bildschirm füllen, aber höchstens 40 % über die passende Größe
-     hinaus zoomen – sonst verschwindet zu viel vom Bild. */
-  var s = fillMode ? Math.min(sCover, sContain * 1.4) : sContain;
+  /* Bildschirm füllen. Die Obergrenze greift nur bei extremen
+     Seitenverhältnissen; übliche Bildschirme (16:9, 16:10, 4:3)
+     werden dadurch vollständig ausgefüllt. */
+  var s = fillMode ? Math.min(sCover, sContain * 1.75) : sContain;
   s = Math.max(0.4, s);
 
   var dpr = Math.min(2, window.devicePixelRatio || 1);
