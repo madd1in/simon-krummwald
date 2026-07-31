@@ -112,6 +112,7 @@ var SCENES = {};
 /* ------------------------- LICHTUNG ------------------------- */
 SCENES.lichtung = {
   name: 'Lichtung',
+  blockers: [[36, 96, 34, 16]],
   light: { tint: 'rgba(255,240,190,.07)', rim: 'rgba(255,246,205,.55)', dx: -1.5, dy: -1.5 },
   ground: 'gras',
   walk: { x1: 10, x2: 310, y1: 106, y2: 136 },
@@ -208,6 +209,7 @@ async function giveElster(item) {
 /* --------------------------- DORF --------------------------- */
 SCENES.dorf = {
   name: 'Krummwald',
+  blockers: [[122, 112, 54, 26], [106, 102, 26, 26]],
   light: { tint: 'rgba(255,238,200,.06)', rim: 'rgba(255,244,210,.45)', dx: -1.5, dy: -1 },
   ground: 'stein',
   walk: { x1: 12, x2: 308, y1: 108, y2: 138 },
@@ -393,6 +395,7 @@ async function giveMathilda(item) {
 /* --------------------- WIRTSHAUS (innen) --------------------- */
 SCENES.wirtshaus = {
   name: 'Zum Krummen Krug',
+  blockers: [[8, 116, 106, 32], [130, 150, 44, 20]],
   light: { tint: 'rgba(255,150,60,.13)', rim: 'rgba(255,170,80,.7)', dx: 2, dy: -1 },
   ground: 'holz',
   walk: { x1: 14, x2: 300, y1: 128, y2: 152 },
@@ -526,6 +529,7 @@ async function talkGrete() {
 /* -------------------------- SUMPF -------------------------- */
 SCENES.sumpf = {
   name: 'Nebelsumpf',
+  blockers: [[100, 114, 70, 24]],
   light: { tint: 'rgba(120,160,150,.12)', rim: 'rgba(190,215,200,.35)', dx: 0, dy: -2 },
   ground: 'moor',
   mirror: { x: 134, y: 126, rx: 34, ry: 9, alpha: .30, squash: .5 },
@@ -683,6 +687,7 @@ async function talkTroll() {
 /* ------------------- HÜTTE DES ZAUBERERS ------------------- */
 SCENES.huette = {
   name: 'Hütte des Zauberers',
+  blockers: [[142, 104, 54, 26], [22, 104, 74, 20]],
   light: { tint: 'rgba(120,255,150,.07)', rim: 'rgba(150,255,180,.4)', dx: -2, dy: -1 },
   ground: 'holz',
   walk: { x1: 14, x2: 300, y1: 114, y2: 138 },
@@ -798,6 +803,7 @@ SCENES.huette = {
 /* ------------------------- HÖHLE ------------------------- */
 SCENES.hoehle = {
   name: 'Drachenhöhle',
+  blockers: [[176, 108, 116, 34], [76, 112, 34, 22]],
   light: { tint: 'rgba(255,140,50,.14)', rim: 'rgba(255,180,90,.65)', dx: 0, dy: 2 },
   ground: 'fels',
   walk: { x1: 16, x2: 300, y1: 110, y2: 138 },
@@ -877,6 +883,7 @@ SCENES.hoehle = {
 /* ----------------------- STEINKREIS ----------------------- */
 SCENES.steinkreis = {
   name: 'Steinkreis',
+  blockers: [[132, 100, 60, 28]],
   light: { tint: 'rgba(120,130,220,.15)', rim: 'rgba(190,180,255,.6)', dx: 1.5, dy: -1.5 },
   ground: 'gras',
   walk: { x1: 14, x2: 306, y1: 110, y2: 138 },

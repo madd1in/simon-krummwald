@@ -37,7 +37,7 @@ var idleSince = 0;         /* fuer Leerlauf-Momente */
 
 var state = { scene: 'lichtung', verb: 'gehe', inv: [], flags: {} };
 
-var actor = { x: 160, y: 150, tx: 160, ty: 150, face: 1, dist: 0, moving: false, res: null, visible: true, bendUntil: 0 };
+var actor = { x: 160, y: 150, tx: 160, ty: 150, face: 1, dist: 0, moving: false, res: null, visible: true, bendUntil: 0, path: [] };
 
 var VERBS = [
   { id: 'gehe', label: 'Gehe zu' }, { id: 'schau', label: 'Schau an' },
@@ -209,8 +209,14 @@ function update(dt, nowMs) {
     var d = Math.hypot(dx, dy);
     var sp = 72 * dt / 1000;
     if (d <= sp) {
-      actor.x = actor.tx; actor.y = actor.ty; actor.moving = false;
-      var res = actor.res; actor.res = null; if (res) res();
+      actor.x = actor.tx; actor.y = actor.ty;
+      if (actor.path && actor.path.length) {
+        var nx = actor.path.shift();
+        actor.tx = nx.x; actor.ty = nx.y;
+      } else {
+        actor.moving = false;
+        var res = actor.res; actor.res = null; if (res) res();
+      }
     } else {
       actor.x += dx / d * sp; actor.y += dy / d * sp;
       actor.dist += sp; stepDist += sp;
@@ -900,14 +906,95 @@ function say(who, text) {
 function choose(opts) { return new Promise(function (res) { dialogChoices = { opts: opts, res: res }; }); }
 function fadeTo(v, ms) { return new Promise(function (res) { fadeAnim = { from: fadeVal, to: v, ms: ms, t0: performance.now(), res: res }; }); }
 
+/* ---------------- Sperrflächen und Wegsuche ----------------
+   Simon lief bisher schnurgerade durch Brunnen, Tresen und Kessel.
+   Jede Szene kann Rechtecke als Hindernis angeben; ist der direkte
+   Weg versperrt, wird ein Zwischenpunkt daran vorbei gesetzt. */
+
+function blockersOf() {
+  var sc = SCENES[state.scene];
+  return (sc && sc.blockers) || [];
+}
+
+function inBlocker(x, y, pad) {
+  var bl = blockersOf();
+  pad = pad || 0;
+  for (var i = 0; i < bl.length; i++) {
+    var b = bl[i];
+    if (x > b[0] - pad && x < b[0] + b[2] + pad && y > b[1] - pad && y < b[1] + b[3] + pad) return b;
+  }
+  return null;
+}
+
+/* Erstes Hindernis auf der Strecke (grobe Abtastung reicht bei 320x200) */
+function firstBlockerOnLine(x0, y0, x1, y1) {
+  var d = Math.hypot(x1 - x0, y1 - y0), steps = Math.max(2, Math.ceil(d / 3));
+  for (var i = 1; i <= steps; i++) {
+    var t = i / steps;
+    var b = inBlocker(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, 1);
+    if (b) return b;
+  }
+  return null;
+}
+
+/* Zielpunkt aus einem Hindernis herausschieben */
+function pushOut(x, y) {
+  var b = inBlocker(x, y, 2);
+  if (!b) return { x: x, y: y };
+  var cand = [
+    { x: b[0] - 4, y: y }, { x: b[0] + b[2] + 4, y: y },
+    { x: x, y: b[1] - 4 }, { x: x, y: b[1] + b[3] + 4 }
+  ];
+  var best = cand[0], bd = 1e9;
+  for (var i = 0; i < cand.length; i++) {
+    var dd = Math.hypot(cand[i].x - x, cand[i].y - y);
+    if (dd < bd && !inBlocker(cand[i].x, cand[i].y, 1)) { bd = dd; best = cand[i]; }
+  }
+  return best;
+}
+
+/* Liefert die Wegpunkte von der Figur zum Ziel */
+function findPath(sx, sy, tx, ty) {
+  if (!blockersOf().length) return [{ x: tx, y: ty }];
+  var b = firstBlockerOnLine(sx, sy, tx, ty);
+  if (!b) return [{ x: tx, y: ty }];
+
+  var wb = SCENES[state.scene].walk, pad = 7;
+  function clamp(p) {
+    return { x: Math.max(wb.x1, Math.min(wb.x2, p.x)), y: Math.max(wb.y1, Math.min(wb.y2, p.y)) };
+  }
+  /* links herum, rechts herum, davor, dahinter */
+  var opts = [
+    clamp({ x: b[0] - pad, y: Math.max(sy, ty) }),
+    clamp({ x: b[0] + b[2] + pad, y: Math.max(sy, ty) }),
+    clamp({ x: (sx + tx) / 2, y: b[1] + b[3] + pad }),
+    clamp({ x: (sx + tx) / 2, y: b[1] - pad })
+  ];
+  var best = null, bestLen = 1e9;
+  for (var i = 0; i < opts.length; i++) {
+    var w = opts[i];
+    if (inBlocker(w.x, w.y, 1)) continue;
+    if (firstBlockerOnLine(sx, sy, w.x, w.y)) continue;
+    if (firstBlockerOnLine(w.x, w.y, tx, ty)) continue;
+    var len = Math.hypot(w.x - sx, w.y - sy) + Math.hypot(tx - w.x, ty - w.y);
+    if (len < bestLen) { bestLen = len; best = w; }
+  }
+  return best ? [best, { x: tx, y: ty }] : [{ x: tx, y: ty }];
+}
+
 function walkTo(x, y) {
   var b = SCENES[state.scene].walk;
   x = Math.max(b.x1, Math.min(b.x2, x));
   y = Math.max(b.y1, Math.min(b.y2, y));
+  var goal = pushOut(x, y);
+  x = goal.x; y = goal.y;
   if (Math.hypot(x - actor.x, y - actor.y) < 2) return Promise.resolve();
+  var path = findPath(actor.x, actor.y, x, y);
   return new Promise(function (res) {
     if (actor.res) { var old = actor.res; actor.res = null; old(); }
-    actor.tx = x; actor.ty = y; actor.moving = true; actor.res = res;
+    actor.path = path.slice(1);
+    actor.tx = path[0].x; actor.ty = path[0].y;
+    actor.moving = true; actor.res = res;
   });
 }
 
@@ -918,7 +1005,7 @@ async function goScene(id, x, y, face) {
   var sc = SCENES[id];
   actor.x = (x === undefined ? sc.start.x : x);
   actor.y = (y === undefined ? sc.start.y : y);
-  actor.tx = actor.x; actor.ty = actor.y; actor.moving = false;
+  actor.tx = actor.x; actor.ty = actor.y; actor.moving = false; actor.path = [];
   if (face) actor.face = face;
   sceneEnteredAt = performance.now();
   invScroll = 0; hoverObj = null; hintLevel = 0;
@@ -1123,7 +1210,7 @@ function handleClick(p, right) {
   }
   /* Klick während des Laufens kürzt den Weg ab */
   if (busy) {
-    if (actor.moving) { actor.x = actor.tx; actor.y = actor.ty; }
+    if (actor.moving) { actor.path = []; actor.x = actor.tx; actor.y = actor.ty; }
     return;
   }
 
