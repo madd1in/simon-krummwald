@@ -758,6 +758,71 @@ var PROPS = {
     P([x + 2, y, x + 10, y - 5, x + 8, y + 3, x + 4, y + 1], '#302938');
     R(x - 1, y - 3, 1, 1, '#c96b5f'); R(x + 1, y - 3, 1, 1, '#c96b5f');
   } },
+  wurzel: { w: 34, h: 18, ox: 17, oy: 17, draw: function (x, y) {
+    P([x - 15, y, x + 15, y, x + 10, y - 5, x + 4, y - 7, x - 3, y - 14, x - 8, y - 7], '#5c3f28');
+    L(x - 4, y - 12, x - 13, y - 2, '#785438', 3);
+    L(x + 3, y - 7, x + 14, y - 2, '#69482f', 2);
+    R(x - 4, y - 13, 2, 8, '#8a6040');
+  } },
+  pilzlampe: { w: 22, h: 32, ox: 11, oy: 31, draw: function (x, y) {
+    R(x - 2, y - 20, 4, 20, '#b8b0c6');
+    E(x, y - 22, 10, 7, '#7757a7'); E(x, y - 24, 8, 5, '#ad86df');
+    E(x, y - 22, 15, 12, 'rgba(174,130,230,.10)');
+    R(x - 5, y - 25, 2, 1, '#eadbff'); R(x + 3, y - 27, 2, 1, '#eadbff');
+  } },
+  banner: { w: 26, h: 42, ox: 13, oy: 41, draw: function (x, y) {
+    R(x - 10, y - 40, 20, 2, '#4c3828');
+    R(x - 1, y - 41, 2, 6, '#6b4f32');
+    P([x - 8, y - 38, x + 8, y - 38, x + 7, y - 12, x, y - 18, x - 7, y - 12], '#7b3249');
+    P([x - 8, y - 38, x, y - 38, x, y - 18, x - 7, y - 12], '#953e58');
+    E(x, y - 29, 4, 4, '#d8b658'); R(x - 1, y - 34, 2, 11, '#f0d77c');
+  } },
+  kette: { w: 14, h: 34, ox: 7, oy: 33, draw: function (x, y) {
+    for (var i = 0; i < 9; i++) {
+      var yy = y - 32 + i * 3.5, side = i % 2 ? 1 : -1;
+      E(x + side, yy, 2.2, 2.8, '#777883');
+      E(x + side, yy, 1.1, 1.6, '#262832');
+    }
+  } },
+  flaschen: { w: 26, h: 20, ox: 13, oy: 19, draw: function (x, y) {
+    var cols = ['#4e9b80', '#7251a5', '#b36b43'];
+    for (var i = 0; i < 3; i++) {
+      var bx = x - 8 + i * 8, bh = 9 + i * 2;
+      R(bx - 2, y - bh, 5, bh, cols[i]);
+      R(bx - 1, y - bh - 4, 3, 5, '#b9c5b9');
+      R(bx - 1, y - bh + 2, 1, bh - 4, 'rgba(255,255,255,.28)');
+      R(bx - 2, y - 2, 5, 2, '#25312d');
+    }
+  } },
+  schmetterling: { w: 14, h: 10, ox: 7, oy: 5, draw: function (x, y) {
+    E(x - 3, y, 3, 3.5, '#d68ac5'); E(x + 3, y, 3, 3.5, '#8f70d5');
+    E(x - 3, y + 2, 2, 2, '#f0b4dc'); E(x + 3, y + 2, 2, 2, '#b9a2ef');
+    R(x, y - 2, 1, 5, '#30283a'); L(x, y - 2, x - 2, y - 5, '#30283a', 1); L(x + 1, y - 2, x + 3, y - 5, '#30283a', 1);
+  } },
+  libelle: { w: 18, h: 10, ox: 9, oy: 5, draw: function (x, y) {
+    R(x - 1, y - 4, 2, 8, '#367d72'); E(x, y - 5, 2, 2, '#78c9ad');
+    E(x - 5, y - 2, 5, 1.5, 'rgba(190,230,225,.65)'); E(x + 5, y - 2, 5, 1.5, 'rgba(190,230,225,.65)');
+    E(x - 4, y + 1, 4, 1.2, 'rgba(190,230,225,.45)'); E(x + 4, y + 1, 4, 1.2, 'rgba(190,230,225,.45)');
+  } },
+  motte: { w: 14, h: 10, ox: 7, oy: 5, draw: function (x, y) {
+    P([x, y, x - 6, y - 4, x - 4, y + 3], '#bba987');
+    P([x, y, x + 6, y - 4, x + 4, y + 3], '#9f8d70');
+    R(x - 1, y - 2, 2, 5, '#4a4035');
+  } },
+  ranken: { w: 28, h: 38, ox: 14, oy: 37, draw: function (x, y) {
+    L(x, y - 37, x - 2, y, '#315f38', 2);
+    for (var i = 0; i < 7; i++) {
+      var yy = y - 33 + i * 5, side = i % 2 ? 1 : -1;
+      L(x - 1, yy, x + side * 8, yy + 4, '#3d7744', 1);
+      E(x + side * 8, yy + 4, 3.5, 2, i % 3 ? '#4d8a50' : '#6a9d55');
+    }
+  } },
+  alchemieglas: { w: 18, h: 24, ox: 9, oy: 23, draw: function (x, y) {
+    R(x - 2, y - 22, 4, 7, '#bcc8c6');
+    P([x - 3, y - 16, x + 3, y - 16, x + 7, y - 3, x + 4, y, x - 4, y, x - 7, y - 3], 'rgba(145,200,190,.75)');
+    P([x - 6, y - 6, x + 6, y - 6, x + 4, y - 1, x - 4, y - 1], '#45a583');
+    E(x - 2, y - 8, 1.5, 1.5, '#b8ffe2'); E(x + 3, y - 10, 1, 1, '#e0fff1');
+  } },
 
   /* --- Wirtshaus --- */
   tisch: { w: 40, h: 22, ox: 20, oy: 21, draw: function (x, y) {

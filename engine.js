@@ -29,6 +29,7 @@ var hintLevel = 0, hintKey = '';
 var toast = null;
 var sceneEnteredAt = 0;
 var revealUntil = 0;
+var touchHoldStart = 0, tapPulse = null;
 
 var state = { scene: 'lichtung', verb: 'gehe', inv: [], flags: {} };
 
@@ -43,10 +44,16 @@ var VERBS = [
 /* ---------------- HUD-Maße ---------------- */
 var INVBAR = { h: 26, slot: 24, max: 11 };
 var BTN = [
-  { id: 'hinweis' }, { id: 'magie' }, { id: 'tagebuch' }, { id: 'musik' }, { id: 'stimme' }, { id: 'vollbild' }
+  { id: 'hinweis' }, { id: 'magie' }, { id: 'foto' }, { id: 'tagebuch' }, { id: 'musik' }, { id: 'stimme' }, { id: 'vollbild' }
 ];
 (function () {
-  for (var i = 0; i < BTN.length; i++) { BTN[i].x = 296 - i * 15; BTN[i].y = 4; BTN[i].w = 13; BTN[i].h = 12; }
+  var w = isTouch ? 24 : 13, h = isTouch ? 22 : 12, gap = isTouch ? 3 : 2;
+  for (var i = 0; i < BTN.length; i++) {
+    BTN[i].x = VW - 4 - w - i * (w + gap);
+    BTN[i].y = 4;
+    BTN[i].w = w;
+    BTN[i].h = h;
+  }
 })();
 
 /* ---------------- Setup ---------------- */
@@ -329,6 +336,7 @@ function drawHUD() {
 
   drawExitGuides();
   drawHotspotFocus();
+  drawTouchFeedback();
 
   /* Objektbezeichnung am Zeiger */
   var label = cursorLabel();
@@ -343,11 +351,11 @@ function drawHUD() {
     ctx.fillStyle = hov ? 'rgba(60,48,84,.85)' : 'rgba(20,16,30,.42)';
     ctx.fillRect(t.x * scale, t.y * scale, t.w * scale, t.h * scale);
     var col = on ? (hov ? '#ffe58a' : '#cbbde6') : '#6b6280';
-    var sym = { hinweis: '?', magie: '✦', tagebuch: '≡', musik: '♪', stimme: '☺', vollbild: '⛶' }[t.id];
-    txt(t.x + t.w / 2, t.y + 1.5, sym, col, 'center', 8);
+    var sym = { hinweis: '?', magie: '✦', foto: '▣', tagebuch: '≡', musik: '♪', stimme: '☺', vollbild: '⛶' }[t.id];
+    txt(t.x + t.w / 2, t.y + (isTouch ? 4.5 : 1.5), sym, col, 'center', isTouch ? 11 : 8);
   }
 
-  if (toast) txt(160, 12, toast.text, '#ffe58a', 'center', 7.5);
+  if (toast) txt(160, isTouch ? 30 : 12, toast.text, '#ffe58a', 'center', 7.5);
 }
 
 /* Sichtbare, aber ruhige Wegmarken: Pfeil immer, Zielname beim Betreten
@@ -428,6 +436,32 @@ function drawHotspotFocus() {
       ctx.fillRect((sx - 2) * scale, sy * scale, 5 * scale, Math.max(1, scale));
       ctx.fillRect(sx * scale, (sy - 2) * scale, Math.max(1, scale), 5 * scale);
     }
+  }
+}
+
+/* Mobile Rückmeldung: kurzer Tapp-Kreis und ein Fortschrittsring
+   während des langen Drückens für "Anschauen". */
+function drawTouchFeedback() {
+  if (!isTouch || mode !== 'play') return;
+  var nowMs = performance.now();
+  if (tapPulse) {
+    var p = (nowMs - tapPulse.t0) / 380;
+    if (p >= 1) tapPulse = null;
+    else {
+      ctx.beginPath();
+      ctx.arc(tapPulse.x * scale, tapPulse.y * scale, (4 + p * 10) * scale, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,232,150,' + (.55 * (1 - p)) + ')';
+      ctx.lineWidth = Math.max(1, scale);
+      ctx.stroke();
+    }
+  }
+  if (downPos && touchHoldStart) {
+    var hold = Math.max(0, Math.min(1, (nowMs - touchHoldStart) / 460));
+    ctx.beginPath();
+    ctx.arc(downPos.x * scale, downPos.y * scale, 12 * scale, -Math.PI / 2, -Math.PI / 2 + hold * Math.PI * 2);
+    ctx.strokeStyle = 'rgba(207,171,255,.92)';
+    ctx.lineWidth = Math.max(2, scale * 1.6);
+    ctx.stroke();
   }
 }
 
@@ -658,14 +692,23 @@ function defaultVerb(hs) {
   return 'schau';
 }
 
-function cancelLong() { if (longTimer) { clearTimeout(longTimer); longTimer = null; } }
+function cancelLong() {
+  if (longTimer) { clearTimeout(longTimer); longTimer = null; }
+  touchHoldStart = 0;
+}
 
 function onPointerDown(e) {
   e.preventDefault(); audioInit();
   var p = toV(e); downPos = p;
   if (e.pointerType === 'touch') {
     longFired = false; cancelLong();
-    longTimer = setTimeout(function () { longTimer = null; longFired = true; handleClick(p, true); }, 460);
+    touchHoldStart = performance.now();
+    tapPulse = { x: p.x, y: p.y, t0: touchHoldStart };
+    longTimer = setTimeout(function () {
+      longTimer = null; longFired = true; touchHoldStart = 0;
+      if (navigator.vibrate) navigator.vibrate(18);
+      handleClick(p, true);
+    }, 460);
     return;
   }
   handleClick(p, e.button === 2);
@@ -759,6 +802,7 @@ function onKey(e) {
   if (e.key === 'j' || e.key === 'J') journalOpen = !journalOpen;
   if (e.key === 'h' || e.key === 'H') giveHint();
   if (e.key === 'v' || e.key === 'V') revealHotspots();
+  if (e.key === 'p' || e.key === 'P') exportPostcard();
   if (e.key === 'm' || e.key === 'M') setMusic(!AU.musicOn);
   if (e.key === 'a' || e.key === 'A') exportAtlas();
   if (e.key === 't' || e.key === 'T') exportTileset();
@@ -770,6 +814,7 @@ function btnAction(id) {
   if (id === 'stimme') { AU.speechOn = !AU.speechOn; if (!AU.speechOn) stopSpeech(); showToast('Sprachausgabe ' + (AU.speechOn ? 'an' : 'aus')); return; }
   if (id === 'hinweis') { giveHint(); return; }
   if (id === 'magie') { revealHotspots(); return; }
+  if (id === 'foto') { exportPostcard(); showToast('Pixel-Postkarte gespeichert'); return; }
   if (id === 'tagebuch') { journalOpen = !journalOpen; return; }
   if (id === 'vollbild') { toggleFullscreen(); return; }
 }

@@ -31,6 +31,7 @@ Wege werden gegangen, Leute angesprochen, Dinge aufgehoben oder bedient.
 | J | Tagebuch mit den offenen Zielen |
 | H | Hinweis (dreistufig, von vage bis konkret) |
 | V | Magiesicht: interaktive Stellen kurz hervorheben |
+| P | Aktuelle Szene als Pixel-Postkarte speichern |
 | M | Musik an/aus |
 | A | Sprite-Atlas als PNG exportieren |
 | T | Tileset als PNG exportieren |
@@ -41,6 +42,8 @@ stattdessen auf etwas in der Welt, wird es damit kombiniert.
 
 **Mobil:** Tippen = handeln, langes Drücken = anschauen. Im Hochformat dreht sich
 das Bild automatisch ins Querformat; über die Schaltfläche oben rechts geht es in den Vollbildmodus.
+Die Werkzeugtasten besitzen auf Touch-Geräten größere Trefferflächen. Ein violetter
+Fortschrittsring zeigt an, wann ein Langdruck als „Anschauen“ erkannt wird.
 
 Der Spielstand wird automatisch gespeichert — beim nächsten Aufruf steht
 „Fortsetzen" im Titelmenü.
@@ -58,8 +61,8 @@ Der Spielstand wird automatisch gespeichert — beim nächsten Aufruf steht
 - **Prozedurale Soundeffekte** aus der Web Audio API
 - **Hinweissystem und Tagebuch**, die den Spielstand auswerten und den nächsten Schritt nennen
 - **Automatischer Spielstand** in localStorage
-- **Sprite-Atlas & Tilemaps:** Figuren mit sechsphasigem Laufzyklus, über 35 Deko-Objekte,
-  Icons und 20 Bodenkachelarten
+- **Sprite-Atlas & Tilemaps:** Figuren mit sechsphasigem Laufzyklus, 48 Deko-Objekte,
+  Icons und 28 Bodenkachelarten
   werden beim Start in einen Atlas gebacken und danach als Sprites geblittet;
   benachbarte Kachelarten werden an den Kanten verzahnt
 - **Atmosphäre:** Regen im Sumpf, Glühwürmchen am Steinkreis, Staub in der Hütte,
@@ -67,6 +70,12 @@ Der Spielstand wird automatisch gespeichert — beim nächsten Aufruf steht
   animierte Laufspuren und Vignette
 - **Magiesicht:** Taste **V** oder das Sternsymbol markiert kurz alle interaktiven
   Stellen, ohne die minimalistische Oberfläche dauerhaft zu überladen
+- **Mobile Touch-Politur:** größere Werkzeugtasten, Tap-Echos, Langdruck-Fortschritt
+  und kurzes haptisches Feedback auf unterstützten Geräten
+- **Lebendige Kleintierwelt:** Schmetterlinge auf der Lichtung, Libellen im Sumpf
+  und Motten rund um magische Lichtquellen
+- **Pixel-Postkarte:** Taste **P** oder das quadratische Kamerasymbol exportiert
+  die aktuelle Szene ohne HUD als 640×400-PNG
 - **Auflösungsunabhängig:** 320×200-Pixelbild, das sich stufenlos an jeden Bildschirm anpasst
 
 ## Technik
