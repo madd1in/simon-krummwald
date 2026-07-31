@@ -111,6 +111,7 @@ var SCENES = {};
 /* ------------------------- LICHTUNG ------------------------- */
 SCENES.lichtung = {
   name: 'Lichtung',
+  ground: 'gras',
   walk: { x1: 10, x2: 310, y1: 106, y2: 136 },
   scaleMin: .62, scaleMax: 1,
   start: { x: 170, y: 124 },
@@ -205,6 +206,7 @@ async function giveElster(item) {
 /* --------------------------- DORF --------------------------- */
 SCENES.dorf = {
   name: 'Krummwald',
+  ground: 'stein',
   walk: { x1: 12, x2: 308, y1: 108, y2: 138 },
   scaleMin: .6, scaleMax: .98,
   start: { x: 40, y: 122 },
@@ -388,6 +390,7 @@ async function giveMathilda(item) {
 /* --------------------- WIRTSHAUS (innen) --------------------- */
 SCENES.wirtshaus = {
   name: 'Zum Krummen Krug',
+  ground: 'holz',
   walk: { x1: 14, x2: 300, y1: 128, y2: 152 },
   scaleMin: .78, scaleMax: 1.05,
   start: { x: 30, y: 150 },
@@ -511,6 +514,7 @@ async function talkGrete() {
 /* -------------------------- SUMPF -------------------------- */
 SCENES.sumpf = {
   name: 'Nebelsumpf',
+  ground: 'moor',
   walk: { x1: 12, x2: 300, y1: 108, y2: 138 },
   scaleMin: .6, scaleMax: .98,
   start: { x: 166, y: 112 },
@@ -658,6 +662,7 @@ async function talkTroll() {
 /* ------------------- HÜTTE DES ZAUBERERS ------------------- */
 SCENES.huette = {
   name: 'Hütte des Zauberers',
+  ground: 'holz',
   walk: { x1: 14, x2: 300, y1: 114, y2: 138 },
   scaleMin: .72, scaleMax: 1,
   start: { x: 292, y: 120 },
@@ -771,6 +776,7 @@ SCENES.huette = {
 /* ------------------------- HÖHLE ------------------------- */
 SCENES.hoehle = {
   name: 'Drachenhöhle',
+  ground: 'fels',
   walk: { x1: 16, x2: 300, y1: 110, y2: 138 },
   scaleMin: .68, scaleMax: 1,
   start: { x: 40, y: 122 },
@@ -848,6 +854,7 @@ SCENES.hoehle = {
 /* ----------------------- STEINKREIS ----------------------- */
 SCENES.steinkreis = {
   name: 'Steinkreis',
+  ground: 'gras',
   walk: { x1: 14, x2: 306, y1: 110, y2: 138 },
   scaleMin: .66, scaleMax: 1,
   start: { x: 160, y: 134 },

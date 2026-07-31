@@ -411,15 +411,25 @@ function drawSimon(x, y, s, frame, face, hat, blink) {
    ============================================================ */
 
 /* Elster im Baum */
+/* Elster: hüpft, pickt ins Nest und richtet sich wieder auf */
 function drawElster(x, y, t, s) {
   s = s || 1;
-  var bob = Math.sin(t * .08) * 1;
-  E(x, y + bob, 5 * s, 3.4 * s, '#15161c');           /* Körper */
-  E(x + 3 * s, y - 2 * s + bob, 2.6 * s, 2.4 * s, '#15161c'); /* Kopf */
-  E(x - 1 * s, y + 1 * s + bob, 3 * s, 2 * s, '#f2f2f2');     /* weiße Flanke */
-  P([x - 4 * s, y + bob, x - 11 * s, y + 3 * s + bob, x - 3 * s, y + 2 * s + bob], '#20222c'); /* Schwanz */
-  R(x + 5 * s, y - 2 * s + bob, 3 * s, 1 * s, '#e0b03a');     /* Schnabel */
-  R(x + 3.4 * s, y - 3 * s + bob, 1 * s, 1 * s, '#fff');      /* Auge */
+  var ph = t * .039;
+  var hop = Math.abs(Math.sin(ph)) * -1.6;             /* Hüpfer */
+  var peck = Math.max(0, Math.sin(ph * 2 - 1.2));      /* Kopf nach unten */
+  var head = peck * 3.2;
+  var tail = peck * 2.2;                                /* Schwanz geht hoch */
+  var bob = hop;
+
+  P([x - 4 * s, y + bob, x - 11 * s, y + 3 * s + bob - tail * s, x - 3 * s, y + 2 * s + bob], '#20222c'); /* Schwanz */
+  E(x, y + bob, 5 * s, 3.4 * s, '#15161c');            /* Körper */
+  E(x - 1 * s, y + 1 * s + bob, 3 * s, 2 * s, '#f2f2f2'); /* weiße Flanke */
+  E(x - .5 * s, y - 1.4 * s + bob, 2.6 * s, 1.6 * s, '#2a2c38'); /* Flügeldecke */
+  E(x + 3 * s, (y - 2 + head) * s + bob, 2.6 * s, 2.4 * s, '#15161c'); /* Kopf */
+  R(x + 5 * s, (y - 2 + head) * s + bob, 3 * s, 1 * s, '#e0b03a');     /* Schnabel */
+  R(x + 3.4 * s, (y - 3 + head) * s + bob, 1 * s, 1 * s, '#fff');      /* Auge */
+  /* Beinchen, wenn sie oben ist */
+  if (hop < -.6) { R(x - .5 * s, y + 2 * s + bob, .8 * s, 2 * s, '#c8922e'); R(x + 1.5 * s, y + 2 * s + bob, .8 * s, 2 * s, '#c8922e'); }
 }
 
 /* Wirt Bruno – rundlich, Schürze, Schnauzbart */
@@ -535,7 +545,9 @@ function drawGrete(x, y, t) {
 
 /* Drache – schlafend, zusammengerollt */
 function drawDrache(x, y, t, sleeping) {
-  var br = Math.sin(t * .03) * 1.2;
+  var ph = t * .039;
+  var br = Math.sin(ph) * 1.8;              /* Brustkorb hebt und senkt sich */
+  var wing = Math.max(0, Math.sin(ph)) * 2.5;  /* Flügel zuckt beim Ausatmen */
   var D = '#8e2f3c', D2 = '#6b1f2b', D3 = '#b5464f', BEL = '#e0b566';
   E(x, y, 40, 7, 'rgba(0,0,0,.35)');
   /* Schwanz */
@@ -548,9 +560,9 @@ function drawDrache(x, y, t, sleeping) {
   for (var i = -4; i <= 4; i++) {
     P([x + i * 6 - 3, y - 28 + br * .3, x + i * 6 + 3, y - 28 + br * .3, x + i * 6, y - 35 + br * .3], D3);
   }
-  /* Flügel */
-  P([x - 4, y - 26 + br, x - 34, y - 42 + br, x - 12, y - 20 + br], D2);
-  P([x - 6, y - 27 + br, x - 24, y - 36 + br, x - 10, y - 24 + br], D3);
+  /* Flügel – hebt sich leicht mit dem Atem */
+  P([x - 4, y - 26 + br, x - 34, y - 42 + br - wing, x - 12, y - 20 + br], D2);
+  P([x - 6, y - 27 + br, x - 24, y - 36 + br - wing * .7, x - 10, y - 24 + br], D3);
   /* Hals + Kopf */
   P([x - 22, y - 22, x - 30, y - 34, x - 22, y - 36, x - 14, y - 24], D);
   E(x - 34, y - 36, 12, 8, D);
@@ -566,10 +578,17 @@ function drawDrache(x, y, t, sleeping) {
   P([x - 14, y - 8, x - 8, y - 20, x - 2, y - 8], D2);
   R(x - 16, y - 5, 12, 5, D2);
   R(x - 16, y - 3, 3, 3, '#e8e2cf'); R(x - 11, y - 3, 3, 3, '#e8e2cf'); R(x - 6, y - 3, 3, 3, '#e8e2cf');
-  /* Schnarch-Bläschen */
+  /* Rauchwölkchen aus den Nüstern beim Ausatmen */
   if (sleeping) {
-    var p = (t * .02) % 1;
-    E(x - 48 - p * 10, y - 40 - p * 12, 1.5 + p * 3, 1.5 + p * 3, 'rgba(255,255,255,' + (.4 - p * .4) + ')');
+    for (var sw = 0; sw < 3; sw++) {
+      var p = ((t * .012 + sw * .34) % 1);
+      var puff = Math.max(0, Math.sin(ph));
+      E(x - 44 - p * 13, y - 37 - p * 15 + Math.sin(p * 5 + sw) * 2,
+        1.2 + p * 3.4, 1.2 + p * 3.4,
+        'rgba(210,205,215,' + ((.34 - p * .34) * (.35 + puff * .65)).toFixed(3) + ')');
+    }
+    /* Nüstern glimmen kurz auf */
+    E(x - 42, y - 36, 1.6, 1.2, 'rgba(255,150,60,' + (.15 + Math.max(0, Math.sin(ph)) * .45).toFixed(2) + ')');
   }
 }
 

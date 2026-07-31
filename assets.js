@@ -390,9 +390,9 @@ function bakeCharacters() {
       bake('elster_' + ph, 26, 18, 13, 9, function (ox, oy) { _rawElster(ox, oy, t, 1); });
     })(p);
   }
-  for (var d = 0; d < 2; d++) {
+  for (var d = 0; d < NPC_PHASES; d++) {
     (function (ph) {
-      bake('drache_' + ph, 120, 60, 62, 58, function (ox, oy) { _rawDrache(ox, oy, ph * 52, true); });
+      bake('drache_' + ph, 120, 60, 62, 58, function (ox, oy) { _rawDrache(ox, oy, ph * 40, true); });
     })(d);
   }
 }
@@ -484,7 +484,7 @@ function bakeAtlas() {
   drawMathilda = function (x, y, t) { sprite('mathilda_' + (Math.floor(t / 45) % NPC_PHASES), x, y, 1, false); };
   drawTroll = function (x, y, t) { sprite('grombold_' + (Math.floor(t / 55) % NPC_PHASES), x, y, 1, false); };
   drawElster = function (x, y, t) { sprite('elster_' + (Math.floor(t / 12) % NPC_PHASES), x, y, 1, false); };
-  drawDrache = function (x, y, t, sleeping) { sprite('drache_' + (Math.floor(t / 60) % 2), x, y, 1, false); };
+  drawDrache = function (x, y, t, sleeping) { sprite('drache_' + (Math.floor(t / 40) % NPC_PHASES), x, y, 1, false); };
   drawGrete = function (x, y, t) { sprite('grete_' + (Math.floor(t / 70) % NPC_PHASES), x, y, 1, false); };
 
   atlasReady = true;

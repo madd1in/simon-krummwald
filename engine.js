@@ -146,7 +146,11 @@ function update(dt, nowMs) {
     } else {
       actor.x += dx / d * sp; actor.y += dy / d * sp;
       actor.dist += sp; stepDist += sp;
-      if (stepDist > 11) { stepDist = 0; sfx('step'); }
+      if (stepDist > 11) {
+        stepDist = 0;
+        var sc0 = SCENES[state.scene];
+        sfx('step_' + ((sc0 && sc0.ground) || 'gras'));
+      }
       if (Math.abs(dx) > .6) actor.face = dx > 0 ? 1 : -1;
     }
   }
@@ -407,6 +411,35 @@ function wrap(s, maxW, size) {
 
 /* ---------------- Minimales HUD ---------------- */
 
+/* Vier Eckwinkel um das Objekt unter dem Zeiger – zeigt an, was
+   anklickbar ist, ohne das Bild mit einem Kasten zuzustellen. */
+function drawHoverFrame() {
+  if (!hoverObj || bubble || dialogChoices || journalOpen) return;
+  var r = hoverObj.rect;
+  if (!r || r[2] <= 0 || r[3] <= 0) return;
+  if (r[2] > 150 && r[3] > 90) return;          /* Himmel & Co. nicht einrahmen */
+
+  var pad = 2;
+  var x0 = Math.max(1, r[0] - pad), y0 = Math.max(1, r[1] - pad);
+  var x1 = Math.min(VW - 1, r[0] + r[2] + pad), y1 = Math.min(VH - 1, r[1] + r[3] + pad);
+  var len = Math.max(3, Math.min(7, Math.min(x1 - x0, y1 - y0) / 3));
+  var a = .45 + Math.sin(T * .12) * .18;
+
+  ctx.strokeStyle = 'rgba(255,228,140,' + a.toFixed(2) + ')';
+  ctx.lineWidth = Math.max(1, scale * .9);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  /* links oben */
+  ctx.moveTo(x0 * scale, (y0 + len) * scale); ctx.lineTo(x0 * scale, y0 * scale); ctx.lineTo((x0 + len) * scale, y0 * scale);
+  /* rechts oben */
+  ctx.moveTo((x1 - len) * scale, y0 * scale); ctx.lineTo(x1 * scale, y0 * scale); ctx.lineTo(x1 * scale, (y0 + len) * scale);
+  /* links unten */
+  ctx.moveTo(x0 * scale, (y1 - len) * scale); ctx.lineTo(x0 * scale, y1 * scale); ctx.lineTo((x0 + len) * scale, y1 * scale);
+  /* rechts unten */
+  ctx.moveTo((x1 - len) * scale, y1 * scale); ctx.lineTo(x1 * scale, y1 * scale); ctx.lineTo(x1 * scale, (y1 - len) * scale);
+  ctx.stroke();
+}
+
 /* Unterkante der Werkzeugleiste */
 function toolbarBottom() { return BTN[0].y + BTN[0].h; }
 
@@ -448,6 +481,7 @@ function drawHUD() {
     return;
   }
 
+  drawHoverFrame();
   drawExitGuides();
   drawHotspotFocus();
   drawTouchFeedback();

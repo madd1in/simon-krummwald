@@ -141,7 +141,15 @@ function sfx(name) {
     case 'portal':  tone(140, t, 2.2, 'sine', 0.18, null, 1400);
                     noise(t, 2.2, 0.10, 1200, 0.4);
                     [0, 3, 7, 10, 12].forEach(function (n, i) { tone(hz(60 + n), t + i * 0.18, 1.2, 'triangle', 0.09, AU.musicBus); }); break;
-    case 'step':    noise(t, 0.05, 0.045, 380, 0.9); break;
+    /* Schritte klingen nach dem Untergrund, auf dem Simon geht */
+    case 'step':
+    case 'step_gras':  noise(t, 0.055, 0.040, 1900, 1.2); noise(t + 0.01, 0.04, 0.022, 620, 0.8); break;
+    case 'step_stein': noise(t, 0.035, 0.055, 2600, 2.6); tone(220, t, 0.045, 'square', 0.035, null, 150); break;
+    case 'step_holz':  noise(t, 0.045, 0.038, 900, 1.8); tone(150, t, 0.075, 'triangle', 0.060, null, 95); break;
+    case 'step_moor':  noise(t, 0.13, 0.055, 320, 0.5); tone(95, t, 0.11, 'sine', 0.045, null, 55); break;
+    case 'step_fels':  noise(t, 0.05, 0.050, 1500, 1.6);
+                       tone(180, t, 0.05, 'square', 0.030, null, 120);
+                       noise(t + 0.11, 0.10, 0.014, 1500, 1.6); break;  /* leichtes Echo */
   }
 }
 
