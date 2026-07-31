@@ -953,33 +953,51 @@ function pushOut(x, y) {
   return best;
 }
 
-/* Liefert die Wegpunkte von der Figur zum Ziel */
+/* Liefert die Wegpunkte von der Figur zum Ziel.
+   Umrundet ein Hindernis über seine Ecken – erst mit einer Ecke,
+   sonst mit zweien. Reicht für rechteckige Hindernisse völlig. */
 function findPath(sx, sy, tx, ty) {
   if (!blockersOf().length) return [{ x: tx, y: ty }];
   var b = firstBlockerOnLine(sx, sy, tx, ty);
   if (!b) return [{ x: tx, y: ty }];
 
-  var wb = SCENES[state.scene].walk, pad = 7;
+  var wb = SCENES[state.scene].walk, pad = 8;
   function clamp(p) {
     return { x: Math.max(wb.x1, Math.min(wb.x2, p.x)), y: Math.max(wb.y1, Math.min(wb.y2, p.y)) };
   }
-  /* links herum, rechts herum, davor, dahinter */
-  var opts = [
-    clamp({ x: b[0] - pad, y: Math.max(sy, ty) }),
-    clamp({ x: b[0] + b[2] + pad, y: Math.max(sy, ty) }),
-    clamp({ x: (sx + tx) / 2, y: b[1] + b[3] + pad }),
-    clamp({ x: (sx + tx) / 2, y: b[1] - pad })
-  ];
-  var best = null, bestLen = 1e9;
-  for (var i = 0; i < opts.length; i++) {
-    var w = opts[i];
-    if (inBlocker(w.x, w.y, 1)) continue;
-    if (firstBlockerOnLine(sx, sy, w.x, w.y)) continue;
-    if (firstBlockerOnLine(w.x, w.y, tx, ty)) continue;
-    var len = Math.hypot(w.x - sx, w.y - sy) + Math.hypot(tx - w.x, ty - w.y);
-    if (len < bestLen) { bestLen = len; best = w; }
+  var corners = [
+    clamp({ x: b[0] - pad, y: b[1] - pad }),
+    clamp({ x: b[0] + b[2] + pad, y: b[1] - pad }),
+    clamp({ x: b[0] - pad, y: b[1] + b[3] + pad }),
+    clamp({ x: b[0] + b[2] + pad, y: b[1] + b[3] + pad })
+  ].filter(function (c) { return !inBlocker(c.x, c.y, 1); });
+
+  var best = null, bestLen = 1e9, i, j;
+
+  /* eine Ecke */
+  for (i = 0; i < corners.length; i++) {
+    var c = corners[i];
+    if (firstBlockerOnLine(sx, sy, c.x, c.y)) continue;
+    if (firstBlockerOnLine(c.x, c.y, tx, ty)) continue;
+    var len = Math.hypot(c.x - sx, c.y - sy) + Math.hypot(tx - c.x, ty - c.y);
+    if (len < bestLen) { bestLen = len; best = [c, { x: tx, y: ty }]; }
   }
-  return best ? [best, { x: tx, y: ty }] : [{ x: tx, y: ty }];
+  if (best) return best;
+
+  /* zwei Ecken */
+  for (i = 0; i < corners.length; i++) {
+    var c1 = corners[i];
+    if (firstBlockerOnLine(sx, sy, c1.x, c1.y)) continue;
+    for (j = 0; j < corners.length; j++) {
+      if (j === i) continue;
+      var c2 = corners[j];
+      if (firstBlockerOnLine(c1.x, c1.y, c2.x, c2.y)) continue;
+      if (firstBlockerOnLine(c2.x, c2.y, tx, ty)) continue;
+      var l2 = Math.hypot(c1.x - sx, c1.y - sy) + Math.hypot(c2.x - c1.x, c2.y - c1.y) + Math.hypot(tx - c2.x, ty - c2.y);
+      if (l2 < bestLen) { bestLen = l2; best = [c1, c2, { x: tx, y: ty }]; }
+    }
+  }
+  return best || [{ x: tx, y: ty }];
 }
 
 function walkTo(x, y) {
