@@ -173,10 +173,18 @@ function playMusic(id) {
   if (AU.song) AU.song.volume = AU.musicOn ? AU.songMix : 0;
   startExternalMusic();
   if (AU.trackId === id) return;
+  /* weicher Wechsel: kurz ausblenden, neuen Satz einblenden */
+  var t = now();
+  if (AU.musicBus && AU.trackId) {
+    AU.musicBus.gain.cancelScheduledValues(t);
+    AU.musicBus.gain.setValueAtTime(AU.musicBus.gain.value, t);
+    AU.musicBus.gain.linearRampToValueAtTime(0.0001, t + 0.35);
+    AU.musicBus.gain.linearRampToValueAtTime(AU.musicOn ? 0.30 : 0, t + 1.5);
+  }
   AU.trackId = id;
   AU.track = TRACKS[id] || TRACKS.lichtung;
   AU.step = 0;
-  AU.nextNote = now() + 0.1;
+  AU.nextNote = t + 0.4;
   AU.delayMix.gain.setTargetAtTime(AU.track.echo, now(), 0.6);
   if (!AU.timer) AU.timer = setInterval(schedule, 60);
 }

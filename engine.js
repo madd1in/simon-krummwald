@@ -33,6 +33,7 @@ var touchHoldStart = 0, tapPulse = null;
 var exitMarkers = [];      /* anklickbare Ausgangspfeile */
 var particles = [];        /* Staub, Funken, Magie */
 var shake = { amp: 0, until: 0 };
+var idleSince = 0;         /* fuer Leerlauf-Momente */
 
 var state = { scene: 'lichtung', verb: 'gehe', inv: [], flags: {} };
 
@@ -191,6 +192,17 @@ function update(dt, nowMs) {
   if (wipe) { wipe.p += dt / wipe.ms; if (wipe.p >= 1) wipe = null; }
   if (toast && nowMs > toast.until) toast = null;
   if (particles.length) updateParticles(dt);
+
+  /* Nach längerer Untätigkeit kommentiert Simon die Lage */
+  if (mode === 'play' && !busy && !bubble && !dialogChoices && !journalOpen && !actor.moving) {
+    if (!idleSince) idleSince = nowMs;
+    else if (nowMs - idleSince > 24000 && typeof idleMoment === 'function') {
+      idleSince = nowMs;
+      run(idleMoment());
+    }
+  } else {
+    idleSince = nowMs;
+  }
 
   if (actor.moving) {
     var dx = actor.tx - actor.x, dy = actor.ty - actor.y;

@@ -402,6 +402,14 @@ SCENES.wirtshaus = {
   draw: bgWirtshaus, fx: 'dust',
   tint: 'rgba(255,170,80,.07)',
   front: function (t) {
+    /* Tresen vor die Figur legen, wenn sie dahinter steht */
+    if (actor.y < 136) {
+      R(8, 118, 104, 8, '#6b4f2a');
+      R(8, 118, 104, 2, '#8a6a3a');
+      R(8, 126, 104, 22, '#54401f');
+      for (var tp = 0; tp < 6; tp++) R(14 + tp * 18, 128, 3, 18, '#42320f');
+      prop('krug', 26, 118, .9);
+    }
     /* angeschnittener Tisch im Vordergrund */
     R(0, 176, 78, 6, '#6b4f2a'); R(0, 176, 78, 1, '#8a6a3a');
     R(14, 182, 5, 18, '#5c4525'); R(62, 182, 5, 18, '#5c4525');
@@ -526,7 +534,14 @@ SCENES.sumpf = {
   start: { x: 166, y: 112 },
   speakers: { grombold: { x: 266, y: 52 } },
   draw: bgSumpf, fx: 'fog',
-  front: function (t) { frontReeds(t); },
+  front: function (t) {
+    /* Schilf am Tuempelrand verdeckt die Figur, wenn sie dahinter steht */
+    if (actor.y < 150) {
+      prop('schilfbusch', 108, 148, .95);
+      prop('schilfbusch', 172, 152, .9);
+    }
+    frontReeds(t);
+  },
   hotspots: [
     {
       id: 'huette', name: 'Hütte', rect: [0, 8, 84, 98], go: [90, 118],
@@ -942,6 +957,58 @@ async function ende() {
   clearSave();
   playMusic('ende');
   await fadeTo(0, 900);
+}
+
+/* ============================================================
+   LEERLAUF – wenn der Spieler eine Weile nichts tut, meldet
+   sich Simon von selbst. Ortsbezogen, damit es nicht generisch
+   wirkt, mit ein paar allgemeinen Sprüchen dazwischen.
+   ============================================================ */
+
+var IDLE_ALLGEMEIN = [
+  'Ich stehe hier jetzt schon eine Weile herum. Sehr produktiv.',
+  'Irgendwer müsste mal etwas anklicken. Ich sage das nur so.',
+  'Denken hilft. Manchmal.',
+  'Zu Hause wäre jetzt Teezeit.',
+  'Ich warte. Ich bin gut im Warten. Nicht so gut wie Grombold, aber gut.'
+];
+
+var IDLE_ORT = {
+  lichtung: [
+    'Vögel, Bäume, frische Luft. Und mein Hut sitzt in sechs Metern Höhe.',
+    'Wenn ich lange genug hier stehe, wächst vielleicht Moos an mir.'
+  ],
+  dorf: [
+    'Ein Dorf, in dem niemand grüßt. Fühlt sich fast wie zu Hause an.',
+    'Irgendwo hier muss es doch etwas geben, das ich noch nicht angefasst habe.'
+  ],
+  wirtshaus: [
+    'Warm, trocken, es riecht nach Bier. Ich könnte hierbleiben.',
+    'Bruno poliert seit einer halben Stunde denselben Krug.'
+  ],
+  sumpf: [
+    'Der Sumpf blubbert. Ich hoffe, das ist nur der Sumpf.',
+    'Meine Stiefel werden das nie wieder vergessen.'
+  ],
+  huette: [
+    'Die Flaschen im Regal schauen mich an. Oder ich bin übermüdet.',
+    'Irgendwo hier hat der alte Zauberer bestimmt noch etwas versteckt.'
+  ],
+  hoehle: [
+    'Ein Drache atmet hinter mir. Völlig entspannte Lage.',
+    'Ich sollte hier nicht länger als nötig herumstehen.'
+  ],
+  steinkreis: [
+    'Die Steine summen. Oder mein Kopf. Schwer zu sagen.',
+    'Von hier aus sieht der Mond aus wie zu Hause. Fast.'
+  ]
+};
+
+async function idleMoment() {
+  var ort = IDLE_ORT[state.scene] || [];
+  var pool = ort.concat(IDLE_ALLGEMEIN);
+  var txt = pool[Math.floor(Math.random() * pool.length)];
+  await say('simon', txt);
 }
 
 /* ============================================================
