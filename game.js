@@ -393,6 +393,17 @@ SCENES.wirtshaus = {
   start: { x: 30, y: 150 },
   speakers: { bruno: { x: 60, y: 74 }, grete: { x: 196, y: 128 } },
   draw: bgWirtshaus, fx: 'dust',
+  tint: 'rgba(255,170,80,.07)',
+  front: function (t) {
+    /* angeschnittener Tisch im Vordergrund */
+    R(0, 176, 78, 6, '#6b4f2a'); R(0, 176, 78, 1, '#8a6a3a');
+    R(14, 182, 5, 18, '#5c4525'); R(62, 182, 5, 18, '#5c4525');
+    prop('krug', 40, 176, 1.3);
+    /* dunkler Deckenbalken */
+    R(0, 0, VW, 6, 'rgba(20,14,8,.75)');
+    P([0, 200, 0, 188, 24, 196, 30, 200], '#241a10');
+    P([320, 200, 320, 186, 292, 194, 286, 200], '#241a10');
+  },
   onEnter: async function () {
     if (!state.flags.wirtshausGesehen) {
       state.flags.wirtshausGesehen = true;
