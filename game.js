@@ -161,17 +161,17 @@ SCENES.lichtung = {
       }
     },
     {
-      id: 'weg_dorf', name: 'Weg nach Krummwald', rect: [294, 94, 26, 48], go: [300, 118],
+      id: 'weg_dorf', name: 'Weg nach Krummwald', exitTo: 'Krummwald', rect: [294, 94, 26, 48], go: [300, 118],
       look: function () { return say('simon', 'Der Weg führt nach Osten zum Dorf. Ich höre von hier aus jemanden schimpfen.'); },
       exit: function () { return goScene('dorf', 26, 120, 1); }
     },
     {
-      id: 'weg_sumpf', name: 'Pfad in den Sumpf', rect: [0, 104, 28, 38], go: [16, 126],
+      id: 'weg_sumpf', name: 'Pfad in den Sumpf', exitTo: 'Nebelsumpf', rect: [0, 104, 28, 38], go: [16, 126],
       look: function () { return say('simon', 'Ein matschiger Pfad. Der Nebel dahinter sieht aus, als hätte er Meinungen.'); },
       exit: function () { return goScene('sumpf', 166, 110, -1); }
     },
     {
-      id: 'pfad_norden', name: 'Pfad zum Steinkreis', rect: [134, 90, 54, 18], go: [160, 110],
+      id: 'pfad_norden', name: 'Pfad zum Steinkreis', exitTo: 'Steinkreis', exitDir: 'up', rect: [134, 90, 54, 18], go: [160, 110],
       look: function () { return say('simon', 'Ein heller Pfad führt nach Norden zu den alten Steinen. Da kribbelt die Luft.'); },
       exit: function () { return goScene('steinkreis', 160, 134, 1); }
     }
@@ -220,7 +220,7 @@ SCENES.dorf = {
       look: function () { return say('simon', 'Das Wirtshaus "Zum Krummen Krug". Aus dem Inneren riecht es nach Bier, Kohl und alten Streitigkeiten.'); }
     },
     {
-      id: 'wirtshaustuer', name: 'Wirtshaustür', rect: [42, 60, 28, 44], go: [58, 122],
+      id: 'wirtshaustuer', name: 'Wirtshaustür', exitTo: 'Wirtshaus', exitDir: 'up', rect: [42, 60, 28, 44], go: [58, 122],
       look: function () { return say('simon', 'Die Tür steht offen. Drinnen flackert Feuerschein, und jemand schrubbt lustlos einen Tresen.'); },
       exit: function () { return goScene('wirtshaus', 30, 150, 1); }
     },
@@ -295,7 +295,7 @@ SCENES.dorf = {
       look: function () { return say('simon', 'Bierfässer. Leer. Man erkennt es am hoffnungslosen Klang, wenn man dagegen klopft.'); }
     },
     {
-      id: 'weg_lichtung', name: 'Weg zur Lichtung', rect: [0, 94, 22, 48], go: [16, 120],
+      id: 'weg_lichtung', name: 'Weg zur Lichtung', exitTo: 'Lichtung', rect: [0, 94, 22, 48], go: [16, 120],
       look: function () { return say('simon', 'Zurück in den Wald zur Lichtung.'); },
       exit: function () { return goScene('lichtung', 296, 118, -1); }
     }
@@ -468,7 +468,7 @@ SCENES.wirtshaus = {
       use: function (item) { if (item) return giveBruno(item); return say('simon', 'Ich sollte mit ihm reden statt an ihm herumzufummeln.'); }
     },
     {
-      id: 'tuer', name: 'Tür nach draußen', rect: [0, 90, 26, 60], go: [22, 140],
+      id: 'tuer', name: 'Tür nach draußen', exitTo: 'Krummwald', rect: [0, 90, 26, 60], go: [22, 140],
       look: function () { return say('simon', 'Zurück auf den Marktplatz.'); },
       exit: function () { return goScene('dorf', 70, 128, 1); }
     }
@@ -527,7 +527,7 @@ SCENES.sumpf = {
       look: function () { return say('simon', 'Grünes Licht flackert hinter dem Glas. Entweder brennt da etwas, oder es kocht. Oder beides.'); }
     },
     {
-      id: 'huettentuer', name: 'Hüttentür', rect: [42, 68, 26, 38], go: [78, 120], face: -1,
+      id: 'huettentuer', name: 'Hüttentür', exitTo: 'Zaubererhütte', exitDir: 'up', rect: [42, 68, 26, 38], go: [78, 120], face: -1,
       look: function () {
         if (state.flags.huetteOffen) return say('simon', 'Die Tür steht offen. Der Dunst dahinter riecht nach altem Kraut.');
         return say('simon', 'Verschlossen. Statt eines Schlüssellochs leuchtet da ein grünes Runenzeichen. Das will kein Schlüssel — das will ein Wort.');
@@ -572,7 +572,7 @@ SCENES.sumpf = {
       }
     },
     {
-      id: 'bruecke', name: 'Brücke', rect: [228, 88, 92, 22], go: [232, 116],
+      id: 'bruecke', name: 'Brücke', exitTo: 'Drachenhöhle', exitDir: 'right', rect: [228, 88, 92, 22], go: [232, 116],
       look: function () { return say('simon', 'Eine morsche Holzbrücke. Dahinter gähnt ein Höhleneingang, aus dem warme Luft weht.'); },
       exit: async function () {
         if (!state.flags.trollWeg) {
@@ -595,7 +595,7 @@ SCENES.sumpf = {
       use: function (item) { if (item) return this.give(item); return talkTroll(); }
     },
     {
-      id: 'pfad_lichtung', name: 'Pfad zur Lichtung', rect: [140, 88, 50, 18], go: [164, 110],
+      id: 'pfad_lichtung', name: 'Pfad zur Lichtung', exitTo: 'Lichtung', exitDir: 'up', rect: [140, 88, 50, 18], go: [164, 110],
       look: function () { return say('simon', 'Der Pfad zurück zur Lichtung. Er sieht deutlich trockener aus.'); },
       exit: function () { return goScene('lichtung', 20, 122, 1); }
     }
@@ -761,7 +761,7 @@ SCENES.huette = {
       }
     },
     {
-      id: 'tuer', name: 'Tür', rect: [296, 58, 24, 52], go: [286, 122],
+      id: 'tuer', name: 'Tür', exitTo: 'Nebelsumpf', rect: [296, 58, 24, 52], go: [286, 122],
       look: function () { return say('simon', 'Die Tür nach draußen. In den Sumpf. Juhu.'); },
       exit: function () { return goScene('sumpf', 84, 120, 1); }
     }
@@ -791,7 +791,7 @@ SCENES.hoehle = {
   },
   hotspots: [
     {
-      id: 'ausgang', name: 'Ausgang', rect: [0, 84, 28, 58], go: [24, 122],
+      id: 'ausgang', name: 'Ausgang', exitTo: 'Nebelsumpf', rect: [0, 84, 28, 58], go: [24, 122],
       look: function () { return say('simon', 'Der Weg zurück über die Brücke.'); },
       exit: function () { return goScene('sumpf', 240, 116, -1); }
     },
@@ -891,7 +891,7 @@ SCENES.steinkreis = {
       take: function () { return say('simon', 'Einen Altar in die Tasche stecken. Klar.'); }
     },
     {
-      id: 'pfad_sued', name: 'Pfad zur Lichtung', rect: [120, 120, 84, 22], go: [160, 137],
+      id: 'pfad_sued', name: 'Pfad zur Lichtung', exitTo: 'Lichtung', exitDir: 'down', rect: [120, 120, 84, 22], go: [160, 137],
       look: function () { return say('simon', 'Der Pfad zurück in den Wald.'); },
       exit: function () { return goScene('lichtung', 160, 112, 1); }
     }
@@ -1128,6 +1128,7 @@ async function startGame() {
   state.scene = 'lichtung';
   state.inv = []; state.flags = {};
   actor.x = 170; actor.y = 150; actor.tx = actor.x; actor.ty = actor.y;
+  sceneEnteredAt = performance.now();
   fadeVal = 1;
   audioInit();
   playMusic('lichtung');

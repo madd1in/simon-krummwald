@@ -182,6 +182,160 @@ function flame(x, y, s, t, warm) {
    Ursprung: Füße auf (x,y). Einheiten ~ 16 breit, 42 hoch.
    ============================================================ */
 
+/* ============================================================
+   SIMON – Posen
+   Jede Pose ist ein Parametersatz; der Laufzyklus wird aus
+   einem Phasenwinkel erzeugt, damit er rund läuft.
+   ============================================================ */
+
+var SIMON_POSE_IDS = [];
+var SIMON_POSES = (function () {
+  var p = {}, i, ph;
+  /* Laufzyklus: 6 Phasen */
+  for (i = 0; i < 6; i++) {
+    ph = i / 6 * 6.283;
+    p['walk' + i] = {
+      legA: Math.sin(ph) * 3.4, legB: -Math.sin(ph) * 3.4,
+      kneeA: Math.max(0, Math.cos(ph)) * 1.6, kneeB: Math.max(0, -Math.cos(ph)) * 1.6,
+      armA: -Math.sin(ph) * 2.6, armB: Math.sin(ph) * 2.6,
+      lift: -Math.abs(Math.cos(ph)) * 1.1,
+      lean: 0.7, mouth: 0, cape: Math.sin(ph) * 1.4 + 1.2
+    };
+  }
+  /* Ruhe: Atmen */
+  for (i = 0; i < 3; i++) {
+    p['idle' + i] = {
+      legA: 0, legB: 0, kneeA: 0, kneeB: 0,
+      armA: i * .25, armB: -i * .2,
+      lift: -i * .45, lean: 0, mouth: 0, cape: .5 + i * .25
+    };
+  }
+  /* Sprechen: leichte Gestik */
+  p.talk0 = { legA: 0, legB: 0, kneeA: 0, kneeB: 0, armA: -1.6, armB: .4, lift: -.3, lean: 0, mouth: 1, cape: .6 };
+  p.talk1 = { legA: 0, legB: 0, kneeA: 0, kneeB: 0, armA: -2.8, armB: .8, lift: -.8, lean: -.5, mouth: 2, cape: .9 };
+  /* Bücken */
+  p.bueck = { legA: 1.5, legB: -1.5, kneeA: 2, kneeB: 0, armA: 3.5, armB: 3, lift: 3.5, lean: 3.2, mouth: 0, cape: -1 };
+  for (var k in p) SIMON_POSE_IDS.push(k);
+  return p;
+})();
+
+function drawSimonPose(x, y, s, poseId, face, hat, blink) {
+  var P0 = SIMON_POSES[poseId] || SIMON_POSES.idle0;
+  var SKIN = '#eab488', SKIN2 = '#cf9066', SKIN3 = '#b57a55';
+  var ROBE = '#3f5cc0', ROBE2 = '#2f4497', ROBE3 = '#4f6ede', CAPE = '#243a86';
+  var TROU = '#28325e', BOOT = '#5f3d22', BOOT2 = '#432a15';
+  var HAIR = '#7d4c1f', HAIR2 = '#5e3814';
+  var HATC = '#63329a', HATC2 = '#4a2378', HATC3 = '#7b45b8';
+
+  var lf = P0.lift, ln = P0.lean;
+  function Q(dx, dy, dw, dh, c) {  /* gespiegelt, Breite berücksichtigt */
+    R(x + (dx * face - (face < 0 ? dw : 0)) * s, y + dy * s, dw * s, dh * s, c);
+  }
+  function QP(pts, c) {
+    var o = [];
+    for (var i = 0; i < pts.length; i += 2) { o.push(x + pts[i] * face * s); o.push(y + pts[i + 1] * s); }
+    P(o, c);
+  }
+
+  /* Schatten */
+  E(x, y, 8.5 * s, 2.6 * s, 'rgba(0,0,0,.3)');
+
+  /* --- Umhang hinter dem Körper --- */
+  QP([-2, -31 + lf, -8 - P0.cape, -14 + lf, -7 - P0.cape * 1.4, -4 + lf, 1, -12 + lf], CAPE);
+
+  /* --- Beine --- */
+  Q(-5.5 + P0.legA, -14 + lf, 4.5, 8 - P0.kneeA, TROU);
+  Q(1 + P0.legB, -14 + lf, 4.5, 8 - P0.kneeB, TROU);
+  Q(-5.5 + P0.legA, -14 + lf, 1.5, 8 - P0.kneeA, '#333f72');
+  /* Stiefel */
+  Q(-6.5 + P0.legA * 1.15, -6.5 + lf + P0.kneeA, 6.5, 5, BOOT);
+  Q(0.5 + P0.legB * 1.15, -6.5 + lf + P0.kneeB, 6.5, 5, BOOT);
+  Q(-6.5 + P0.legA * 1.15, -2.2 + lf + P0.kneeA, 6.5, 2.2, BOOT2);
+  Q(0.5 + P0.legB * 1.15, -2.2 + lf + P0.kneeB, 6.5, 2.2, BOOT2);
+
+  /* --- Robe --- */
+  QP([-8, -12 + lf, 8, -12 + lf, 6.5 - ln * .3, -31 + lf, -6 - ln * .3, -31 + lf], ROBE);
+  QP([-8, -12 + lf, -1, -12 + lf, -0.5 - ln * .3, -31 + lf, -6 - ln * .3, -31 + lf], ROBE2);
+  /* Saum */
+  Q(-8, -13.5 + lf, 16, 2, ROBE2);
+  /* Falten */
+  Q(-3.5, -28 + lf, 1, 15, ROBE2);
+  Q(2.5, -27 + lf, 1, 13, ROBE2);
+  Q(4.5, -29 + lf, 1, 8, ROBE3);
+  /* Gürtel */
+  Q(-7.5, -21.5 + lf, 15, 2.4, '#8a6528');
+  Q(-1.6, -22.2 + lf, 3.4, 3.6, '#f0cd63');
+  Q(-0.8, -21.4 + lf, 1.8, 2, '#a8862f');
+  /* Gürteltasche */
+  Q(3.5, -20.5 + lf, 3.5, 4, '#6b4a26');
+  Q(3.5, -20.5 + lf, 3.5, 1, '#89623a');
+
+  /* --- Arme --- */
+  var aA = P0.armA, aB = P0.armB;
+  Q(-9.5, -30 + lf + aA * .3, 3.4, 10 + aA * .5, ROBE2);          /* hinterer Arm */
+  Q(6, -30 + lf + aB * .3, 3.4, 10 + aB * .5, ROBE);              /* vorderer Arm */
+  Q(-9.5, -21 + lf + aA * .8, 3.4, 1.6, ROBE3);                   /* Ärmelaufschlag */
+  Q(6, -21 + lf + aB * .8, 3.4, 1.6, ROBE3);
+  Q(-9.2, -19.5 + lf + aA * .9, 3, 3, SKIN);                      /* Hände */
+  Q(6.2, -19.5 + lf + aB * .9, 3, 3, SKIN);
+  Q(-9.2, -17.5 + lf + aA * .9, 3, 1, SKIN2);
+  Q(6.2, -17.5 + lf + aB * .9, 3, 1, SKIN2);
+
+  /* --- Kragen und Hals --- */
+  QP([-5.5 - ln * .3, -31 + lf, 5.5 - ln * .3, -31 + lf, 4 - ln * .4, -33.5 + lf, -4 - ln * .4, -33.5 + lf], ROBE3);
+  Q(-2.2 - ln * .4, -35 + lf, 4.4, 2.5, SKIN3);
+
+  /* --- Kopf --- */
+  var hx = -ln * .5;
+  Q(-5.2 + hx, -45 + lf, 10.4, 10.5, SKIN);
+  Q(-5.2 + hx, -45 + lf, 10.4, 2, '#f0c096');       /* Stirnlicht */
+  Q(-5.2 + hx, -36 + lf, 10.4, 1.4, SKIN2);         /* Kinnschatten */
+  Q(3.6 + hx, -44 + lf, 1.6, 9, SKIN2);             /* Wangenschatten hinten */
+  /* Ohr */
+  Q(-6 + hx, -41 + lf, 1.6, 2.6, SKIN2);
+
+  /* Haare */
+  Q(-6.2 + hx, -47.5 + lf, 12.4, 4.2, HAIR);
+  Q(-6.2 + hx, -47.5 + lf, 12.4, 1.4, '#8f5b28');
+  Q(-6.6 + hx, -44 + lf, 2, 5.5, HAIR);
+  Q(4.4 + hx, -44.5 + lf, 2, 4.5, HAIR2);
+  QP([-6.2 + hx, -46 + lf, -1 + hx, -46 + lf, -3.5 + hx, -42.5 + lf], HAIR2);   /* Strähne */
+  QP([0.5 + hx, -46.5 + lf, 4.5 + hx, -46.5 + lf, 2 + hx, -43 + lf], HAIR2);
+  Q(-7.4 + hx, -48.5 + lf, 4, 2.4, HAIR);           /* Schopf */
+
+  /* Gesicht */
+  if (blink) {
+    Q(-3.4 + hx, -40.6 + lf, 2.2, 1, '#9c6b45');
+    Q(1.2 + hx, -40.6 + lf, 2.2, 1, '#9c6b45');
+  } else {
+    Q(-3.4 + hx, -41.4 + lf, 2.2, 2.2, '#f4f0e6');
+    Q(1.2 + hx, -41.4 + lf, 2.2, 2.2, '#f4f0e6');
+    Q(-2.6 + hx, -41.2 + lf, 1.4, 1.8, '#2a2118');
+    Q(1.9 + hx, -41.2 + lf, 1.4, 1.8, '#2a2118');
+    Q(-2.4 + hx, -41 + lf, .6, .6, '#ffffff');
+    Q(2.1 + hx, -41 + lf, .6, .6, '#ffffff');
+  }
+  Q(-3.8 + hx, -42.8 + lf, 2.8, .9, HAIR2);         /* Brauen */
+  Q(1 + hx, -42.8 + lf, 2.8, .9, HAIR2);
+  QP([-.6 + hx, -39.6 + lf, 2.6 + hx, -38.4 + lf, -.6 + hx, -37.8 + lf], SKIN2);  /* Nase */
+  /* Mund */
+  if (P0.mouth === 0) Q(-1.8 + hx, -36.6 + lf, 4, 1, '#8c4a3a');
+  else if (P0.mouth === 1) { Q(-1.8 + hx, -37 + lf, 4, 2, '#7a3830'); Q(-1.2 + hx, -36.4 + lf, 2.6, .8, '#c96a5a'); }
+  else { Q(-2 + hx, -37.4 + lf, 4.4, 3, '#6b2c26'); Q(-1.4 + hx, -36.6 + lf, 3.2, 1.4, '#d07a68'); }
+
+  /* --- Zipfelmütze --- */
+  if (hat) {
+    QP([-7.5 + hx, -46.5 + lf, 7.5 + hx, -46.5 + lf, 3 + hx - ln, -61 + lf], HATC);
+    QP([-7.5 + hx, -46.5 + lf, 0 + hx, -46.5 + lf, 1.2 + hx - ln * .6, -54 + lf], HATC2);
+    QP([2 + hx, -50 + lf, 5 + hx, -50 + lf, 3 + hx - ln, -61 + lf], HATC3);
+    Q(-8.2 + hx, -48 + lf, 16.4, 2.8, HATC3);
+    Q(-8.2 + hx, -46.4 + lf, 16.4, 1, HATC2);
+    E(x + (3 + hx - ln) * face * s, y + (-61 + lf) * s, 1.8 * s, 1.8 * s, '#ffdc52');
+    E(x + (3 + hx - ln) * face * s, y + (-61 + lf) * s, 3.2 * s, 3.2 * s, 'rgba(255,220,80,.22)');
+  }
+}
+
+/* Alte Signatur bleibt erhalten (Frame-Index) – wird von assets.js ersetzt */
 function drawSimon(x, y, s, frame, face, hat, blink) {
   function Q(dx, dy, dw, dh, c) { R(x + dx * face * s, y + dy * s, dw * s, dh * s, c); }
   function Qc(dx, dy, dw, dh, c) { R(x + (dx * face - (face < 0 ? dw : 0)) * s, y + dy * s, dw * s, dh * s, c); }
@@ -537,6 +691,72 @@ var PROPS = {
       E(gx, gy, 2.4, 1.7, rnd(i + 5) > .5 ? '#e9b54a' : '#c98a30');
     }
     E(x - 4, y - 6, 2.4, 1.7, '#f4d888');
+  } },
+
+  /* --- Neue Welt-Sprites --- */
+  pilzring: { w: 30, h: 14, ox: 15, oy: 13, draw: function (x, y) {
+    for (var i = 0; i < 7; i++) {
+      var a = i / 7 * Math.PI * 2, px = x + Math.cos(a) * 11, py = y - 3 + Math.sin(a) * 4;
+      R(px - 1, py - 4, 2, 4, '#e8dfc7');
+      E(px, py - 5, 3, 2, i % 2 ? '#c94b45' : '#d99b38');
+      R(px - 1, py - 6, 1, 1, '#fff4d0');
+    }
+  } },
+  wegstein: { w: 20, h: 26, ox: 10, oy: 25, draw: function (x, y) {
+    P([x - 7, y, x + 7, y, x + 5, y - 20, x - 3, y - 24, x - 7, y - 15], '#65635f');
+    P([x - 3, y - 24, x + 5, y - 20, x + 2, y - 10], '#85827a');
+    P([x - 3, y - 15, x + 3, y - 18, x + 1, y - 14, x + 4, y - 12, x - 2, y - 10], '#a58ad6');
+  } },
+  gluehpilz: { w: 20, h: 24, ox: 10, oy: 23, draw: function (x, y) {
+    R(x - 1.5, y - 12, 3, 12, '#b8c6a3');
+    E(x, y - 14, 8, 5, '#70c9a0'); E(x, y - 15, 6, 3, '#a4f0c6');
+    E(x, y - 14, 12, 9, 'rgba(100,240,180,.10)');
+    R(x - 5, y - 15, 2, 1, '#e5fff1'); R(x + 3, y - 17, 2, 1, '#e5fff1');
+  } },
+  runenstein: { w: 24, h: 34, ox: 12, oy: 33, draw: function (x, y) {
+    P([x - 9, y, x + 9, y, x + 7, y - 27, x + 2, y - 32, x - 7, y - 28], '#3f4744');
+    P([x - 7, y - 28, x + 2, y - 32, x, y - 8], '#56605b');
+    L(x - 3, y - 23, x + 3, y - 17, '#9d75df', 1);
+    L(x + 3, y - 17, x - 2, y - 11, '#9d75df', 1);
+    L(x - 4, y - 17, x + 4, y - 17, '#d0b2ff', 1);
+    E(x, y - 17, 8, 12, 'rgba(155,93,229,.08)');
+  } },
+  spinnennetz: { w: 32, h: 28, ox: 16, oy: 27, draw: function (x, y) {
+    var c = 'rgba(205,215,220,.62)';
+    L(x - 14, y - 25, x + 14, y, c, 1); L(x + 14, y - 25, x - 14, y, c, 1);
+    L(x, y - 26, x, y, c, 1); L(x - 15, y - 13, x + 15, y - 13, c, 1);
+    E(x, y - 13, 6, 6, 'rgba(0,0,0,0)'); E(x, y - 13, 11, 11, 'rgba(0,0,0,0)');
+    for (var i = 0; i < 8; i++) {
+      var a = i / 8 * Math.PI * 2;
+      L(x + Math.cos(a) * 5, y - 13 + Math.sin(a) * 5, x + Math.cos(a) * 10, y - 13 + Math.sin(a) * 10, c, 1);
+    }
+  } },
+  kraeuter: { w: 22, h: 30, ox: 11, oy: 29, draw: function (x, y) {
+    R(x - 1, y - 29, 2, 7, '#8a6a3d');
+    for (var i = -2; i <= 2; i++) {
+      var bx = x + i * 3, len = 12 + (i % 2) * 3;
+      L(bx, y - 23, bx + i, y - 23 + len, '#768f47', 1);
+      E(bx + i - 2, y - 17 + len * .25, 2.5, 1.5, '#5f7b3d');
+      E(bx + i + 2, y - 14 + len * .35, 2.5, 1.5, '#819b4f');
+    }
+  } },
+  wegfahne: { w: 24, h: 42, ox: 12, oy: 41, draw: function (x, y) {
+    R(x - 1, y - 38, 2, 38, '#57402a'); E(x, y, 4, 1.5, 'rgba(0,0,0,.25)');
+    P([x + 1, y - 37, x + 12, y - 34, x + 2, y - 27], '#70409c');
+    P([x + 1, y - 37, x + 7, y - 35, x + 2, y - 31], '#9d62cf');
+    R(x + 4, y - 34, 2, 2, '#f0d36a');
+  } },
+  lichtkugel: { w: 18, h: 18, ox: 9, oy: 9, draw: function (x, y) {
+    E(x, y - 9, 8, 8, 'rgba(130,105,220,.10)');
+    E(x, y - 9, 4, 4, 'rgba(170,145,245,.22)');
+    E(x, y - 9, 1.8, 1.8, '#eee2ff');
+    R(x - 5, y - 12, 1, 1, '#bda2ed'); R(x + 5, y - 6, 1, 1, '#bda2ed');
+  } },
+  fledermaus: { w: 22, h: 12, ox: 11, oy: 6, draw: function (x, y) {
+    E(x, y, 2.5, 3, '#24202b');
+    P([x - 2, y, x - 10, y - 5, x - 8, y + 3, x - 4, y + 1], '#302938');
+    P([x + 2, y, x + 10, y - 5, x + 8, y + 3, x + 4, y + 1], '#302938');
+    R(x - 1, y - 3, 1, 1, '#c96b5f'); R(x + 1, y - 3, 1, 1, '#c96b5f');
   } },
 
   /* --- Wirtshaus --- */

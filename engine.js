@@ -27,6 +27,8 @@ var journalOpen = false;
 var stepDist = 0;
 var hintLevel = 0, hintKey = '';
 var toast = null;
+var sceneEnteredAt = 0;
+var revealUntil = 0;
 
 var state = { scene: 'lichtung', verb: 'gehe', inv: [], flags: {} };
 
@@ -41,7 +43,7 @@ var VERBS = [
 /* ---------------- HUD-Maße ---------------- */
 var INVBAR = { h: 26, slot: 24, max: 11 };
 var BTN = [
-  { id: 'hinweis' }, { id: 'tagebuch' }, { id: 'musik' }, { id: 'stimme' }, { id: 'vollbild' }
+  { id: 'hinweis' }, { id: 'magie' }, { id: 'tagebuch' }, { id: 'musik' }, { id: 'stimme' }, { id: 'vollbild' }
 ];
 (function () {
   for (var i = 0; i < BTN.length; i++) { BTN[i].x = 296 - i * 15; BTN[i].y = 4; BTN[i].w = 13; BTN[i].h = 12; }
@@ -164,10 +166,11 @@ function render() {
   else {
     var sc = SCENES[state.scene];
     sc.draw(T, state.flags);
+    if (actor.moving) drawActorTrail();
     if (actor.visible) {
       var f = 0, bob = 0, blink = false;
-      if (actor.moving) f = [0, 1, 0, 3][Math.floor(actor.dist / 5) % 4];
-      else { bob = Math.sin(T * .04) * .5; blink = (T % 190) < 7; }
+      if (actor.moving) f = 10 + (Math.floor(actor.dist / 4.2) % 6);
+      else { f = 20 + (Math.floor(T / 44) % 3); bob = Math.sin(T * .04) * .5; blink = (T % 190) < 7; }
       drawSimon(actor.x, actor.y + bob, actorScale(), f, actor.face, !!state.flags.hut, blink);
     }
     if (sc.front) sc.front(T, state.flags);
@@ -256,6 +259,18 @@ function torchLight(x, y) {
   g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
 }
 
+/* Kleine Bodenreaktion beim Laufen: Staub, Asche oder Sumpfringe. */
+function drawActorTrail() {
+  var p = (actor.dist % 12) / 12, y = actor.y - 1;
+  if (state.scene === 'sumpf') {
+    E(actor.x, y, 3 + p * 8, 1 + p * 2.2, 'rgba(150,190,150,' + (.22 * (1 - p)) + ')');
+  } else if (state.scene === 'hoehle') {
+    for (var i = 0; i < 3; i++) E(actor.x - actor.face * (4 + i * 3), y - p * (5 + i), 1.2, 1.2, 'rgba(150,130,130,' + (.24 * (1 - p)) + ')');
+  } else {
+    for (var d = 0; d < 3; d++) E(actor.x - actor.face * (4 + d * 3), y - p * (3 + d), 1.2 + p, .7 + p, 'rgba(205,185,140,' + (.18 * (1 - p)) + ')');
+  }
+}
+
 function postFX() {
   var w = cv.width, h = cv.height;
   var gr = ctx.createRadialGradient(w / 2, h / 2, h * .5, w / 2, h / 2, h * 1.1);
@@ -312,6 +327,9 @@ function drawHUD() {
     return;
   }
 
+  drawExitGuides();
+  drawHotspotFocus();
+
   /* Objektbezeichnung am Zeiger */
   var label = cursorLabel();
   if (label) {
@@ -325,11 +343,92 @@ function drawHUD() {
     ctx.fillStyle = hov ? 'rgba(60,48,84,.85)' : 'rgba(20,16,30,.42)';
     ctx.fillRect(t.x * scale, t.y * scale, t.w * scale, t.h * scale);
     var col = on ? (hov ? '#ffe58a' : '#cbbde6') : '#6b6280';
-    var sym = { hinweis: '?', tagebuch: '≡', musik: '♪', stimme: '☺', vollbild: '⛶' }[t.id];
+    var sym = { hinweis: '?', magie: '✦', tagebuch: '≡', musik: '♪', stimme: '☺', vollbild: '⛶' }[t.id];
     txt(t.x + t.w / 2, t.y + 1.5, sym, col, 'center', 8);
   }
 
   if (toast) txt(160, 12, toast.text, '#ffe58a', 'center', 7.5);
+}
+
+/* Sichtbare, aber ruhige Wegmarken: Pfeil immer, Zielname beim Betreten
+   einer Szene, auf Touch-Geräten und beim Darüberfahren. */
+function drawExitGuides() {
+  if (busy || bubble || pending || invOpen || mode !== 'play') return;
+  var sc = SCENES[state.scene], age = performance.now() - sceneEnteredAt;
+  if (!sc || !sc.hotspots) return;
+
+  if (age < 3000) {
+    var la = Math.max(0, Math.min(1, (3000 - age) / 500));
+    ctx.fillStyle = 'rgba(10,8,18,' + (0.52 * la) + ')';
+    ctx.fillRect(8 * scale, 7 * scale, Math.min(116, 18 + sc.name.length * 5.2) * scale, 13 * scale);
+    txt(14, 9, sc.name, 'rgba(255,238,184,' + la + ')', 'left', 7.5);
+  }
+
+  for (var i = 0; i < sc.hotspots.length; i++) {
+    var h = sc.hotspots[i];
+    if (!h.exit || (h.when && !h.when())) continue;
+    var r = h.rect, cx = r[0] + r[2] / 2, cy = r[1] + r[3] / 2;
+    var dir = h.exitDir || (cx < 42 ? 'left' : (cx > 278 ? 'right' : (cy < 116 ? 'up' : 'down')));
+    var x = cx, y = cy;
+    if (dir === 'left') x = Math.max(7, r[0] + 7);
+    if (dir === 'right') x = Math.min(VW - 7, r[0] + r[2] - 7);
+    if (dir === 'up') y = Math.max(20, r[1] + 7);
+    if (dir === 'down') y = Math.min(VH - 30, r[1] + r[3] - 7);
+
+    var hot = hoverObj === h, pulse = .72 + Math.sin(T * .08 + i) * .16;
+    ctx.fillStyle = hot ? 'rgba(89,57,132,.92)' : 'rgba(8,7,14,.66)';
+    ctx.fillRect((x - 6) * scale, (y - 6) * scale, 12 * scale, 12 * scale);
+    ctx.strokeStyle = 'rgba(255,222,112,' + (hot ? 1 : pulse) + ')';
+    ctx.lineWidth = Math.max(1, scale);
+    ctx.strokeRect((x - 5.5) * scale, (y - 5.5) * scale, 11 * scale, 11 * scale);
+
+    ctx.beginPath();
+    if (dir === 'left') { ctx.moveTo((x - 3) * scale, y * scale); ctx.lineTo((x + 2) * scale, (y - 3) * scale); ctx.lineTo((x + 2) * scale, (y + 3) * scale); }
+    else if (dir === 'right') { ctx.moveTo((x + 3) * scale, y * scale); ctx.lineTo((x - 2) * scale, (y - 3) * scale); ctx.lineTo((x - 2) * scale, (y + 3) * scale); }
+    else if (dir === 'up') { ctx.moveTo(x * scale, (y - 3) * scale); ctx.lineTo((x - 3) * scale, (y + 2) * scale); ctx.lineTo((x + 3) * scale, (y + 2) * scale); }
+    else { ctx.moveTo(x * scale, (y + 3) * scale); ctx.lineTo((x - 3) * scale, (y - 2) * scale); ctx.lineTo((x + 3) * scale, (y - 2) * scale); }
+    ctx.closePath();
+    ctx.fillStyle = '#ffe58a'; ctx.fill();
+
+    if (isTouch || hot || age < 4200) {
+      var label = h.exitTo || h.name, tw = measure(label, 6.5) + 8;
+      var lx = Math.max(tw / 2 + 2, Math.min(VW - tw / 2 - 2, x));
+      var ly = dir === 'down' ? y - 16 : y + 9;
+      ctx.fillStyle = 'rgba(8,7,14,.78)';
+      ctx.fillRect((lx - tw / 2) * scale, (ly - 1) * scale, tw * scale, 9 * scale);
+      txt(lx, ly, label, hot ? '#fff2b8' : '#d9c9ee', 'center', 6.5);
+    }
+  }
+}
+
+/* "Magiesicht": interaktive Stellen leuchten kurz auf; der aktuelle
+   Hoverpunkt bekommt dieselben Eckmarken dauerhaft und stärker. */
+function drawHotspotFocus() {
+  if (mode !== 'play' || busy || bubble || dialogChoices || pending) return;
+  var reveal = performance.now() < revealUntil, sc = SCENES[state.scene];
+  if (!reveal && !hoverObj) return;
+  for (var i = 0; i < sc.hotspots.length; i++) {
+    var h = sc.hotspots[i], hot = hoverObj === h;
+    if (h.exit || (!hot && !reveal) || (h.when && !h.when())) continue;
+    var r = h.rect;
+    if (!r || r[2] * r[3] > 22000) continue;
+    var a = hot ? .95 : (.35 + Math.sin(T * .07 + i) * .12);
+    var x1 = r[0], y1 = r[1], x2 = r[0] + r[2], y2 = r[1] + r[3], c = Math.min(5, r[2] / 3, r[3] / 3);
+    ctx.strokeStyle = 'rgba(224,193,255,' + a + ')';
+    ctx.lineWidth = Math.max(1, scale * .7);
+    ctx.beginPath();
+    ctx.moveTo((x1 + c) * scale, y1 * scale); ctx.lineTo(x1 * scale, y1 * scale); ctx.lineTo(x1 * scale, (y1 + c) * scale);
+    ctx.moveTo((x2 - c) * scale, y1 * scale); ctx.lineTo(x2 * scale, y1 * scale); ctx.lineTo(x2 * scale, (y1 + c) * scale);
+    ctx.moveTo(x1 * scale, (y2 - c) * scale); ctx.lineTo(x1 * scale, y2 * scale); ctx.lineTo((x1 + c) * scale, y2 * scale);
+    ctx.moveTo((x2 - c) * scale, y2 * scale); ctx.lineTo(x2 * scale, y2 * scale); ctx.lineTo(x2 * scale, (y2 - c) * scale);
+    ctx.stroke();
+    if (hot || (reveal && i % 2 === 0)) {
+      var sx = x2 - 2, sy = y1 + 2 + Math.sin(T * .09 + i) * 2;
+      ctx.fillStyle = 'rgba(255,238,184,' + a + ')';
+      ctx.fillRect((sx - 2) * scale, sy * scale, 5 * scale, Math.max(1, scale));
+      ctx.fillRect(sx * scale, (sy - 2) * scale, Math.max(1, scale), 5 * scale);
+    }
+  }
 }
 
 /* Die Leiste gehört in den Weltpuffer, weil die Item-Icons dort gezeichnet werden. */
@@ -439,6 +538,7 @@ async function goScene(id, x, y, face) {
   actor.y = (y === undefined ? sc.start.y : y);
   actor.tx = actor.x; actor.ty = actor.y; actor.moving = false;
   if (face) actor.face = face;
+  sceneEnteredAt = performance.now();
   invScroll = 0; hoverObj = null; hintLevel = 0;
   playMusic(id);
   saveGame();
@@ -484,6 +584,7 @@ async function continueGame() {
   actor.x = s.x || 160; actor.y = s.y || 150; actor.tx = actor.x; actor.ty = actor.y;
   fadeVal = 1;
   audioInit(); playMusic(state.scene);
+  sceneEnteredAt = performance.now();
   await fadeTo(0, 600);
   showToast('Spielstand geladen');
 }
@@ -657,8 +758,10 @@ function onKey(e) {
   if (e.key === 'i' || e.key === 'I' || e.key === 'Tab') { invPinned = !invPinned; e.preventDefault(); }
   if (e.key === 'j' || e.key === 'J') journalOpen = !journalOpen;
   if (e.key === 'h' || e.key === 'H') giveHint();
+  if (e.key === 'v' || e.key === 'V') revealHotspots();
   if (e.key === 'm' || e.key === 'M') setMusic(!AU.musicOn);
   if (e.key === 'a' || e.key === 'A') exportAtlas();
+  if (e.key === 't' || e.key === 'T') exportTileset();
 }
 
 function btnAction(id) {
@@ -666,8 +769,16 @@ function btnAction(id) {
   if (id === 'musik') { setMusic(!AU.musicOn); showToast('Musik ' + (AU.musicOn ? 'an' : 'aus')); return; }
   if (id === 'stimme') { AU.speechOn = !AU.speechOn; if (!AU.speechOn) stopSpeech(); showToast('Sprachausgabe ' + (AU.speechOn ? 'an' : 'aus')); return; }
   if (id === 'hinweis') { giveHint(); return; }
+  if (id === 'magie') { revealHotspots(); return; }
   if (id === 'tagebuch') { journalOpen = !journalOpen; return; }
   if (id === 'vollbild') { toggleFullscreen(); return; }
+}
+
+function revealHotspots() {
+  if (mode !== 'play' || busy || bubble) return;
+  revealUntil = performance.now() + 2600;
+  showToast('Magiesicht zeigt interaktive Stellen');
+  sfx('magic');
 }
 
 function toggleFullscreen() {

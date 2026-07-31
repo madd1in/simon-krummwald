@@ -1,8 +1,8 @@
 # Simon der Zauberer – Der Fluch von Krummwald
 
 Ein komplett neues Point-&-Click-Adventure im Stil der klassischen 90er-Jahre-Adventures.
-Eigene Geschichte, eigene Rätsel, sechs Schauplätze – alles in reinem JavaScript,
-ohne Framework, ohne externe Bilder oder Audiodateien.
+Eigene Geschichte, eigene Rätsel, sieben Schauplätze – alles in reinem JavaScript,
+ohne Framework und ohne externe Bilddateien.
 
 **[▶ Im Browser spielen](https://madd1in.github.io/simon-krummwald/)**
 
@@ -30,8 +30,10 @@ Wege werden gegangen, Leute angesprochen, Dinge aufgehoben oder bedient.
 | I oder Tab | Inventarleiste festpinnen |
 | J | Tagebuch mit den offenen Zielen |
 | H | Hinweis (dreistufig, von vage bis konkret) |
+| V | Magiesicht: interaktive Stellen kurz hervorheben |
 | M | Musik an/aus |
 | A | Sprite-Atlas als PNG exportieren |
+| T | Tileset als PNG exportieren |
 
 **Gegenstände benutzen:** Ein Klick auf ein Stück im Inventar nimmt es in die Hand.
 Ein zweiter Klick darauf benutzt es (Buch lesen, Fackel anzünden). Klickt man
@@ -45,19 +47,26 @@ Der Spielstand wird automatisch gespeichert — beim nächsten Aufruf steht
 
 ## Features
 
-- **Sechs Schauplätze:** Lichtung, Dorf Krummwald, Nebelsumpf, Zaubererhütte, Drachenhöhle, Steinkreis
+- **Sieben Schauplätze:** Lichtung, Dorf Krummwald, Wirtshaus, Nebelsumpf,
+  Zaubererhütte, Drachenhöhle und Steinkreis
 - **Minimales HUD:** kein Verbkasten, der die Hälfte des Bildes frisst – die Szene nutzt die volle Fläche
 - **14 verzahnte Rätsel** ohne Sackgassen – man kann sich nicht aussperren
 - **Dialogsystem** mit Antwortauswahl und fünf sprechenden Figuren
 - **Sprachausgabe** über die Web Speech API – jede Figur hat ihre eigene Stimmlage
-- **Prozedurale Musik & Soundeffekte** aus der Web Audio API, pro Schauplatz ein eigener Track
+- **MP3-Soundtrack plus prozedurales Fallback:** „Mosswing Path“ läuft als Musikbett;
+  wenn die Datei nicht geladen werden kann, übernimmt automatisch die Web-Audio-Musik
+- **Prozedurale Soundeffekte** aus der Web Audio API
 - **Hinweissystem und Tagebuch**, die den Spielstand auswerten und den nächsten Schritt nennen
 - **Automatischer Spielstand** in localStorage
-- **Sprite-Atlas & Tilemaps:** Figuren, 25 Deko-Objekte, Icons und zwölf Bodenkachelarten
+- **Sprite-Atlas & Tilemaps:** Figuren mit sechsphasigem Laufzyklus, über 35 Deko-Objekte,
+  Icons und 20 Bodenkachelarten
   werden beim Start in einen Atlas gebacken und danach als Sprites geblittet;
   benachbarte Kachelarten werden an den Kanten verzahnt
 - **Atmosphäre:** Regen im Sumpf, Glühwürmchen am Steinkreis, Staub in der Hütte,
-  Funken in der Höhle, Fackelschein, Vordergrund-Ebenen, Vignette
+  Funken und Fledermäuse in der Höhle, Fackelschein, Vordergrund-Ebenen,
+  animierte Laufspuren und Vignette
+- **Magiesicht:** Taste **V** oder das Sternsymbol markiert kurz alle interaktiven
+  Stellen, ohne die minimalistische Oberfläche dauerhaft zu überladen
 - **Auflösungsunabhängig:** 320×200-Pixelbild, das sich stufenlos an jeden Bildschirm anpasst
 
 ## Technik
@@ -67,17 +76,21 @@ Kein Build, keine Abhängigkeiten. `index.html` öffnen genügt.
 | Datei | Inhalt |
 |---|---|
 | `index.html` | Gerüst, Skript-Loader mit Versionsstempel |
-| `audio.js` | Musiksequencer, Soundsynthese, Sprachausgabe |
+| `audio.js` | MP3-Soundtrack, Musik-Fallback, Soundsynthese, Sprachausgabe |
 | `art.js` | Zeichenprimitive, Figuren, Inventar-Icons |
 | `assets.js` | Sprite-Atlas, Tileset, Tilemap-Renderer, PNG-Export |
-| `scenes.js` | Die sechs Hintergründe und ihre Tilemaps |
+| `scenes.js` | Die sieben Hintergründe und ihre Tilemaps |
 | `engine.js` | Renderer, Eingabe (Maus/Touch), Verben, Inventar, Dialoge, Skalierung |
 | `game.js` | Gegenstände, Schauplätze, Rätsellogik, Dialoge, Hinweise |
 
 Die gesamte Grafik ist Code: Es gibt keine einzige Bilddatei. Beim Start rendert
 `bakeAtlas()` alle Figuren, Animationsphasen, Icons und Bodenkacheln einmalig in
 ein Offscreen-Canvas und ersetzt die Zeichenfunktionen durch Blits aus diesem Atlas.
-Mit Taste **A** lässt sich der fertige Atlas als PNG herunterladen.
+Mit Taste **A** lässt sich der fertige Atlas als PNG herunterladen; Taste **T**
+exportiert zusätzlich ein sauberes Tileset mit vier Varianten pro Bodentyp.
+
+Der Soundtrack liegt unter `assets/mosswing-path.mp3` und startet nach der ersten
+Eingabe im Browser. Der Musikschalter bzw. die Taste **M** steuert MP3 und Fallback gemeinsam.
 
 ### Lokal entwickeln
 
