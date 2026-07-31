@@ -124,8 +124,12 @@ function resize() {
   var topCrop = Math.min(6, lostY / 2);
   var cx = (VW - visW) / 2;
 
-  SAFE.x0 = Math.round(cx); SAFE.x1 = Math.round(VW - cx);
-  SAFE.y0 = Math.round(topCrop); SAFE.y1 = Math.round(VH - (lostY - topCrop));
+  /* Der sichere Bereich darf nie entarten – sonst rutscht das HUD
+     bei sehr kleinen Fenstern aus dem Bild oder verschwindet. */
+  SAFE.x0 = Math.max(0, Math.min(56, Math.round(cx)));
+  SAFE.x1 = Math.min(VW, Math.max(VW - 56, Math.round(VW - cx)));
+  SAFE.y0 = Math.max(0, Math.min(16, Math.round(topCrop)));
+  SAFE.y1 = Math.min(VH, Math.max(VH - 44, Math.round(VH - (lostY - topCrop))));
 
   /* Bild entsprechend nach unten schieben, damit der Ausschnitt sitzt */
   var overY = VH * s - availH;
