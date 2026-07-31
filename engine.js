@@ -526,7 +526,7 @@ function drawHUD() {
   /* Objektbezeichnung am Zeiger */
   var label = cursorLabel();
   if (label) {
-    var ly = Math.max(10, mouse.y - 12);
+    var ly = Math.max(SAFE.y0 + 10, mouse.y - 12);
     txt(Math.max(30, Math.min(VW - 30, mouse.x)), ly, label, '#ffeeb8', 'center', 7.5);
   }
 
@@ -540,7 +540,7 @@ function drawHUD() {
     txt(t.x + t.w / 2, t.y + (isTouch ? 4.5 : 1.5), sym, col, 'center', isTouch ? 11 : 8);
   }
 
-  if (toast) txt(160, isTouch ? 30 : 12, toast.text, '#ffe58a', 'center', 7.5);
+  if (toast) txt(160, SAFE.y0 + (isTouch ? 30 : 12), toast.text, '#ffe58a', 'center', 7.5);
 }
 
 /* Sichtbare, aber ruhige Wegmarken: Pfeil immer, Zielname beim Betreten
@@ -553,8 +553,8 @@ function drawExitGuides() {
   if (age < 3000) {
     var la = Math.max(0, Math.min(1, (3000 - age) / 500));
     ctx.fillStyle = 'rgba(10,8,18,' + (0.52 * la) + ')';
-    ctx.fillRect(8 * scale, 7 * scale, Math.min(116, 18 + sc.name.length * 5.2) * scale, 13 * scale);
-    txt(14, 9, sc.name, 'rgba(255,238,184,' + la + ')', 'left', 7.5);
+    ctx.fillRect((SAFE.x0 + 8) * scale, (SAFE.y0 + 7) * scale, Math.min(116, 18 + sc.name.length * 5.2) * scale, 13 * scale);
+    txt(SAFE.x0 + 14, SAFE.y0 + 9, sc.name, 'rgba(255,238,184,' + la + ')', 'left', 7.5);
   }
 
   for (var i = 0; i < sc.hotspots.length; i++) {
@@ -565,7 +565,7 @@ function drawExitGuides() {
     var x = cx, y = cy;
     if (dir === 'left') x = Math.max(7, r[0] + 7);
     if (dir === 'right') x = Math.min(VW - 7, r[0] + r[2] - 7);
-    if (dir === 'up') y = Math.max(20, r[1] + 7);
+    if (dir === 'up') y = Math.max(SAFE.y0 + 20, r[1] + 7);
     if (dir === 'down') y = Math.min(SAFE.y1 - 30, r[1] + r[3] - 7);
     /* nie unter der Werkzeugleiste oder hinter der Inventarleiste verstecken */
     if (underToolbar(x, y)) y = toolbarBottom() + 12;
@@ -718,7 +718,19 @@ function drawBubble() {
   /* sanft einblenden statt hart aufpoppen */
   var fadeIn = Math.min(1, (performance.now() - bubble.start) / 140);
   ctx.globalAlpha = fadeIn;
-  var y0 = bubble.who === 'narrator' ? 12 : Math.max(4, pos.y - lines.length * lh - 4);
+  /* Blasen müssen im sichtbaren Ausschnitt bleiben – im Füllmodus
+     ist der obere Bildrand abgeschnitten. Passt es über dem Kopf
+     nicht mehr, rutscht die Blase unter die Figur. */
+  var topLimit = SAFE.y0 + 5;
+  var botLimit = SAFE.y1 - lines.length * lh - 6;
+  var y0;
+  if (bubble.who === 'narrator') {
+    y0 = SAFE.y0 + 12;
+  } else {
+    y0 = pos.y - lines.length * lh - 4;
+    if (y0 < topLimit) y0 = Math.min(pos.y + 12, botLimit);
+    y0 = Math.max(topLimit, Math.min(y0, botLimit));
+  }
   var x = Math.max(4 + wMax / 2, Math.min(VW - 4 - wMax / 2, pos.x));
   if (bubble.who === 'narrator') {
     ctx.fillStyle = 'rgba(8,6,14,.66)';
