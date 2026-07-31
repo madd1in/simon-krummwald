@@ -181,7 +181,7 @@ function bgLichtung(t, F) {
   bush(112, 100, 8, '#2e6626');
 
   /* Große Eiche, Nest und Wegweiser – ebenfalls unbewegt */
-  var nx = 46, ny = 26;
+  var nx = 46, ny = 34;
   cachedLayer('lichtung_baum_' + (F.hut ? 1 : 0), function () {
     var bx = 52;
     R(bx - 9, 40, 18, 66, '#5b3d20');

@@ -114,15 +114,26 @@ function resize() {
   cssScale = s; scale = s * dpr;
   cv.width = Math.round(VW * s * dpr); cv.height = Math.round(VH * s * dpr);
   cv.style.width = (VW * s) + 'px'; cv.style.height = (VH * s) + 'px';
-  cv.style.transform = rotated ? 'rotate(90deg)' : 'none';
   ctx.imageSmoothingEnabled = false;
 
-  /* Sichtbarer Ausschnitt in Spielkoordinaten: was beim Füllen über
-     den Rand ragt, darf kein HUD enthalten. */
+  /* Sichtbarer Ausschnitt in Spielkoordinaten. Oben hängen wichtige
+     Dinge (Vogelnest, Mond, Regale), deshalb wird dort höchstens
+     TOP_CROP abgeschnitten und der Rest unten weggenommen. */
   var visW = Math.min(VW, availW / s), visH = Math.min(VH, availH / s);
-  var cx = (VW - visW) / 2, cy = (VH - visH) / 2;
-  SAFE.x0 = Math.round(cx); SAFE.y0 = Math.round(cy);
-  SAFE.x1 = Math.round(VW - cx); SAFE.y1 = Math.round(VH - cy);
+  var lostY = VH - visH;
+  var topCrop = Math.min(6, lostY / 2);
+  var cx = (VW - visW) / 2;
+
+  SAFE.x0 = Math.round(cx); SAFE.x1 = Math.round(VW - cx);
+  SAFE.y0 = Math.round(topCrop); SAFE.y1 = Math.round(VH - (lostY - topCrop));
+
+  /* Bild entsprechend nach unten schieben, damit der Ausschnitt sitzt */
+  var overY = VH * s - availH;
+  var shift = overY > 0 ? (overY / 2 - topCrop * s) : 0;
+  var tf = rotated ? 'rotate(90deg)' : '';
+  if (shift) tf += (tf ? ' ' : '') + 'translateY(' + Math.round(shift) + 'px)';
+  cv.style.transform = tf || 'none';
+
   layoutHUD();
   fxCache = null;
 }

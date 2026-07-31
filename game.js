@@ -130,7 +130,7 @@ SCENES.lichtung = {
       use: function () { return say('simon', 'Klettern? Mit meiner Kondition? Der Baum würde vor Lachen die Rinde verlieren.'); }
     },
     {
-      id: 'nest', name: 'Nest', rect: [30, 12, 36, 22], go: [80, 110],
+      id: 'nest', name: 'Nest', rect: [28, 20, 40, 24], go: [80, 110],
       look: function () {
         if (state.flags.hut) return say('simon', 'Ein leeres Nest. Die Elster hat jetzt einen Knopf und ich meinen Hut. Nennt man wohl eine Win-win-Situation.');
         return say('simon', 'Da oben klebt ein Nest. Und darin, zwischen Zweigen und gestohlenem Kleinkram: MEIN HUT.');
@@ -138,7 +138,7 @@ SCENES.lichtung = {
       take: function () { return say('simon', 'Das Nest hängt sechs Meter über mir. Ich müsste die Elster überreden, herunterzukommen.'); }
     },
     {
-      id: 'elster', name: 'Elster', rect: [56, 2, 30, 24], go: [84, 110],
+      id: 'elster', name: 'Elster', rect: [54, 12, 34, 26], go: [84, 110],
       when: function () { return !state.flags.hut; },
       look: function () { return say('simon', 'Eine Elster. Schwarz, weiß, und mit dem moralischen Kompass eines Steuerberaters.'); },
       talk: talkElster,
