@@ -91,6 +91,54 @@ function sprite(name, x, y, s, flip) {
   g.restore();
 }
 
+/* Figur mit Szenenlicht: Grundfarbe leicht einfärben und einen
+   Lichtsaum aus der Richtung der Lichtquelle darüberlegen.
+   Läuft über ein kleines Zwischencanvas, damit nur die Figur
+   betroffen ist und nicht der Hintergrund. */
+var litBuf = null, litCtx = null;
+
+function tintedSprite(name, x, y, s, flip, light) {
+  var f = FRAMES[name];
+  if (!f) return;
+  if (!light) { sprite(name, x, y, s, flip); return; }
+
+  if (!litBuf) {
+    litBuf = document.createElement('canvas');
+    litBuf.width = 96; litBuf.height = 96;
+    litCtx = litBuf.getContext('2d');
+    litCtx.imageSmoothingEnabled = false;
+  }
+  if (f.w > litBuf.width || f.h > litBuf.height) { sprite(name, x, y, s, flip); return; }
+
+  litCtx.clearRect(0, 0, f.w, f.h);
+
+  /* 1. Lichtsaum: versetzte Silhouette, zur Lichtfarbe umgefärbt */
+  if (light.rim) {
+    litCtx.globalCompositeOperation = 'source-over';
+    litCtx.drawImage(ATLAS, f.x, f.y, f.w, f.h, light.dx || -1, light.dy || -1, f.w, f.h);
+    litCtx.globalCompositeOperation = 'source-in';
+    litCtx.fillStyle = light.rim;
+    litCtx.fillRect(0, 0, f.w, f.h);
+  }
+  /* 2. die Figur selbst darüber */
+  litCtx.globalCompositeOperation = 'source-over';
+  litCtx.drawImage(ATLAS, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
+
+  /* 3. Grundton der Szene über alles, was zur Figur gehört */
+  if (light.tint) {
+    litCtx.globalCompositeOperation = 'source-atop';
+    litCtx.fillStyle = light.tint;
+    litCtx.fillRect(0, 0, f.w, f.h);
+  }
+  litCtx.globalCompositeOperation = 'source-over';
+
+  g.save();
+  g.translate(x, y);
+  if (s !== 1 || flip) g.scale(flip ? -s : s, s);
+  g.drawImage(litBuf, 0, 0, f.w, f.h, -f.ox, -f.oy, f.w, f.h);
+  g.restore();
+}
+
 /* ---------- Tileset ---------- */
 
 function tilePixels(kind, seed) {
@@ -477,7 +525,10 @@ function bakeAtlas() {
     else if (frame === 40) pose = 'bueck';
     else if (frame === 1) pose = 'walk1';
     else if (frame === 3) pose = 'walk4';
-    sprite('simonpose_' + (hat ? 1 : 0) + '_' + (blink ? 1 : 0) + '_' + pose, x, y, s, face < 0);
+    var nm = 'simonpose_' + (hat ? 1 : 0) + '_' + (blink ? 1 : 0) + '_' + pose;
+    var sc = (typeof SCENES !== 'undefined' && SCENES[state.scene]) ? SCENES[state.scene] : null;
+    if (sc && sc.light) tintedSprite(nm, x, y, s, face < 0, sc.light);
+    else sprite(nm, x, y, s, face < 0);
   };
   drawIcon = function (id, x, y) { sprite('item_' + id, x, y, 1, false); };
   drawBruno = function (x, y, t) { sprite('bruno_' + (Math.floor(t / 40) % NPC_PHASES), x, y, 1, false); };

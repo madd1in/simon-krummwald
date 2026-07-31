@@ -678,6 +678,9 @@ function drawBubble() {
   }
   var lines = bubble.lay.lines, wMax = bubble.lay.wMax;
   var lh = size + 2;
+  /* sanft einblenden statt hart aufpoppen */
+  var fadeIn = Math.min(1, (performance.now() - bubble.start) / 140);
+  ctx.globalAlpha = fadeIn;
   var y0 = bubble.who === 'narrator' ? 12 : Math.max(4, pos.y - lines.length * lh - 4);
   var x = Math.max(4 + wMax / 2, Math.min(VW - 4 - wMax / 2, pos.x));
   if (bubble.who === 'narrator') {
@@ -685,6 +688,7 @@ function drawBubble() {
     ctx.fillRect((x - wMax / 2 - 6) * scale, (y0 - 4) * scale, (wMax + 12) * scale, (lines.length * lh + 6) * scale);
   }
   for (var l = 0; l < lines.length; l++) txt(x, y0 + l * lh, lines[l], col, 'center', size);
+  ctx.globalAlpha = 1;
 }
 
 function speakerPos(who) {
@@ -953,7 +957,16 @@ function handleClick(p, right) {
 
   if (!hs) {
     if (pending) { pending = null; return; }
-    if (!right) walkTo(p.x, p.y);
+    if (!right) {
+      /* Zielpunkt kurz markieren, damit der Klick quittiert wird */
+      var b0 = SCENES[state.scene].walk;
+      tapPulse = {
+        x: Math.max(b0.x1, Math.min(b0.x2, p.x)),
+        y: Math.max(b0.y1, Math.min(b0.y2, p.y)),
+        t0: performance.now()
+      };
+      walkTo(p.x, p.y);
+    }
     return;
   }
   sfx('click');
