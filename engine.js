@@ -73,6 +73,7 @@ function startEngine() {
   g = world.getContext('2d');
   g.scale(RES, RES);                 /* ab hier wird in Spielkoordinaten gezeichnet */
   g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = 'high';
   cv = document.getElementById('cv');
   ctx = cv.getContext('2d');
   bakeAtlas();
@@ -125,6 +126,7 @@ function resize() {
   cv.width = Math.round(VW * s * dpr); cv.height = Math.round(VH * s * dpr);
   cv.style.width = (VW * s) + 'px'; cv.style.height = (VH * s) + 'px';
   ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   /* Sichtbarer Ausschnitt in Spielkoordinaten. Oben hängen wichtige
      Dinge (Vogelnest, Mond, Regale), deshalb wird dort höchstens
@@ -380,6 +382,7 @@ function render() {
   }
 
   ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   var sh = shakeOffset();
   if (sh) {
     ctx.drawImage(world, Math.round(sh.x * scale), Math.round(sh.y * scale), cv.width, cv.height);
@@ -1326,6 +1329,13 @@ function onKey(e) {
   if (e.key === 'v' || e.key === 'V') revealHotspots();
   if (e.key === 'm' || e.key === 'M') setMusic(!AU.musicOn);
   if (e.key === 'a' || e.key === 'A') exportAtlas();
+  if (e.key === 'o' || e.key === 'O') {
+    OUTLINES = !OUTLINES;
+    FRAMES = {}; packX = 0; packY = 0; packRow = 0;
+    clearLayerCache();
+    bakeAtlas();
+    showToast(OUTLINES ? 'Konturen an' : 'Konturen aus');
+  }
   if (e.key === 'f' || e.key === 'F') toggleFullscreen();
   if (e.key === 'z' || e.key === 'Z') {
     fillMode = !fillMode; resize();

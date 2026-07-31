@@ -57,10 +57,12 @@ function bake(name, w, h, ox, oy, fn) {
    acht Richtungen versetzt, dann die Figur darüber. Das hebt die
    Figuren sauber vom Hintergrund ab. */
 var outBufA = null, outCtxA = null, outBufB = null, outCtxB = null;
+var OUTLINES = false;      /* Konturen um Figuren – Taste O schaltet um */
 
 function bakeOutlined(name, w, h, ox, oy, fn, col, th) {
-  col = col || 'rgba(18,14,26,.85)';
-  th = (th || 1) / RES * 2;
+  if (!OUTLINES) { bake(name, w, h, ox, oy, fn); return; }
+  col = col || 'rgba(20,16,28,.55)';
+  th = (th || 1) / RES;
 
   if (!outBufA) {
     outBufA = document.createElement('canvas'); outCtxA = outBufA.getContext('2d');
@@ -73,8 +75,8 @@ function bakeOutlined(name, w, h, ox, oy, fn, col, th) {
   }
   outCtxA.setTransform(1, 0, 0, 1, 0, 0); outCtxA.clearRect(0, 0, pw, ph);
   outCtxB.setTransform(1, 0, 0, 1, 0, 0); outCtxB.clearRect(0, 0, pw, ph);
-  outCtxA.imageSmoothingEnabled = true;
-  outCtxB.imageSmoothingEnabled = true;
+  outCtxA.imageSmoothingEnabled = true; outCtxA.imageSmoothingQuality = 'high';
+  outCtxB.imageSmoothingEnabled = true; outCtxB.imageSmoothingQuality = 'high';
 
   /* Figur in Puffer A */
   var save = g;
@@ -119,7 +121,7 @@ function cachedLayer(key, fn) {
     c = document.createElement('canvas');
     c.width = VW * RES; c.height = VH * RES;
     var cx = c.getContext('2d');
-    cx.imageSmoothingEnabled = true;
+    cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
     cx.scale(RES, RES);
     var save = g;
     g = cx;
@@ -161,7 +163,7 @@ function tintedSprite(name, x, y, s, flip, light) {
     litBuf = document.createElement('canvas');
     litBuf.width = 96 * RES; litBuf.height = 96 * RES;
     litCtx = litBuf.getContext('2d');
-    litCtx.imageSmoothingEnabled = true;
+    litCtx.imageSmoothingEnabled = true; litCtx.imageSmoothingQuality = 'high';
     litCtx.scale(RES, RES);
   }
   if (f.w > 96 || f.h > 96) { sprite(name, x, y, s, flip); return; }
@@ -593,7 +595,7 @@ function bakeAtlas() {
   ATLAS = document.createElement('canvas');
   ATLAS.width = 1024 * RES; ATLAS.height = 768 * RES;
   AX = ATLAS.getContext('2d');
-  AX.imageSmoothingEnabled = true;
+  AX.imageSmoothingEnabled = true; AX.imageSmoothingQuality = 'high';
   packX = 0; packY = 0; packRow = 0;
 
   /* Originalfunktionen sichern, bevor sie ersetzt werden */
