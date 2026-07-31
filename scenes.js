@@ -16,19 +16,34 @@ var LEG = { G: 'gras', D: 'gras_dunkel', P: 'pfad', K: 'kopfstein',
 var MAP_LICHTUNG = [
   'DDGGGGGGPPGGGGGGGGGD',
   'PGGGGGGGPPPGGGGGGGPP',
-  'PPGGDGGGPPPPGGGGGGPP'
+  'PPGGDGGGPPPPGGGGGGPP',
+  'PPGGGGGPPPPPGGGGGGPP',
+  'PGGGGGGPPPPPPGGGGGPP',
+  'GGGGGGPPPPPPPGGGGGPP',
+  'GGGGGPPPPPPPPGGGGGPP'
 ];
 var MAP_DORF = [
   'GKKKKKKKKKKKKKKKKKKG',
   'GKKKKKKKKKKKKKKKKKKK',
+  'KKKKKKKKKKKKKKKKKKKK',
+  'KKKKKKKKKKKKKKKKKKKK',
+  'KKKKKKKKKKKKKKKKKKKK',
+  'KKKKKKKKKKKKKKKKKKKK',
   'KKKKKKKKKKKKKKKKKKKK'
 ];
 var MAP_SUMPF = [
   'MMMMMMMPPPMMMMMMMMMM',
   'MMMMMMMMPPMMMMMMMMMM',
+  'MMMMMMMMMMMMMMMMMMMM',
+  'MMMMMMMMMMMMMMMMMMMM',
+  'MMMMMMMMMMMMMMMMMMMM',
+  'MMMMMMMMMMMMMMMMMMMM',
   'MMMMMMMMMMMMMMMMMMMM'
 ];
 var MAP_HUETTE = [
+  'HHHHHHHHHHHHHHHHHHHH',
+  'HHHHHHHHHHHHHHHHHHHH',
+  'HHHHHHHHHHHHHHHHHHHH',
   'HHHHHHHHHHHHHHHHHHHH',
   'HHHHHHHHHHHHHHHHHHHH',
   'HHHHHHHHHHHHHHHHHHHH'
@@ -36,13 +51,57 @@ var MAP_HUETTE = [
 var MAP_HOEHLE = [
   'FFFFFFFFFFFFFFFFFFFF',
   'FFFFFFFFFFFFFFFFFFFF',
+  'FFFFFFFFFFFFFFFFFFFF',
+  'FFFFFFFFFFFFFFFFFFFF',
+  'FFFFFFFFFFFFFFFFFFFF',
+  'FFFFFFFFFFFFFFFFFFFF',
   'FFFFFFFFFFFFFFFFFFFF'
 ];
 var MAP_STEINKREIS = [
   'NNNNNNNNNNNNNNNNNNNN',
   'NNNNNNNNPPPPNNNNNNNN',
-  'NNNNNNNPPPPPPNNNNNNN'
+  'NNNNNNNPPPPPPNNNNNNN',
+  'NNNNNNPPPPPPPNNNNNNN',
+  'NNNNNPPPPPPPPPNNNNNN',
+  'NNNNPPPPPPPPPPNNNNNN',
+  'NNNNPPPPPPPPPPPNNNNN'
 ];
+
+/* ------------------------------------------------------------
+   Vordergrund-Ebenen: werden NACH den Figuren gezeichnet und
+   geben dem Bild Tiefe.
+   ------------------------------------------------------------ */
+function frontFoliage(t, c1, c2) {
+  for (var i = 0; i < 34; i++) {
+    var x = rnd(i * 3.7) * 340 - 10;
+    var h = 10 + rnd(i * 1.9) * 22;
+    var sw = Math.sin(t * .02 + i) * 1.5;
+    P([x - 5, 200, x + 5, 200, x + sw, 200 - h], i % 2 ? c1 : c2);
+    P([x - 2, 200, x + 2, 200, x + sw * .6, 200 - h * .7], c2);
+  }
+}
+function frontReeds(t) {
+  for (var i = 0; i < 26; i++) {
+    var x = rnd(i * 5.3) * 340 - 10;
+    var h = 16 + rnd(i * 2.3) * 30;
+    var sw = Math.sin(t * .035 + i * .8) * 3;
+    L(x, 200, x + sw, 200 - h, '#1c2a1e', 1);
+    E(x + sw, 200 - h - 1, 1.4, 3.4, '#22301d');
+  }
+}
+function frontRocks(t) {
+  P([0, 200, 0, 168, 22, 178, 40, 200], '#191320');
+  P([320, 200, 320, 160, 292, 174, 274, 200], '#191320');
+  for (var i = 0; i < 5; i++) {
+    var x = 60 + i * 52 + rnd(i) * 20;
+    P([x - 14, 200, x + 14, 200, x + 4, 188 - rnd(i + 2) * 8], '#1d1626');
+  }
+}
+function frontStones(t) {
+  P([0, 200, 0, 150, 30, 164, 46, 200], '#0d140f');
+  P([320, 200, 320, 146, 288, 160, 272, 200], '#0d140f');
+  frontFoliage(t, '#101a12', '#16241a');
+}
 
 /* ------------------------------------------------------------
    1. LICHTUNG
@@ -62,8 +121,8 @@ function bgLichtung(t, F) {
 
   /* Wiese als Tilemap */
   drawTilemap(MAP_LICHTUNG, LEG, 0, 96);
-  groundShade(96, 142, .30, -.05);
-  grassTufts(0, VW, 96, 140, 4.2, '#2f6323', '#6ba43c');
+  groundShade(96, 200, .32, -.06);
+  grassTufts(0, VW, 96, 196, 4.2, '#2f6323', '#6ba43c');
 
   /* Büsche */
   bush(292, 104, 13, '#2f6b28');
@@ -125,7 +184,7 @@ function bgDorf(t, F) {
 
   /* Boden als Tilemap */
   drawTilemap(MAP_DORF, LEG, 0, 96);
-  groundShade(96, 142, .26, -.04);
+  groundShade(96, 200, .28, -.05);
 
   /* --- Wirtshaus links --- */
   R(6, 34, 96, 68, '#d8cdb0');                       /* Fachwerkwand */
@@ -225,7 +284,7 @@ function bgSumpf(t, F) {
 
   /* Boden als Tilemap */
   drawTilemap(MAP_SUMPF, LEG, 0, 92);
-  groundShade(92, 142, .34, .02);
+  groundShade(92, 200, .36, .02);
 
   /* Sumpftümpel vorne */
   E(134, 126, 66, 15, '#2a3128');
@@ -317,7 +376,7 @@ function bgHuette(t, F) {
   for (var i = 0; i < 16; i++) { R(i * 20, 0, 1, 108, '#2e2318'); R(i * 20 + 1, 0, 18, 1, 'rgba(255,220,180,.05)'); }
   /* Dielenboden als Tilemap */
   drawTilemap(MAP_HUETTE, LEG, 0, 104);
-  groundShade(104, 142, .34, .04);
+  groundShade(104, 200, .36, .04);
 
   /* Fenster links mit Sumpflicht */
   R(12, 20, 34, 30, '#2e2318');
@@ -442,7 +501,7 @@ function bgHoehle(t, F, lit) {
   }
   /* Höhlenboden als Tilemap */
   drawTilemap(MAP_HOEHLE, LEG, 0, 96);
-  groundShade(96, 142, .40, .10);
+  groundShade(96, 200, .42, .10);
   for (var r = 0; r < 40; r++) {
     var rx = rnd(r * 3.1) * VW, ry = 100 + rnd(r + 7) * 40;
     E(rx, ry, 2 + rnd(r + 1) * 4, 1.5 + rnd(r + 2) * 2, rnd(r + 5) > .5 ? '#5c5266' : '#382f42');
@@ -497,8 +556,8 @@ function bgSteinkreis(t, F) {
 
   /* Boden als Tilemap */
   drawTilemap(MAP_STEINKREIS, LEG, 0, 94);
-  groundShade(94, 142, .42, .10);
-  grassTufts(0, VW, 98, 140, 12.3, '#22331f', '#40592f');
+  groundShade(94, 200, .44, .10);
+  grassTufts(0, VW, 98, 196, 12.3, '#22331f', '#40592f');
 
   /* Steinkreis (hinten kleiner) */
   var stones = [[36, 108, 16, 44], [78, 102, 13, 36], [126, 98, 11, 30],

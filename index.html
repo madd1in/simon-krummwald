@@ -23,14 +23,14 @@
 </head>
 <body>
   <div id="wrap"><canvas id="cv"></canvas></div>
-  <div id="hint">Linksklick = Aktion &nbsp;·&nbsp; Rechtsklick = Anschauen &nbsp;·&nbsp; Tasten 1–6 = Verben &nbsp;·&nbsp; H = Hinweis &nbsp;·&nbsp; F5 = Neustart</div>
+  <div id="hint">Linksklick = handeln &nbsp;·&nbsp; Rechtsklick = anschauen &nbsp;·&nbsp; I = Inventar &nbsp;·&nbsp; J = Tagebuch &nbsp;·&nbsp; H = Hinweis</div>
 
   <script>
   /* Lädt die Spieldateien der Reihe nach.
      Mit "?dev" in der Adresse wird der Browser-Cache umgangen. */
   (function () {
     var files = ['audio.js', 'art.js', 'assets.js', 'scenes.js', 'engine.js', 'game.js'];
-    var BUILD = 6;   /* bei Änderungen erhöhen, damit Browser neu laden */
+    var BUILD = 7;   /* bei Änderungen erhöhen, damit Browser neu laden */
     var bust = /dev/i.test(location.href) ? '?v=' + Date.now() : '?v=' + BUILD;
     (function next(i) {
       if (i >= files.length) return;

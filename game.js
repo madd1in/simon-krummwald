@@ -56,6 +56,17 @@ ITEMS.muenzen.use = async function () {
   await say('simon', 'Geld benutzt man am besten bei Leuten, die etwas verkaufen.');
 };
 
+/* Klick auf Simon selbst – kleiner Klassiker */
+var SIMON_HS = {
+  id: 'simon_self', name: 'Simon', rect: [-1, -1, 0, 0], def: 'schau',
+  look: function () {
+    if (state.flags.hut) return say('simon', 'Gut aussehender junger Zauberer mit Hut. Der Hut macht wirklich viel aus.');
+    return say('simon', 'Ein Zauberer ohne Hut. Von hinten sehe ich aus wie jemand, der sich verlaufen hat. Von vorne auch.');
+  },
+  talk: function () { return say('simon', 'Ich rede mit mir selbst. In dieser Welt ist das vermutlich die beste Gesellschaft.'); },
+  use: function () { return say('simon', 'Ich benutze mich selbst. Steht wahrscheinlich nichts Gutes darüber im Handbuch.'); }
+};
+
 /* ---------------- Kombinieren ---------------- */
 
 async function combine(a, b) {
@@ -104,7 +115,12 @@ SCENES.lichtung = {
   start: { x: 170, y: 124 },
   speakers: { elster: { x: 72, y: 12 } },
   draw: bgLichtung, fx: 'leaves',
+  front: function (t) { frontFoliage(t, '#1b3a19', '#24491f'); },
   hotspots: [
+    {
+      id: 'himmel', name: 'Himmel', rect: [0, 0, 320, 56], go: [160, 150],
+      look: function () { return say('simon', 'Blauer Himmel, weiße Wolken. Wenigstens hat diese Welt das Wichtigste richtig gemacht.'); }
+    },
     {
       id: 'eiche', name: 'Eiche', rect: [28, 34, 50, 74], go: [86, 112],
       look: function () { return say('simon', 'Eine uralte Eiche. Knorrig, mächtig — und ganz oben trägt sie meinen Hut spazieren.'); },
@@ -193,6 +209,10 @@ SCENES.dorf = {
   start: { x: 40, y: 122 },
   speakers: { bruno: { x: 58, y: 58 }, mathilda: { x: 232, y: 50 } },
   draw: bgDorf,
+  front: function (t) {
+    P([0, 200, 0, 176, 26, 184, 34, 200], '#2a241c');
+    P([320, 200, 320, 172, 292, 182, 286, 200], '#2a241c');
+  },
   hotspots: [
     {
       id: 'wirtshaus', name: 'Wirtshaus', rect: [4, 10, 116, 92], go: [40, 118],
@@ -211,7 +231,7 @@ SCENES.dorf = {
       use: function (item) { if (item) return giveBruno(item); return say('simon', 'Ich sollte mit ihm reden statt an ihm herumzufummeln.'); }
     },
     {
-      id: 'brunnen', name: 'Brunnen', rect: [120, 84, 58, 58], go: [112, 134], face: 1,
+      id: 'brunnen', name: 'Brunnen', rect: [120, 84, 58, 58], go: [112, 134], face: 1, def: 'schau',
       look: async function () {
         await say('simon', 'Ein alter Steinbrunnen. In den Rand hat jemand etwas eingeritzt...');
         await say('narrator', '"Wer eintreten will, spreche: KRIBBELKRABBEL." Darunter, in anderer Handschrift: "Ja, ich weiß. Ich war jung."');
@@ -375,6 +395,7 @@ SCENES.sumpf = {
   start: { x: 166, y: 112 },
   speakers: { grombold: { x: 266, y: 52 } },
   draw: bgSumpf, fx: 'fog',
+  front: function (t) { frontReeds(t); },
   hotspots: [
     {
       id: 'huette', name: 'Hütte', rect: [0, 8, 84, 98], go: [90, 118],
@@ -401,7 +422,7 @@ SCENES.sumpf = {
       }
     },
     {
-      id: 'tuempel', name: 'Sumpftümpel', rect: [100, 110, 80, 30], go: [140, 138], face: 1,
+      id: 'tuempel', name: 'Sumpftümpel', rect: [100, 110, 80, 30], go: [140, 148], face: 1, def: 'schau',
       look: function () { return say('simon', 'Trübes, blubberndes Wasser. Es sieht giftig aus und riecht, als wäre es stolz darauf.'); },
       use: async function (item) {
         if (item === 'eimer') {
@@ -563,7 +584,7 @@ SCENES.huette = {
       }
     },
     {
-      id: 'uhr', name: 'Standuhr', rect: [254, 12, 44, 96], go: [246, 128], face: 1,
+      id: 'uhr', name: 'Standuhr', rect: [254, 12, 44, 96], go: [246, 138], face: 1, def: 'benutze',
       look: function () {
         if (state.flags.zahnradWeg) return say('simon', 'Eine ausgeweidete Standuhr. Sie zeigt jetzt für immer die Uhrzeit "egal".');
         return say('simon', 'Eine Standuhr, die viel zu schnell tickt. Hinter dem Glas sehe ich Messingzahnräder.');
@@ -635,6 +656,7 @@ SCENES.hoehle = {
   speakers: { drache: { x: 196, y: 60 } },
   draw: function (t, F) { bgHoehle(t, F, lit()); },
   fx: 'ember',
+  front: function (t) { if (lit()) frontRocks(t); },
   onEnter: async function () {
     if (!lit() && !state.flags.hoehleDunkelGesehen) {
       state.flags.hoehleDunkelGesehen = true;
@@ -658,7 +680,7 @@ SCENES.hoehle = {
       take: dark(function () { return say('simon', 'Ich stehle einem schlafenden Drachen kein Gold. Ich bin faul, nicht lebensmüde.'); })
     },
     {
-      id: 'drache', name: 'Drache', rect: [176, 66, 116, 62], go: [176, 136], face: 1,
+      id: 'drache', name: 'Drache', rect: [176, 66, 116, 62], go: [176, 150], face: 1, def: 'schau',
       look: dark(function () {
         if (state.flags.drachenSchlaf) return say('simon', 'Er schläft tief und fest und lächelt sogar ein bisschen. Vermutlich träumt er von Käse.');
         return say('simon', 'Er schläft. Aber es ist dieser dünne Schlaf, bei dem ein Niesen ausreicht, um zum Mittagessen zu werden.');
@@ -709,6 +731,7 @@ SCENES.steinkreis = {
   scaleMin: .66, scaleMax: 1,
   start: { x: 160, y: 134 },
   draw: bgSteinkreis, fx: 'fireflies',
+  front: function (t) { frontStones(t); },
   onEnter: async function () {
     if (!state.flags.kreisGesehen) {
       state.flags.kreisGesehen = true;
@@ -778,6 +801,7 @@ async function ende() {
   await fadeTo(1, 900);
   mode = 'ending';
   T = 0;
+  clearSave();
   playMusic('ende');
   await fadeTo(0, 900);
 }
@@ -788,75 +812,88 @@ async function ende() {
    gestaffelt von vage bis konkret.
    ============================================================ */
 
-function getHint() {
+function questSteps() {
   var F = state.flags;
-  var steps = [
-    { key: 'brunnen', done: function () { return F.zauberwort; }, texts: [
+  return [
+    { key: 'brunnen', title: 'Herausfinden, wie die Hütte im Sumpf aufgeht', done: function () { return F.zauberwort; }, texts: [
       'Im Dorf gibt es etwas zu lesen. Alte Steine sind gesprächiger, als man denkt.',
       'Schau dir den Brunnen in Krummwald genauer an. Jemand hat etwas in den Rand geritzt.',
       'Verb "Schau an" auf den Brunnen im Dorf — dort steht das Zauberwort für die Hüttentür.' ] },
-    { key: 'huette', done: function () { return F.huetteOffen; }, texts: [
+    { key: 'huette', title: 'Die Hütte des Zauberers betreten', done: function () { return F.huetteOffen; }, texts: [
       'Die Hütte im Sumpf will begrüßt werden, nicht aufgebrochen.',
       'Das Wort vom Brunnenrand gehört an die Hüttentür.',
       '"Benutze" die Hüttentür im Sumpf — Simon spricht dann das Zauberwort KRIBBELKRABBEL.' ] },
-    { key: 'buch', done: function () { return F.buchGelesen; }, texts: [
+    { key: 'buch', title: 'Das Zauberbuch lesen', done: function () { return F.buchGelesen; }, texts: [
       'In der Hütte liegt Lesestoff. Ein Zauberer notiert alles.',
       'Nimm das Zauberbuch vom Tisch und lies es.',
       'Buch nehmen, dann im Inventar "Benutze Zauberbuch" — darin stehen Trollrätsel und Kesselrezept.' ] },
-    { key: 'troll', done: function () { return F.trollWeg; }, texts: [
+    { key: 'troll', title: 'Grombolds Rätsel lösen', done: function () { return F.trollWeg; }, texts: [
       'Der Troll auf der Brücke will nur eines: eine Antwort.',
       'Rede mit Grombold, sobald du das Zauberbuch gelesen hast.',
       'Die Lösung des Rätsels ist "Ein Hemd" — die Option erscheint, wenn du das Buch gelesen hast.' ] },
-    { key: 'krug', done: function () { return F.krugAbgegeben; }, texts: [
+    { key: 'krug', title: 'Bruno seinen Bierkrug zurückbringen', done: function () { return F.krugAbgegeben; }, texts: [
       'Jemand im Dorf vermisst etwas, das jetzt in deiner Tasche steckt.',
       'Bruno will seinen Bierkrug zurück — und zahlt dafür.',
       '"Gib Bierkrug an Bruno" vor dem Wirtshaus. Es gibt Münzen und ein Käsebrot.' ] },
-    { key: 'knopf', done: function () { return F.knopfWeg; }, texts: [
+    { key: 'knopf', title: 'Etwas Glänzendes für die Elster besorgen', done: function () { return F.knopfWeg; }, texts: [
       'Für den Vogel brauchst du etwas, das viel zu sehr glänzt.',
       'Mathilda verkauft einen glänzenden Knopf — für genau fünf Kupfermünzen.',
       'Rede mit Mathilda am Marktstand und kaufe den Knopf.' ] },
-    { key: 'zahnrad', done: function () { return F.zahnradWeg; }, texts: [
+    { key: 'zahnrad', title: 'Ein Zahnrad auftreiben', done: function () { return F.zahnradWeg; }, texts: [
       'Etwas in der Hütte tickt, obwohl es niemanden interessiert.',
       'Die Standuhr in der Hütte hat mehr Zahnräder, als sie braucht.',
       '"Benutze" die Standuhr in der Hütte und nimm das Zahnrad heraus.' ] },
-    { key: 'eimer', done: function () { return F.eimerWeg; }, texts: [
+    { key: 'eimer', title: 'Den Brunnen reparieren und den Eimer holen', done: function () { return F.eimerWeg; }, texts: [
       'Der Brunnen kann mehr, wenn man ihn repariert.',
       'Die Brunnenkurbel fehlt ein Zahnrad.',
       '"Benutze Zahnrad mit Brunnen", danach den Brunnen benutzen — du bekommst den Eimer.' ] },
-    { key: 'trank', done: function () { return F.kesselFertig; }, texts: [
+    { key: 'trank', title: 'Den Schlaftrank brauen', done: function () { return F.kesselFertig; }, texts: [
       'Der Kessel in der Hütte will gefüttert werden. Das Buch verrät die Reihenfolge.',
       'Sumpfwasser (mit dem Eimer schöpfen), dann Fliegenpilz, dann Käsebrot — in den Kessel.',
       'Eimer am Sumpftümpel füllen, Pilz im Sumpf nehmen; dann nacheinander Eimer mit Sumpfwasser, Fliegenpilz und Käsebrot mit dem Kessel benutzen.' ] },
-    { key: 'fackel', done: function () { return has('fackel_an'); }, texts: [
+    { key: 'fackel', title: 'Licht für die Höhle machen', done: function () { return has('fackel_an'); }, texts: [
       'In der Höhle ist es dunkel. Du hast alle Teile für eine Lösung dabei.',
       'Stock und Lumpen ergeben eine Fackel. Feuerstein macht daraus Licht.',
       'Im Inventar: "Benutze Stock mit Lumpen", dann "Benutze Feuerstein mit Fackel".' ] },
-    { key: 'drache', done: function () { return F.drachenSchlaf; }, texts: [
+    { key: 'drache', title: 'Den Drachen tief schlafen legen', done: function () { return F.drachenSchlaf; }, texts: [
       'Der Drache schläft zu leicht für deinen Geschmack.',
       'Der Schlaftrank aus dem Kessel ist genau dafür gemacht.',
       '"Benutze Schlaftrank mit Drache" in der Höhle.' ] },
-    { key: 'kristall', done: function () { return F.kristallWeg; }, texts: [
+    { key: 'kristall', title: 'Den Kristall an sich nehmen', done: function () { return F.kristallWeg; }, texts: [
       'Jetzt kannst du dir nehmen, was auf dem Felssockel liegt.',
       'Nimm den violetten Kristall in der Höhle.',
       'Verb "Nimm" auf den Kristall links in der Drachenhöhle.' ] },
-    { key: 'hut', done: function () { return F.hut; }, texts: [
+    { key: 'hut', title: 'Den Hut von der Elster zurückholen', done: function () { return F.hut; }, texts: [
       'Die Elster tauscht. Sie handelt nur nicht mit Geld.',
       'Gib der Elster den glänzenden Knopf.',
       '"Gib glänzender Knopf an Elster" auf der Lichtung — sie lässt den Hut fallen.' ] },
-    { key: 'altar', done: function () { return F.kristallPlatziert; }, texts: [
+    { key: 'altar', title: 'Den Kristall auf den Altar legen', done: function () { return F.kristallPlatziert; }, texts: [
       'Der Steinkreis im Norden hat eine sehr passgenaue Mulde.',
       'Lege den Kristall auf den Altar im Steinkreis.',
       '"Benutze Kristall mit Altar" im Steinkreis.' ] },
-    { key: 'finale', done: function () { return false; }, texts: [
+    { key: 'finale', title: 'Das Portal öffnen und nach Hause gehen', done: function () { return false; }, texts: [
       'Alles liegt bereit. Es fehlt nur noch das Wort.',
       'Benutze den Altar und sprich das Zauberwort.',
-      '"Benutze Altar" (oder "Rede mit Altar") im Steinkreis — das beendet das Spiel.' ] }
+      'Klicke im Steinkreis den Altar an — das beendet das Spiel.' ] }
   ];
+}
 
-  for (var i = 0; i < steps.length; i++) {
-    if (!steps[i].done()) return steps[i];
-  }
+function getHint() {
+  var steps = questSteps();
+  for (var i = 0; i < steps.length; i++) if (!steps[i].done()) return steps[i];
   return null;
+}
+
+/* Für das Tagebuch: alle Ziele mit Status, künftige bleiben verborgen */
+function journalSteps() {
+  var steps = questSteps(), out = [], offen = 0;
+  for (var i = 0; i < steps.length; i++) {
+    var d = steps[i].done();
+    if (!d) offen++;
+    if (!d && offen > 2) break;          /* nicht die ganze Lösung verraten */
+    out.push({ text: steps[i].title, done: d });
+  }
+  return out;
 }
 
 /* ============================================================
@@ -885,16 +922,54 @@ function drawTitleScreen(t) {
   var pu = .4 + Math.sin(t * .05) * .25;
   P([232, 108, 244, 108, 254, 132, 222, 132], 'rgba(155,93,229,' + (pu * .3) + ')');
 
-  /* Simon von hinten, klein */
-  drawSimon(120, 138, 1.05, 0, 1, true);
+  /* Simon im Vordergrund, links neben dem Menü */
+  drawSimon(56, 192, 1.35, 0, 1, true);
+  frontFoliage(t, '#060d08', '#0a140c');
+}
+
+/* ---- Titelmenü ---- */
+
+function titleItems() {
+  return hasSave()
+    ? [{ id: 'continue', label: 'Fortsetzen' }, { id: 'new', label: 'Neues Spiel' }]
+    : [{ id: 'new', label: 'Spiel starten' }];
+}
+
+function titleBox(i) { return { x: 105, y: 148 + i * 17, w: 110, h: 14 }; }
+
+function titleHit(p) {
+  var it = titleItems();
+  for (var i = 0; i < it.length; i++) {
+    var b = titleBox(i);
+    if (p.x >= b.x && p.x < b.x + b.w && p.y >= b.y && p.y < b.y + b.h) return i;
+  }
+  return -1;
+}
+
+function titleClick(p) {
+  var i = titleHit(p);
+  var it = titleItems();
+  if (i < 0) { if (it.length === 1) startGame(); return; }
+  sfx('click');
+  if (it[i].id === 'continue') continueGame();
+  else { clearSave(); startGame(); }
 }
 
 function drawTitleText() {
-  var y = 30;
-  txt(160, y, 'SIMON DER ZAUBERER', '#ffd94a', 'center', 17);
-  txt(160, y + 24, 'Der Fluch von Krummwald', '#c9b8e6', 'center', 9);
-  txt(160, 172, (Math.floor(T / 30) % 2 ? '– Klicken zum Starten –' : ''), '#ffffff', 'center', 8);
-  txt(160, 190, 'Ein Point-&-Click-Abenteuer in sechs Schauplätzen', 'rgba(220,210,240,.55)', 'center', 6.5);
+  txt(160, 34, 'SIMON DER ZAUBERER', '#ffd94a', 'center', 18);
+  txt(160, 60, 'Der Fluch von Krummwald', '#c9b8e6', 'center', 9);
+
+  var it = titleItems();
+  for (var i = 0; i < it.length; i++) {
+    var b = titleBox(i), hov = hoverTitle === i;
+    ctx.fillStyle = hov ? 'rgba(90,70,140,.85)' : 'rgba(24,18,40,.65)';
+    ctx.fillRect(b.x * scale, b.y * scale, b.w * scale, b.h * scale);
+    ctx.fillStyle = hov ? 'rgba(200,170,255,.9)' : 'rgba(140,116,184,.5)';
+    ctx.fillRect(b.x * scale, b.y * scale, b.w * scale, Math.max(1, scale * .5));
+    txt(160, b.y + 3, it[i].label, hov ? '#ffe58a' : '#d6cbec', 'center', 8.5);
+  }
+  txt(160, 192, 'Point-&-Click-Abenteuer · Linksklick handelt, Rechtsklick schaut an',
+    'rgba(220,210,240,.5)', 'center', 6.5);
 }
 
 function drawEndingScreen(t) {
@@ -919,7 +994,7 @@ function drawEndingText() {
   txt(160, 30, 'ENDE', '#ffd94a', 'center', 20);
   txt(160, 150, 'Simon ist wieder zu Hause.', '#f2e9d0', 'center', 9);
   txt(160, 164, 'Der Hut sitzt. Der Tee ist noch warm.', '#c9b8e6', 'center', 7.5);
-  txt(160, 182, 'F5 drückt man, wenn man es nochmal wissen will.', 'rgba(220,210,240,.5)', 'center', 6.5);
+  txt(160, 182, 'Seite neu laden, wenn man es noch einmal wissen will.', 'rgba(220,210,240,.5)', 'center', 6.5);
 }
 
 /* ============================================================
@@ -930,7 +1005,8 @@ async function startGame() {
   if (mode !== 'title') return;
   mode = 'play';
   state.scene = 'lichtung';
-  actor.x = 170; actor.y = 124; actor.tx = actor.x; actor.ty = actor.y;
+  state.inv = []; state.flags = {};
+  actor.x = 170; actor.y = 150; actor.tx = actor.x; actor.ty = actor.y;
   fadeVal = 1;
   audioInit();
   playMusic('lichtung');
