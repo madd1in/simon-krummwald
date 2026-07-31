@@ -166,7 +166,8 @@ function bgLichtung(t, F) {
   prop('ranken', 18, 108, .72);
   for (var bf = 0; bf < 3; bf++) {
     prop('schmetterling', 118 + bf * 54 + Math.sin(t * .025 + bf) * 12,
-      92 + bf * 13 + Math.cos(t * .035 + bf * 2) * 7, .65 + bf * .08, bf % 2);
+      92 + bf * 13 + Math.cos(t * .035 + bf * 2) * 7, .65 + bf * .08,
+      (Math.floor(t / 7) + bf) % 2);
   }
   prop('busch1', 300, 158);
   prop('blumen', 150, 176);
@@ -247,8 +248,8 @@ function bgDorf(t, F) {
   prop('kiste', 122, 190, 1.1);
   prop('blumen', 232, 172);
   prop('stein2', 168, 166, .8);
-  prop('wegfahne', 306, 146, .75);
-  prop('banner', 184, 104, .72);
+  propSway('wegfahne', 306, 146, .75, t * .018, .016);
+  propSway('banner', 184, 104, .72, t * .014 + 1, .018);
 
   /* --- Wirtshaus links --- */
   R(6, 34, 96, 68, '#d8cdb0');                       /* Fachwerkwand */
@@ -372,7 +373,8 @@ function bgSumpf(t, F) {
   prop('ranken', 72, 110, .65);
   for (var df = 0; df < 2; df++) {
     prop('libelle', 116 + df * 82 + Math.sin(t * .045 + df) * 22,
-      108 + df * 14 + Math.cos(t * .055 + df) * 6, .72, df % 2);
+      108 + df * 14 + Math.cos(t * .055 + df) * 6, .72,
+      (Math.floor(t / 5) + df) % 2);
   }
 
   /* Sumpftümpel vorne */
@@ -484,7 +486,8 @@ function bgHuette(t, F) {
   prop('alchemieglas', 184, 105, .72);
   for (var mt = 0; mt < 3; mt++) {
     prop('motte', 168 + Math.sin(t * .04 + mt * 2) * (16 + mt * 5),
-      80 + Math.cos(t * .05 + mt) * (8 + mt * 3), .55 + mt * .08, mt % 2);
+      80 + Math.cos(t * .05 + mt) * (8 + mt * 3), .55 + mt * .08,
+      (Math.floor(t / 8) + mt) % 2);
   }
 
   /* Fenster links mit Sumpflicht */
@@ -646,7 +649,7 @@ function bgWirtshaus(t, F) {
   prop('krug', 146, 148, 1.1);
   prop('krug', 158, 149, 1);
   prop('krug', 56, 176, 1.2);
-  prop('banner', 214, 88, .78);
+  propSway('banner', 214, 88, .78, t * .012 + 2, .014);
   prop('flaschen', 300, 112, .72);
   prop('ranken', 314, 82, .55);
 
@@ -778,13 +781,14 @@ function bgSteinkreis(t, F) {
   prop('kerze', 220, 190, 1.2);
   prop('stein1', 286, 196, 1.1);
   prop('runenstein', 270, 188, .6);
-  prop('wegfahne', 156, 118, .62);
+  propSway('wegfahne', 156, 118, .62, t * .013, .012);
   prop('lichtkugel', 112 + Math.sin(t * .025) * 8, 92 + Math.cos(t * .031) * 5, .75);
   prop('lichtkugel', 212 + Math.cos(t * .022) * 10, 78 + Math.sin(t * .027) * 6, .55);
-  prop('banner', 44, 126, .62);
+  propSway('banner', 44, 126, .62, t * .011 + 1.6, .013);
   for (var pm = 0; pm < 2; pm++) {
     prop('motte', 160 + Math.sin(t * .028 + pm * 3) * (48 + pm * 20),
-      78 + Math.cos(t * .035 + pm) * 12, .6 + pm * .1, pm % 2);
+      78 + Math.cos(t * .035 + pm) * 12, .6 + pm * .1,
+      (Math.floor(t / 8) + pm) % 2);
   }
 
   /* Steinkreis (hinten kleiner) */

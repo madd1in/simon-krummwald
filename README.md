@@ -31,7 +31,6 @@ Wege werden gegangen, Leute angesprochen, Dinge aufgehoben oder bedient.
 | J | Tagebuch mit den offenen Zielen |
 | H | Hinweis (dreistufig, von vage bis konkret) |
 | V | Magiesicht: interaktive Stellen kurz hervorheben |
-| P | Aktuelle Szene als Pixel-Postkarte speichern |
 | M | Musik an/aus |
 | A | Sprite-Atlas als PNG exportieren |
 | T | Tileset als PNG exportieren |
@@ -74,8 +73,9 @@ Der Spielstand wird automatisch gespeichert — beim nächsten Aufruf steht
   und kurzes haptisches Feedback auf unterstützten Geräten
 - **Lebendige Kleintierwelt:** Schmetterlinge auf der Lichtung, Libellen im Sumpf
   und Motten rund um magische Lichtquellen
-- **Pixel-Postkarte:** Taste **P** oder das quadratische Kamerasymbol exportiert
-  die aktuelle Szene ohne HUD als 640×400-PNG
+- **Subtile Materialtiefe:** weiche Kontaktschatten, ruhige Lichtfelder,
+  Kesseldampf, feine Wasserringe und leicht schwingende Fahnen statt
+  zusätzlicher Interface-Effekte
 - **Auflösungsunabhängig:** 320×200-Pixelbild, das sich stufenlos an jeden Bildschirm anpasst
 
 ## Technik
