@@ -42,7 +42,9 @@ var VERBS = [
 ];
 
 /* ---------------- HUD-Maße ---------------- */
-var INVBAR = { h: 26, slot: 24, max: 11 };
+var INVBAR = { h: 26, slot: 24, max: 11, y: VH - 26 };
+var SAFE = { x0: 0, y0: 0, x1: VW, y1: VH };   /* sichtbarer Ausschnitt */
+var fillMode = true;                            /* Bildschirm ausfüllen */
 var BTN = [
   { id: 'hinweis' }, { id: 'magie' }, { id: 'tagebuch' }, { id: 'musik' }, { id: 'stimme' }, { id: 'vollbild' }
 ];
@@ -69,6 +71,8 @@ function startEngine() {
   resize();
   window.addEventListener('resize', resize);
   window.addEventListener('orientationchange', function () { setTimeout(resize, 120); });
+  document.addEventListener('fullscreenchange', function () { setTimeout(resize, 60); });
+  document.addEventListener('webkitfullscreenchange', function () { setTimeout(resize, 60); });
   cv.addEventListener('pointermove', onPointerMove);
   cv.addEventListener('pointerdown', onPointerDown);
   cv.addEventListener('pointerup', onPointerUp);
@@ -93,16 +97,48 @@ function expandScenes() {
 }
 
 function resize() {
-  var iw = window.innerWidth, ih = window.innerHeight - (isTouch ? 0 : 18);
+  var full = isFullscreen();
+  var iw = window.innerWidth, ih = window.innerHeight - ((isTouch || full) ? 0 : 18);
   rotated = isTouch && ih > iw * 1.08;
   var availW = rotated ? ih : iw, availH = rotated ? iw : ih;
-  var s = Math.max(0.4, Math.min(availW / VW, availH / VH));
+
+  var sContain = Math.min(availW / VW, availH / VH);
+  var sCover = Math.max(availW / VW, availH / VH);
+  /* Bildschirm füllen, aber höchstens 40 % über die passende Größe
+     hinaus zoomen – sonst verschwindet zu viel vom Bild. */
+  var s = fillMode ? Math.min(sCover, sContain * 1.4) : sContain;
+  s = Math.max(0.4, s);
+
   var dpr = Math.min(2, window.devicePixelRatio || 1);
   cssScale = s; scale = s * dpr;
   cv.width = Math.round(VW * s * dpr); cv.height = Math.round(VH * s * dpr);
   cv.style.width = (VW * s) + 'px'; cv.style.height = (VH * s) + 'px';
   cv.style.transform = rotated ? 'rotate(90deg)' : 'none';
   ctx.imageSmoothingEnabled = false;
+
+  /* Sichtbarer Ausschnitt in Spielkoordinaten: was beim Füllen über
+     den Rand ragt, darf kein HUD enthalten. */
+  var visW = Math.min(VW, availW / s), visH = Math.min(VH, availH / s);
+  var cx = (VW - visW) / 2, cy = (VH - visH) / 2;
+  SAFE.x0 = Math.round(cx); SAFE.y0 = Math.round(cy);
+  SAFE.x1 = Math.round(VW - cx); SAFE.y1 = Math.round(VH - cy);
+  layoutHUD();
+  fxCache = null;
+}
+
+function isFullscreen() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
+/* HUD an den sichtbaren Bereich heften */
+function layoutHUD() {
+  var w = isTouch ? 24 : 13, h = isTouch ? 22 : 12, gap = isTouch ? 3 : 2;
+  for (var i = 0; i < BTN.length; i++) {
+    BTN[i].w = w; BTN[i].h = h;
+    BTN[i].x = SAFE.x1 - 4 - w - i * (w + gap);
+    BTN[i].y = SAFE.y0 + 4;
+  }
+  INVBAR.y = SAFE.y1 - INVBAR.h;
 }
 
 function toV(e) {
@@ -155,7 +191,7 @@ function update(dt, nowMs) {
     }
   }
   /* Inventarleiste ein-/ausblenden */
-  var want = invPinned || pending || (!isTouch && mouse.y > VH - INVBAR.h - 6) || (isTouch && state.inv.length > 0);
+  var want = invPinned || pending || (!isTouch && mouse.y > INVBAR.y - 6) || (isTouch && state.inv.length > 0);
   invOpen = !!want;
 }
 
@@ -464,7 +500,7 @@ function drawHUD() {
   /* Dialogauswahl */
   if (dialogChoices) {
     var dm = dlgMetrics();
-    var n = dialogChoices.opts.length, y0 = VH - dm.pad - n * dm.lh;
+    var n = dialogChoices.opts.length, y0 = SAFE.y1 - dm.pad - n * dm.lh;
     ctx.fillStyle = 'rgba(8,6,14,.62)';
     ctx.fillRect(0, (y0 - 6) * scale, cv.width, (VH - y0 + 6) * scale);
     ctx.fillStyle = 'rgba(150,124,196,.30)';
@@ -529,10 +565,10 @@ function drawExitGuides() {
     if (dir === 'left') x = Math.max(7, r[0] + 7);
     if (dir === 'right') x = Math.min(VW - 7, r[0] + r[2] - 7);
     if (dir === 'up') y = Math.max(20, r[1] + 7);
-    if (dir === 'down') y = Math.min(VH - 30, r[1] + r[3] - 7);
+    if (dir === 'down') y = Math.min(SAFE.y1 - 30, r[1] + r[3] - 7);
     /* nie unter der Werkzeugleiste oder hinter der Inventarleiste verstecken */
     if (underToolbar(x, y)) y = toolbarBottom() + 12;
-    if (invOpen && state.inv.length && y > VH - INVBAR.h - 6) y = VH - INVBAR.h - 10;
+    if (invOpen && state.inv.length && y > INVBAR.y - 6) y = INVBAR.y - 10;
 
     var hot = hoverObj === h, pulse = .72 + Math.sin(T * .08 + i) * .16;
     ctx.fillStyle = hot ? 'rgba(89,57,132,.92)' : 'rgba(8,7,14,.66)';
@@ -619,7 +655,7 @@ function drawTouchFeedback() {
 /* Die Leiste gehört in den Weltpuffer, weil die Item-Icons dort gezeichnet werden. */
 function drawInvBarWorld() {
   var n = Math.min(INVBAR.max, state.inv.length);
-  var w = n * INVBAR.slot, x0 = (VW - w) / 2, y0 = VH - INVBAR.h;
+  var w = n * INVBAR.slot, x0 = (VW - w) / 2, y0 = INVBAR.y;
   g.fillStyle = 'rgba(10,8,18,.62)'; g.fillRect(0, y0, VW, INVBAR.h);
   g.fillStyle = 'rgba(140,116,184,.30)'; g.fillRect(0, y0, VW, 1);
   for (var i = 0; i < n; i++) {
@@ -661,7 +697,7 @@ function drawJournal() {
     txt(30, y, (s.done ? '✓ ' : '·  ') + s.text, s.done ? '#7fb96a' : '#d6cbec', 'left', 7.5);
     y += 10.5;
   }
-  txt(160, VH - 14, 'Taste J oder Klick zum Schließen', 'rgba(220,210,240,.5)', 'center', 7);
+  txt(160, SAFE.y1 - 14, 'Taste J oder Klick zum Schließen', 'rgba(220,210,240,.5)', 'center', 7);
 }
 
 function drawBubble() {
@@ -780,7 +816,7 @@ async function continueGame() {
   state.scene = s.scene; state.inv = s.inv || []; state.flags = s.flags || {};
   actor.x = s.x || 160; actor.y = s.y || 150; actor.tx = actor.x; actor.ty = actor.y;
   fadeVal = 1;
-  audioInit(); playMusic(state.scene);
+  audioInit(); enterFullscreen(); playMusic(state.scene);
   sceneEnteredAt = performance.now();
   await fadeTo(0, 600);
   showToast('Spielstand geladen');
@@ -813,7 +849,7 @@ function updateHover(p) {
   }
   if (dialogChoices) {
     var dm = dlgMetrics();
-    var n = dialogChoices.opts.length, y0 = VH - dm.pad - n * dm.lh;
+    var n = dialogChoices.opts.length, y0 = SAFE.y1 - dm.pad - n * dm.lh;
     var i = Math.floor((p.y - y0) / dm.lh);
     if (i >= 0 && i < n) hoverChoice = i;
     return;
@@ -826,7 +862,7 @@ function updateHover(p) {
 function slotAt(x, y) {
   if (!invOpen || !state.inv.length) return -1;
   var n = Math.min(INVBAR.max, state.inv.length);
-  var w = n * INVBAR.slot, x0 = (VW - w) / 2, y0 = VH - INVBAR.h;
+  var w = n * INVBAR.slot, x0 = (VW - w) / 2, y0 = INVBAR.y;
   if (y < y0) return -1;
   var i = Math.floor((x - x0) / INVBAR.slot);
   if (i < 0 || i >= n) return -1;
@@ -1000,6 +1036,11 @@ function onKey(e) {
   if (e.key === 'v' || e.key === 'V') revealHotspots();
   if (e.key === 'm' || e.key === 'M') setMusic(!AU.musicOn);
   if (e.key === 'a' || e.key === 'A') exportAtlas();
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+  if (e.key === 'z' || e.key === 'Z') {
+    fillMode = !fillMode; resize();
+    showToast(fillMode ? 'Bildschirm füllen' : 'Ganzes Bild zeigen');
+  }
   if (e.key === 't' || e.key === 'T') exportTileset();
 }
 
@@ -1018,6 +1059,21 @@ function revealHotspots() {
   revealUntil = performance.now() + 2600;
   showToast('Magiesicht zeigt interaktive Stellen');
   sfx('magic');
+}
+
+/* Beim Spielstart ins Vollbild – der Startklick ist die nötige
+   Nutzergeste. Schlägt es fehl (Browser verweigert), läuft das
+   Spiel einfach im Fenster weiter. */
+function enterFullscreen() {
+  if (isFullscreen()) { setTimeout(resize, 60); return; }
+  var el = document.documentElement;
+  var req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!req) return;
+  try {
+    var r = req.call(el);
+    if (r && r.catch) r.catch(function () {});
+  } catch (e) {}
+  setTimeout(resize, 220);
 }
 
 function toggleFullscreen() {

@@ -1070,7 +1070,7 @@ function titleItems() {
     : [{ id: 'new', label: 'Spiel starten' }];
 }
 
-function titleBox(i) { return { x: 105, y: 148 + i * 17, w: 110, h: 14 }; }
+function titleBox(i) { return { x: 105, y: SAFE.y1 - 52 + i * 17, w: 110, h: 14 }; }
 
 function titleHit(p) {
   var it = titleItems();
@@ -1091,8 +1091,8 @@ function titleClick(p) {
 }
 
 function drawTitleText() {
-  txt(160, 34, 'SIMON DER ZAUBERER', '#ffd94a', 'center', 18);
-  txt(160, 60, 'Der Fluch von Krummwald', '#c9b8e6', 'center', 9);
+  txt(160, SAFE.y0 + 34, 'SIMON DER ZAUBERER', '#ffd94a', 'center', 18);
+  txt(160, SAFE.y0 + 60, 'Der Fluch von Krummwald', '#c9b8e6', 'center', 9);
 
   var it = titleItems();
   for (var i = 0; i < it.length; i++) {
@@ -1103,7 +1103,7 @@ function drawTitleText() {
     ctx.fillRect(b.x * scale, b.y * scale, b.w * scale, Math.max(1, scale * .5));
     txt(160, b.y + 3, it[i].label, hov ? '#ffe58a' : '#d6cbec', 'center', 8.5);
   }
-  txt(160, 192, 'Point-&-Click-Abenteuer · Linksklick handelt, Rechtsklick schaut an',
+  txt(160, SAFE.y1 - 8, 'Point-&-Click-Abenteuer · Linksklick handelt, Rechtsklick schaut an',
     'rgba(220,210,240,.5)', 'center', 6.5);
 }
 
@@ -1145,6 +1145,7 @@ async function startGame() {
   sceneEnteredAt = performance.now();
   fadeVal = 1;
   audioInit();
+  enterFullscreen();
   playMusic('lichtung');
   await fadeTo(0, 700);
   busy = true;
