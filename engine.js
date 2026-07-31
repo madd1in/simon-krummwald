@@ -594,7 +594,11 @@ function handleClick(p, right) {
     }
     return;
   }
-  if (busy) return;
+  /* Klick während des Laufens kürzt den Weg ab */
+  if (busy) {
+    if (actor.moving) { actor.x = actor.tx; actor.y = actor.ty; }
+    return;
+  }
 
   /* Inventar */
   var slot = slotAt(p.x, p.y);

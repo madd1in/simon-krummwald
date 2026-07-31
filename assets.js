@@ -172,7 +172,7 @@ function tilemapEdges(map, legend, x0, y0) {
         if (!col) continue;
         var bx = x0 + c * TILE, by = y0 + r * TILE;
         /* Flecken der Nachbarart über die Grenze streuen */
-        for (var i = 0; i < 7; i++) {
+        for (var i = 0; i < 9; i++) {
           var s = c * 17.3 + r * 5.9 + d * 3.1 + i * 1.7;
           var t = rnd(s), u = rnd(s + 0.5) * 0.42;
           var px, py;
@@ -180,7 +180,7 @@ function tilemapEdges(map, legend, x0, y0) {
           else if (dirs[d][0] === -1) { px = bx + u * TILE - 2; py = by + t * TILE; }
           else if (dirs[d][1] === 1) { px = bx + t * TILE; py = by + TILE - u * TILE; }
           else { px = bx + t * TILE; py = by + u * TILE - 2; }
-          var w = 1 + rnd(s + 2) * 3, h = 1 + rnd(s + 3) * 2;
+          var w = 1 + rnd(s + 2) * 1.8, h = 1 + rnd(s + 3) * 1.4;
           R(px, py, w, h, col);
         }
       }
