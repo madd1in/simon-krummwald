@@ -50,6 +50,33 @@ function bake(name, w, h, ox, oy, fn) {
   FRAMES[name] = { x: cell.x, y: cell.y, w: w, h: h, ox: ox, oy: oy };
 }
 
+/* ---------- Ebenen-Cache ----------
+   Unbewegte Bildteile werden einmal in ein eigenes Canvas
+   gezeichnet und danach nur noch geblittet. Das spart pro Frame
+   tausende Zeichenbefehle. */
+
+var LAYERCACHE = {}, layerCount = 0;
+
+function cachedLayer(key, fn) {
+  var c = LAYERCACHE[key];
+  if (!c) {
+    if (layerCount > 24) { LAYERCACHE = {}; layerCount = 0; }   /* Notbremse */
+    c = document.createElement('canvas');
+    c.width = VW; c.height = VH;
+    var cx = c.getContext('2d');
+    cx.imageSmoothingEnabled = false;
+    var save = g;
+    g = cx;
+    fn();
+    g = save;
+    LAYERCACHE[key] = c;
+    layerCount++;
+  }
+  g.drawImage(c, 0, 0);
+}
+
+function clearLayerCache() { LAYERCACHE = {}; layerCount = 0; }
+
 /* ---------- Blit ---------- */
 
 function sprite(name, x, y, s, flip) {
@@ -284,18 +311,23 @@ var TILE_COL = {
 
 /* Eine echte Tilemap: Zeilen aus Zeichen, Legende ordnet Kachelnamen zu */
 function drawTilemap(map, legend, x0, y0) {
-  var r, c, row, kind, v;
-  for (r = 0; r < map.length; r++) {
-    row = map[r];
-    for (c = 0; c < row.length; c++) {
-      kind = legend[row[c]];
-      if (!kind) continue;
-      v = Math.floor(rnd(c * 3.3 + r * 7.1) * 4);
-      sprite('tile_' + kind + '_' + v, x0 + c * TILE, y0 + r * TILE, 1, false);
+  /* Böden ändern sich nie – einmal backen, danach nur blitten */
+  if (!map.__id) map.__id = 'tm' + (++tilemapIds);
+  cachedLayer(map.__id + '_' + x0 + '_' + y0, function () {
+    var r, c, row, kind, v;
+    for (r = 0; r < map.length; r++) {
+      row = map[r];
+      for (c = 0; c < row.length; c++) {
+        kind = legend[row[c]];
+        if (!kind) continue;
+        v = Math.floor(rnd(c * 3.3 + r * 7.1) * 4);
+        sprite('tile_' + kind + '_' + v, x0 + c * TILE, y0 + r * TILE, 1, false);
+      }
     }
-  }
-  tilemapEdges(map, legend, x0, y0);
+    tilemapEdges(map, legend, x0, y0);
+  });
 }
+var tilemapIds = 0;
 
 /* Verzahnt benachbarte Kachelarten, damit keine Rechtecke stehen bleiben */
 function tilemapEdges(map, legend, x0, y0) {

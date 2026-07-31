@@ -120,27 +120,29 @@ function frontStones(t) {
    1. LICHTUNG
    ------------------------------------------------------------ */
 function bgLichtung(t, F) {
-  band(0, 92, '#4f9fd8', '#b8e2f5');
-  cloud(58, 16, 1.1, 'rgba(255,255,255,.85)');
-  cloud(210, 12, .85, 'rgba(255,255,255,.7)');
-  cloud(268, 30, .6, 'rgba(255,255,255,.55)');
+  /* --- unbewegter Teil: einmal backen, danach nur blitten --- */
+  cachedLayer('lichtung_static', function () {
+    band(0, 92, '#4f9fd8', '#b8e2f5');
+    cloud(58, 16, 1.1, 'rgba(255,255,255,.85)');
+    cloud(210, 12, .85, 'rgba(255,255,255,.7)');
+    cloud(268, 30, .6, 'rgba(255,255,255,.55)');
 
-  /* ferner Waldrand – zwei Tiefenebenen */
-  for (var i = 0; i < 22; i++) {
-    var x = i * 15.5 + rnd(i) * 8;
-    leafCanopy(x, 74 + rnd(i + 9) * 5, 12, 11 + rnd(i + 3) * 5, i * 3.3, '#16300f', '#1d3f16', '#25501c');
-  }
-  for (var i2 = 0; i2 < 20; i2++) {
-    var x2 = i2 * 17 + rnd(i2 + 40) * 9;
-    R(x2 - 1.5, 84, 3, 12, '#2e2416');
-    leafCanopy(x2, 84 + rnd(i2 + 19) * 4, 14, 12 + rnd(i2 + 13) * 5, i2 * 5.1 + 7, '#1d4318', '#2a5c22', '#356f2b');
-  }
-  R(0, 92, VW, 5, '#25491f');
+    /* ferner Waldrand – zwei Tiefenebenen */
+    for (var i = 0; i < 22; i++) {
+      var x = i * 15.5 + rnd(i) * 8;
+      leafCanopy(x, 74 + rnd(i + 9) * 5, 12, 11 + rnd(i + 3) * 5, i * 3.3, '#16300f', '#1d3f16', '#25501c');
+    }
+    for (var i2 = 0; i2 < 20; i2++) {
+      var x2 = i2 * 17 + rnd(i2 + 40) * 9;
+      R(x2 - 1.5, 84, 3, 12, '#2e2416');
+      leafCanopy(x2, 84 + rnd(i2 + 19) * 4, 14, 12 + rnd(i2 + 13) * 5, i2 * 5.1 + 7, '#1d4318', '#2a5c22', '#356f2b');
+    }
+    R(0, 92, VW, 5, '#25491f');
 
-  /* Wiese als Tilemap */
-  drawTilemap(MAP_LICHTUNG, LEG, 0, 96);
-  groundShade(96, 200, .32, -.06);
-  grassTufts(0, VW, 96, 196, 4.2, '#2f6323', '#6ba43c');
+    drawTilemap(MAP_LICHTUNG, LEG, 0, 96);
+    groundShade(96, 200, .32, -.06);
+    grassTufts(0, VW, 96, 196, 4.2, '#2f6323', '#6ba43c');
+  });
 
   /* Wolkenschatten und Lichtstrahlen durch die Krone */
   cloudShadows(t, 96, 200, .09);
@@ -178,42 +180,45 @@ function bgLichtung(t, F) {
   bush(18, 100, 11, '#356f2b');
   bush(112, 100, 8, '#2e6626');
 
-  /* Große Eiche links */
-  var bx = 52;
-  R(bx - 9, 40, 18, 66, '#5b3d20');
-  R(bx - 9, 40, 3, 66, '#6f4c28');
-  R(bx + 6, 40, 3, 66, '#442d17');
-  /* senkrechte Rindenmaserung */
-  for (var k = 0; k < 7; k++) {
-    var kx = bx - 7 + k * 2.4;
-    R(kx, 42 + rnd(k) * 8, 1, 40 + rnd(k + 3) * 22, k % 2 ? '#4e341b' : '#664425');
-  }
-  R(bx - 4, 62, 1, 10, '#3d2915'); R(bx + 2, 84, 1, 8, '#3d2915');
-  P([bx - 20, 106, bx + 20, 106, bx + 9, 96, bx - 9, 96], '#5b3d20');   /* Wurzeln */
-  L(bx + 6, 58, bx + 26, 46, '#5b3d20', 3);
-  L(bx - 6, 50, bx - 24, 40, '#5b3d20', 3);
-  leafCanopy(bx, 30, 42, 25, 3.7, '#1b4218', '#2a5c22', '#3d7b30');
-  leafCanopy(bx - 24, 34, 20, 15, 11.3, '#1b4218', '#2a5c22', '#3d7b30');
-  leafCanopy(bx + 25, 31, 19, 14, 19.1, '#1b4218', '#2a5c22', '#3d7b30');
-  leafCanopy(bx - 4, 15, 25, 15, 27.5, '#22521d', '#316827', '#478a36');
-
-  /* Nest mit Hut */
+  /* Große Eiche, Nest und Wegweiser – ebenfalls unbewegt */
   var nx = 46, ny = 26;
-  E(nx, ny, 11, 6, '#6b4a26');
-  E(nx, ny - 2, 9, 4, '#7d5a2e');
-  for (var q = 0; q < 12; q++) L(nx - 10 + q * 1.8, ny - 3 + rnd(q) * 5, nx - 6 + q * 1.6, ny - 1 + rnd(q + 5) * 4, '#54381c', 1);
-  if (!F.hut) {
-    P([nx - 7, ny - 3, nx + 6, ny - 3, nx - 1, ny - 15], '#5e2f8e');
-    R(nx - 8, ny - 4, 15, 2, '#7b3fb5');
-    E(nx - 1, ny - 15, 1.4, 1.4, '#ffd94a');
-  }
-  if (!F.hut) drawElster(nx + 14, ny - 4, t, 1);
+  cachedLayer('lichtung_baum_' + (F.hut ? 1 : 0), function () {
+    var bx = 52;
+    R(bx - 9, 40, 18, 66, '#5b3d20');
+    R(bx - 9, 40, 3, 66, '#6f4c28');
+    R(bx + 6, 40, 3, 66, '#442d17');
+    for (var k = 0; k < 7; k++) {
+      var kx = bx - 7 + k * 2.4;
+      R(kx, 42 + rnd(k) * 8, 1, 40 + rnd(k + 3) * 22, k % 2 ? '#4e341b' : '#664425');
+    }
+    R(bx - 4, 62, 1, 10, '#3d2915'); R(bx + 2, 84, 1, 8, '#3d2915');
+    P([bx - 20, 106, bx + 20, 106, bx + 9, 96, bx - 9, 96], '#5b3d20');
+    L(bx + 6, 58, bx + 26, 46, '#5b3d20', 3);
+    L(bx - 6, 50, bx - 24, 40, '#5b3d20', 3);
+    leafCanopy(bx, 30, 42, 25, 3.7, '#1b4218', '#2a5c22', '#3d7b30');
+    leafCanopy(bx - 24, 34, 20, 15, 11.3, '#1b4218', '#2a5c22', '#3d7b30');
+    leafCanopy(bx + 25, 31, 19, 14, 19.1, '#1b4218', '#2a5c22', '#3d7b30');
+    leafCanopy(bx - 4, 15, 25, 15, 27.5, '#22521d', '#316827', '#478a36');
 
-  /* Wegweiser */
-  R(238, 96, 4, 26, '#7d5a2e');
-  P([224, 88, 262, 88, 262, 97, 224, 97], '#a3763a');
-  P([226, 99, 256, 99, 256, 107, 226, 107], '#a3763a');
-  R(224, 88, 38, 2, '#c49355');
+    /* Nest mit Hut */
+    E(nx, ny, 11, 6, '#6b4a26');
+    E(nx, ny - 2, 9, 4, '#7d5a2e');
+    for (var q = 0; q < 12; q++) L(nx - 10 + q * 1.8, ny - 3 + rnd(q) * 5, nx - 6 + q * 1.6, ny - 1 + rnd(q + 5) * 4, '#54381c', 1);
+    if (!F.hut) {
+      P([nx - 7, ny - 3, nx + 6, ny - 3, nx - 1, ny - 15], '#5e2f8e');
+      R(nx - 8, ny - 4, 15, 2, '#7b3fb5');
+      E(nx - 1, ny - 15, 1.4, 1.4, '#ffd94a');
+    }
+
+    /* Wegweiser */
+    R(238, 96, 4, 26, '#7d5a2e');
+    P([224, 88, 262, 88, 262, 97, 224, 97], '#a3763a');
+    P([226, 99, 256, 99, 256, 107, 226, 107], '#a3763a');
+    R(224, 88, 38, 2, '#c49355');
+  });
+
+  /* animiert: die Elster */
+  if (!F.hut) drawElster(nx + 14, ny - 4, t, 1);
 
   /* Stock am Boden */
   if (!F.stockWeg) {

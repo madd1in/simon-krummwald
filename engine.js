@@ -377,17 +377,43 @@ function wrap(s, maxW, size) {
 
 /* ---------------- Minimales HUD ---------------- */
 
+/* Unterkante der Werkzeugleiste */
+function toolbarBottom() { return BTN[0].y + BTN[0].h; }
+
+/* Liegt ein Punkt im Bereich der Werkzeugleiste? */
+function underToolbar(x, y) {
+  if (y > toolbarBottom() + 4) return false;
+  for (var b = 0; b < BTN.length; b++) {
+    var t = BTN[b];
+    if (x >= t.x - 2 && x < t.x + t.w + 2) return true;
+  }
+  return false;
+}
+
+/* Dialogmaße – auf Touchgeräten deutlich größer, damit man trifft und liest */
+function dlgMetrics() {
+  return isTouch ? { lh: 16, size: 11.5, pad: 10 } : { lh: 11, size: 8, pad: 8 };
+}
+
 function drawHUD() {
   if (journalOpen) { drawJournal(); return; }
 
   /* Dialogauswahl */
   if (dialogChoices) {
-    var n = dialogChoices.opts.length, y0 = VH - 8 - n * 11;
-    ctx.fillStyle = 'rgba(8,6,14,.55)';
+    var dm = dlgMetrics();
+    var n = dialogChoices.opts.length, y0 = VH - dm.pad - n * dm.lh;
+    ctx.fillStyle = 'rgba(8,6,14,.62)';
     ctx.fillRect(0, (y0 - 6) * scale, cv.width, (VH - y0 + 6) * scale);
+    ctx.fillStyle = 'rgba(150,124,196,.30)';
+    ctx.fillRect(0, (y0 - 6) * scale, cv.width, Math.max(1, scale * .5));
     for (var i = 0; i < n; i++) {
-      txt(12, y0 + i * 11, (hoverChoice === i ? '▸ ' : '  ') + dialogChoices.opts[i],
-        hoverChoice === i ? '#ffe58a' : '#d6cbec', 'left', 8);
+      var sel = hoverChoice === i;
+      if (sel) {
+        ctx.fillStyle = 'rgba(120,92,180,.35)';
+        ctx.fillRect(6 * scale, (y0 + i * dm.lh - 1.5) * scale, (VW - 12) * scale, dm.lh * scale);
+      }
+      txt(12, y0 + i * dm.lh, (sel ? '▸ ' : '  ') + dialogChoices.opts[i],
+        sel ? '#ffe58a' : '#e2d9f4', 'left', dm.size);
     }
     return;
   }
@@ -419,7 +445,7 @@ function drawHUD() {
 /* Sichtbare, aber ruhige Wegmarken: Pfeil immer, Zielname beim Betreten
    einer Szene, auf Touch-Geräten und beim Darüberfahren. */
 function drawExitGuides() {
-  if (busy || bubble || pending || invOpen || mode !== 'play') return;
+  if (busy || bubble || pending || dialogChoices || mode !== 'play') return;
   var sc = SCENES[state.scene], age = performance.now() - sceneEnteredAt;
   if (!sc || !sc.hotspots) return;
 
@@ -440,6 +466,9 @@ function drawExitGuides() {
     if (dir === 'right') x = Math.min(VW - 7, r[0] + r[2] - 7);
     if (dir === 'up') y = Math.max(20, r[1] + 7);
     if (dir === 'down') y = Math.min(VH - 30, r[1] + r[3] - 7);
+    /* nie unter der Werkzeugleiste oder hinter der Inventarleiste verstecken */
+    if (underToolbar(x, y)) y = toolbarBottom() + 12;
+    if (invOpen && state.inv.length && y > VH - INVBAR.h - 6) y = VH - INVBAR.h - 10;
 
     var hot = hoverObj === h, pulse = .72 + Math.sin(T * .08 + i) * .16;
     ctx.fillStyle = hot ? 'rgba(89,57,132,.92)' : 'rgba(8,7,14,.66)';
@@ -698,13 +727,18 @@ function updateHover(p) {
   if (mode === 'title') { hoverTitle = titleHit(p); return; }
   if (mode !== 'play' || journalOpen) return;
 
-  for (var b = 0; b < BTN.length; b++) {
-    var t = BTN[b];
-    if (p.x >= t.x && p.x < t.x + t.w && p.y >= t.y && p.y < t.y + t.h) { hoverBtn = b; return; }
+  /* Die Werkzeugleiste fängt nur in ihrer eigenen Zone – darunter
+     liegende Ausgänge und Objekte bleiben anklickbar. */
+  if (p.y < toolbarBottom() + 4) {
+    for (var b = 0; b < BTN.length; b++) {
+      var t = BTN[b];
+      if (p.x >= t.x - 1 && p.x < t.x + t.w + 1 && p.y >= t.y - 3 && p.y < t.y + t.h + 3) { hoverBtn = b; return; }
+    }
   }
   if (dialogChoices) {
-    var n = dialogChoices.opts.length, y0 = VH - 8 - n * 11;
-    var i = Math.floor((p.y - y0) / 11);
+    var dm = dlgMetrics();
+    var n = dialogChoices.opts.length, y0 = VH - dm.pad - n * dm.lh;
+    var i = Math.floor((p.y - y0) / dm.lh);
     if (i >= 0 && i < n) hoverChoice = i;
     return;
   }
@@ -725,11 +759,30 @@ function slotAt(x, y) {
 
 function objAt(x, y) {
   var sc = SCENES[state.scene];
-  for (var i = sc.hotspots.length - 1; i >= 0; i--) {
-    var h = sc.hotspots[i];
+  var i, h, r;
+  /* exakter Treffer zuerst */
+  for (i = sc.hotspots.length - 1; i >= 0; i--) {
+    h = sc.hotspots[i];
     if (h.when && !h.when()) continue;
-    var r = h.rect;
+    r = h.rect;
     if (x >= r[0] && x < r[0] + r[2] && y >= r[1] && y < r[1] + r[3]) return h;
+  }
+  /* Fingerkuppen sind ungenau: kleine Ziele bekommen einen Fangbereich */
+  if (isTouch) {
+    var best = null, bestD = 1e9;
+    for (i = sc.hotspots.length - 1; i >= 0; i--) {
+      h = sc.hotspots[i];
+      if (h.when && !h.when()) continue;
+      r = h.rect;
+      /* je kleiner das Ziel, desto großzügiger der Rand (max 11px) */
+      var pad = Math.max(0, Math.min(11, 20 - Math.min(r[2], r[3])));
+      if (pad <= 0) continue;
+      var cx = Math.max(r[0], Math.min(r[0] + r[2], x));
+      var cy = Math.max(r[1], Math.min(r[1] + r[3], y));
+      var d = Math.hypot(x - cx, y - cy);
+      if (d <= pad && d < bestD) { bestD = d; best = h; }
+    }
+    if (best) return best;
   }
   if (typeof SIMON_HS !== 'undefined' && insideActor(x, y)) return SIMON_HS;
   return null;
