@@ -44,7 +44,7 @@ var VERBS = [
 /* ---------------- HUD-Maße ---------------- */
 var INVBAR = { h: 26, slot: 24, max: 11 };
 var BTN = [
-  { id: 'hinweis' }, { id: 'magie' }, { id: 'foto' }, { id: 'tagebuch' }, { id: 'musik' }, { id: 'stimme' }, { id: 'vollbild' }
+  { id: 'hinweis' }, { id: 'magie' }, { id: 'tagebuch' }, { id: 'musik' }, { id: 'stimme' }, { id: 'vollbild' }
 ];
 (function () {
   var w = isTouch ? 24 : 13, h = isTouch ? 22 : 12, gap = isTouch ? 3 : 2;
@@ -173,6 +173,7 @@ function render() {
   else {
     var sc = SCENES[state.scene];
     sc.draw(T, state.flags);
+    drawSceneAccents(T);
     if (actor.moving) drawActorTrail();
     if (actor.visible) {
       var f = 0, bob = 0, blink = false;
@@ -266,6 +267,63 @@ function torchLight(x, y) {
   g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
 }
 
+/* Subtile, rein visuelle Szenenakzente. Sie ergänzen vorhandene Motive,
+   ohne neue Zustände, Hotspots oder Bedienelemente einzuführen. */
+function softSceneGlow(x, y, rx, ry, col) {
+  g.save();
+  g.translate(x, y);
+  g.scale(1, ry / rx);
+  var gr = g.createRadialGradient(0, 0, 0, 0, 0, rx);
+  gr.addColorStop(0, col);
+  gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = gr;
+  g.fillRect(-rx, -rx, rx * 2, rx * 2);
+  g.restore();
+}
+
+function drawSceneAccents(t) {
+  var i, p, a;
+  if (state.scene === 'lichtung') {
+    for (i = 0; i < 5; i++) {
+      p = .35 + Math.sin(t * .018 + i * 1.7) * .18;
+      E(118 + i * 34 + Math.sin(t * .009 + i) * 3, 104 + (i % 2) * 20, 1.2, 1.2, 'rgba(255,239,166,' + p + ')');
+    }
+  } else if (state.scene === 'dorf') {
+    softSceneGlow(196, 123, 24 + Math.sin(t * .045) * 2, 15, 'rgba(255,190,92,.11)');
+  } else if (state.scene === 'sumpf') {
+    g.lineWidth = 1;
+    for (i = 0; i < 3; i++) {
+      p = ((t * .009 + i * .34) % 1);
+      g.beginPath();
+      g.ellipse(140 + i * 13, 128 + i * 3, 3 + p * 12, 1 + p * 3, 0, 0, Math.PI * 2);
+      g.strokeStyle = 'rgba(155,195,165,' + (.18 * (1 - p)) + ')';
+      g.stroke();
+    }
+    softSceneGlow(270, 139, 16 + Math.sin(t * .03), 9, 'rgba(120,225,170,.055)');
+  } else if (state.scene === 'huette') {
+    for (i = 0; i < 4; i++) {
+      p = ((t * .008 + i * .26) % 1);
+      E(168 + Math.sin(t * .02 + i) * (2 + p * 5), 106 - p * 30, 2 + p * 3, 1 + p * 2,
+        'rgba(205,220,202,' + (.13 * (1 - p)) + ')');
+    }
+    softSceneGlow(178, 104, 24 + Math.sin(t * .025) * 2, 12, 'rgba(163,132,230,.065)');
+  } else if (state.scene === 'wirtshaus') {
+    softSceneGlow(268, 118, 36 + Math.sin(t * .055) * 3, 24, 'rgba(255,150,70,.13)');
+  } else if (state.scene === 'hoehle' && has('fackel_an')) {
+    a = .10 + Math.sin(t * .04) * .025;
+    softSceneGlow(96, 108, 27, 20, 'rgba(174,116,255,' + a + ')');
+    for (i = 0; i < 4; i++) {
+      p = Math.max(0, Math.sin(t * .035 + i * 1.9));
+      R(82 + i * 9, 91 + (i % 2) * 10, 1, 1, 'rgba(225,201,255,' + (p * .48) + ')');
+    }
+  } else if (state.scene === 'steinkreis') {
+    a = .07 + Math.sin(t * .035) * .025;
+    softSceneGlow(162, 116, 42, 18, 'rgba(151,112,225,' + a + ')');
+    L(142, 124, 150, 118, 'rgba(189,158,235,' + a + ')', 1);
+    L(174, 118, 182, 124, 'rgba(189,158,235,' + a + ')', 1);
+  }
+}
+
 /* Kleine Bodenreaktion beim Laufen: Staub, Asche oder Sumpfringe. */
 function drawActorTrail() {
   var p = (actor.dist % 12) / 12, y = actor.y - 1;
@@ -351,7 +409,7 @@ function drawHUD() {
     ctx.fillStyle = hov ? 'rgba(60,48,84,.85)' : 'rgba(20,16,30,.42)';
     ctx.fillRect(t.x * scale, t.y * scale, t.w * scale, t.h * scale);
     var col = on ? (hov ? '#ffe58a' : '#cbbde6') : '#6b6280';
-    var sym = { hinweis: '?', magie: '✦', foto: '▣', tagebuch: '≡', musik: '♪', stimme: '☺', vollbild: '⛶' }[t.id];
+    var sym = { hinweis: '?', magie: '✦', tagebuch: '≡', musik: '♪', stimme: '☺', vollbild: '⛶' }[t.id];
     txt(t.x + t.w / 2, t.y + (isTouch ? 4.5 : 1.5), sym, col, 'center', isTouch ? 11 : 8);
   }
 
@@ -802,7 +860,6 @@ function onKey(e) {
   if (e.key === 'j' || e.key === 'J') journalOpen = !journalOpen;
   if (e.key === 'h' || e.key === 'H') giveHint();
   if (e.key === 'v' || e.key === 'V') revealHotspots();
-  if (e.key === 'p' || e.key === 'P') exportPostcard();
   if (e.key === 'm' || e.key === 'M') setMusic(!AU.musicOn);
   if (e.key === 'a' || e.key === 'A') exportAtlas();
   if (e.key === 't' || e.key === 'T') exportTileset();
@@ -814,7 +871,6 @@ function btnAction(id) {
   if (id === 'stimme') { AU.speechOn = !AU.speechOn; if (!AU.speechOn) stopSpeech(); showToast('Sprachausgabe ' + (AU.speechOn ? 'an' : 'aus')); return; }
   if (id === 'hinweis') { giveHint(); return; }
   if (id === 'magie') { revealHotspots(); return; }
-  if (id === 'foto') { exportPostcard(); showToast('Pixel-Postkarte gespeichert'); return; }
   if (id === 'tagebuch') { journalOpen = !journalOpen; return; }
   if (id === 'vollbild') { toggleFullscreen(); return; }
 }

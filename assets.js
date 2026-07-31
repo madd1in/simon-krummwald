@@ -373,8 +373,37 @@ function bakeProps() {
   }
 }
 
-/* Deko blitten – Ursprung unten mittig */
-function prop(name, x, y, s, flip) { sprite('prop_' + name, x, y, s || 1, !!flip); }
+/* Deko blitten – Ursprung unten mittig. Bodenobjekte bekommen einen
+   sehr weichen Kontaktschatten; schwebende und hängende Sprites nicht. */
+var FLOATING_PROPS = {
+  vogel: 1, fledermaus: 1, schmetterling: 1, libelle: 1, motte: 1,
+  lichtkugel: 1, seerose: 1, spinnennetz: 1, kraeuter: 1,
+  banner: 1, kette: 1, ranken: 1
+};
+function prop(name, x, y, s, flip) {
+  s = s || 1;
+  var f = FRAMES['prop_' + name];
+  if (f && !FLOATING_PROPS[name]) {
+    E(x, y - .5 * s, Math.max(2.5, f.w * .24 * s), Math.max(.8, 1.5 * s), 'rgba(0,0,0,.11)');
+  }
+  sprite('prop_' + name, x, y, s, !!flip);
+}
+
+/* Sehr kleine Pendelbewegung für bereits vorhandene Fahnen.
+   Die Amplitude bleibt absichtlich unter zwei Grad. */
+function propSway(name, x, y, s, t, amount, flip) {
+  s = s || 1;
+  amount = amount || .02;
+  var f = FRAMES['prop_' + name];
+  if (f && !FLOATING_PROPS[name]) {
+    E(x, y - .5 * s, Math.max(2.5, f.w * .24 * s), Math.max(.8, 1.5 * s), 'rgba(0,0,0,.11)');
+  }
+  g.save();
+  g.translate(x, y);
+  g.rotate(Math.sin(t) * amount);
+  sprite('prop_' + name, 0, 0, s, !!flip);
+  g.restore();
+}
 
 function bakeIcons() {
   var ids = Object.keys(ITEMS);
@@ -454,25 +483,4 @@ function exportTileset() {
   a.download = 'krummwald-tileset.png';
   a.href = out.toDataURL('image/png');
   a.click();
-}
-
-/* Aktuelle Szene ohne HUD als 640x400-Pixel-Postkarte speichern. */
-function exportPostcard() {
-  if (typeof world === 'undefined' || !world) return;
-  var restoreInv = (typeof invOpen !== 'undefined') ? invOpen : false;
-  if (restoreInv && typeof render === 'function') {
-    invOpen = false;
-    render();
-  }
-  var out = document.createElement('canvas');
-  out.width = VW * 2; out.height = VH * 2;
-  var og = out.getContext('2d');
-  og.imageSmoothingEnabled = false;
-  og.drawImage(world, 0, 0, out.width, out.height);
-  var a = document.createElement('a');
-  var place = (typeof state !== 'undefined' && state.scene) ? state.scene : 'szene';
-  a.download = 'krummwald-' + place + '-postkarte.png';
-  a.href = out.toDataURL('image/png');
-  a.click();
-  if (restoreInv) invOpen = true;
 }
