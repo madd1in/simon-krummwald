@@ -423,53 +423,81 @@ function drawElster(x, y, t, s) {
 }
 
 /* Wirt Bruno – rundlich, Schürze, Schnauzbart */
+/* Bruno poliert den Tresen: der rechte Arm wischt, die Schulter geht mit */
 function drawBruno(x, y, t) {
-  var b = Math.sin(t * .04) * .4;
+  var ph = t * .039;
+  var b = Math.sin(ph * 2) * .5;
+  var wipe = Math.sin(ph) * 4.5;          /* Wischweg */
+  var lean = Math.abs(Math.sin(ph)) * .8;
   E(x, y, 9, 2.5, 'rgba(0,0,0,.25)');
   R(x - 7, y - 6, 6, 6, '#4a3524'); R(x + 1, y - 6, 6, 6, '#4a3524');
   R(x - 8, y - 24 + b, 16, 18, '#8d3b32');                 /* Wams */
+  R(x - 8, y - 24 + b, 16, 2, '#a4483d');
   R(x - 8, y - 16 + b, 16, 10, '#d8cdb4');                 /* Schürze */
   R(x - 8, y - 16 + b, 16, 1, '#b0a488');
-  R(x - 11, y - 23 + b, 4, 13, '#8d3b32'); R(x + 7, y - 23 + b, 4, 13, '#8d3b32');
-  R(x - 11, y - 12 + b, 4, 3, '#e9b083'); R(x + 7, y - 12 + b, 4, 3, '#e9b083');
+  R(x - 3, y - 14 + b, 6, 8, '#cabfa3');                   /* Schürzenfalte */
+  /* linker Arm hängt, rechter wischt */
+  R(x - 11, y - 23 + b, 4, 13, '#8d3b32');
+  R(x - 11, y - 12 + b, 4, 3, '#e9b083');
+  R(x + 7, y - 23 + b + lean, 4, 10, '#8d3b32');
+  R(x + 7 + wipe * .5, y - 14 + b + lean, 4, 4, '#e9b083');
+  /* Lappen in der Hand */
+  R(x + 6 + wipe, y - 11 + b + lean, 7, 3, '#e8e2cf');
+  R(x + 6 + wipe, y - 11 + b + lean, 7, 1, '#f6f2e6');
   R(x - 5, y - 27 + b, 10, 4, '#e9b083');                  /* Hals */
-  R(x - 6, y - 37 + b, 12, 11, '#e9b083');                 /* Kopf */
-  R(x - 7, y - 39 + b, 14, 3, '#3d3128');                  /* Haare */
-  R(x - 7, y - 36 + b, 2, 4, '#3d3128'); R(x + 5, y - 36 + b, 2, 4, '#3d3128');
-  R(x - 4, y - 33 + b, 2, 2, '#1a1414'); R(x + 2, y - 33 + b, 2, 2, '#1a1414');
-  R(x - 4, y - 29 + b, 8, 2, '#4a3a2a');                   /* Schnauzer */
-  R(x - 1, y - 31 + b, 2, 2, '#cf9066');
+  R(x - 6, y - 37 + b - lean * .5, 12, 11, '#e9b083');     /* Kopf */
+  R(x - 6, y - 37 + b - lean * .5, 12, 2, '#f4c197');
+  R(x - 7, y - 39 + b - lean * .5, 14, 3, '#3d3128');      /* Haare */
+  R(x - 7, y - 36 + b - lean * .5, 2, 4, '#3d3128'); R(x + 5, y - 36 + b - lean * .5, 2, 4, '#3d3128');
+  R(x - 4, y - 33 + b - lean * .5, 2, 2, '#1a1414'); R(x + 2, y - 33 + b - lean * .5, 2, 2, '#1a1414');
+  R(x - 4, y - 29 + b - lean * .5, 8, 2, '#4a3a2a');       /* Schnauzer */
+  R(x - 1, y - 31 + b - lean * .5, 2, 2, '#cf9066');
 }
 
 /* Trödlerin Mathilda – dünn, Kopftuch, spitze Nase */
+/* Mathilda sortiert ihren Krempel: ein Arm hebt und senkt sich */
 function drawMathilda(x, y, t) {
-  var b = Math.sin(t * .05 + 2) * .5;
+  var ph = t * .039 + 2;
+  var b = Math.sin(ph * 2) * .5;
+  var sort = Math.max(0, Math.sin(ph)) * 5;      /* Arm hebt an */
+  var head = Math.sin(ph) * .6;
   E(x, y, 8, 2.4, 'rgba(0,0,0,.25)');
   P([x - 9, y, x + 9, y, x + 6, y - 22 + b, x - 6, y - 22 + b], '#5c4a86');  /* Rock */
+  P([x - 9, y, x - 2, y, x - 1, y - 22 + b, x - 6, y - 22 + b], '#51407a');
   R(x - 6, y - 32 + b, 12, 11, '#7a63aa');                                    /* Oberteil */
-  R(x - 9, y - 31 + b, 3, 12, '#7a63aa'); R(x + 6, y - 31 + b, 3, 12, '#7a63aa');
-  R(x - 9, y - 20 + b, 3, 3, '#e0a785'); R(x + 6, y - 20 + b, 3, 3, '#e0a785');
-  R(x - 4, y - 35 + b, 8, 4, '#e0a785');
-  R(x - 5, y - 44 + b, 10, 10, '#e0a785');                                    /* Kopf */
-  P([x - 7, y - 44 + b, x + 7, y - 44 + b, x + 5, y - 49 + b, x - 5, y - 49 + b], '#c8482f'); /* Kopftuch */
-  R(x - 7, y - 45 + b, 14, 2, '#c8482f');
-  P([x - 7, y - 43 + b, x - 3, y - 43 + b, x - 8, y - 33 + b], '#c8482f');
-  R(x - 3, y - 41 + b, 2, 2, '#1a1414'); R(x + 2, y - 41 + b, 2, 2, '#1a1414');
-  P([x + 4, y - 40 + b, x + 8, y - 38 + b, x + 4, y - 37 + b], '#e0a785');    /* Nase */
-  R(x - 2, y - 36 + b, 4, 1, '#8c4a3a');
+  R(x - 6, y - 32 + b, 12, 2, '#8e77bd');
+  R(x - 9, y - 31 + b, 3, 12, '#7a63aa');
+  R(x + 6, y - 31 + b - sort, 3, 12, '#7a63aa');
+  R(x - 9, y - 20 + b, 3, 3, '#e0a785');
+  R(x + 6, y - 20 + b - sort, 3, 3, '#e0a785');
+  /* aufgehobenes Stück Krempel */
+  if (sort > 2) R(x + 6, y - 24 + b - sort, 4, 3, '#8b8f99');
+  var hb = b + head;
+  R(x - 4, y - 35 + hb, 8, 4, '#e0a785');
+  R(x - 5, y - 44 + hb, 10, 10, '#e0a785');                                   /* Kopf */
+  P([x - 7, y - 44 + hb, x + 7, y - 44 + hb, x + 5, y - 49 + hb, x - 5, y - 49 + hb], '#c8482f'); /* Kopftuch */
+  R(x - 7, y - 45 + hb, 14, 2, '#c8482f');
+  P([x - 7, y - 43 + hb, x - 3, y - 43 + hb, x - 8, y - 33 + hb], '#c8482f');
+  R(x - 3, y - 41 + hb, 2, 2, '#1a1414'); R(x + 2, y - 41 + hb, 2, 2, '#1a1414');
+  P([x + 4, y - 40 + hb, x + 8, y - 38 + hb, x + 4, y - 37 + hb], '#e0a785'); /* Nase */
+  R(x - 2, y - 36 + hb, 4, 1, '#8c4a3a');
 }
 
 /* Troll Grombold – breit, moosgrün, Hauer */
 function drawTroll(x, y, t) {
-  var b = Math.sin(t * .035) * .8;
+  var ph = t * .039;
+  var b = Math.sin(ph) * 1.1;                 /* schwerer Atem */
+  var scratch = Math.max(0, Math.sin(ph * 2 - 1)) * 5;   /* kratzt sich am Kopf */
   var GR = '#5e7a3e', GR2 = '#48602f', GR3 = '#748f4c';
   E(x, y, 15, 3.5, 'rgba(0,0,0,.3)');
   R(x - 12, y - 7, 10, 7, GR2); R(x + 2, y - 7, 10, 7, GR2);      /* Füße */
   R(x - 13, y - 34 + b, 26, 28, GR);                              /* Rumpf */
   R(x - 13, y - 34 + b, 26, 6, GR3);
   R(x - 10, y - 22 + b, 20, 9, '#6b4a2c');                        /* Lendenschurz */
-  R(x - 19, y - 33 + b, 7, 20, GR); R(x + 12, y - 33 + b, 7, 20, GR);
-  R(x - 20, y - 15 + b, 8, 6, GR3); R(x + 12, y - 15 + b, 8, 6, GR3);
+  R(x - 19, y - 33 + b, 7, 20, GR);
+  R(x + 12, y - 33 + b, 7, 20 - scratch * 2, GR);
+  R(x - 20, y - 15 + b, 8, 6, GR3);
+  R(x + 12, y - 15 + b - scratch * 2, 8, 6, GR3);
   R(x - 9, y - 47 + b, 18, 14, GR3);                              /* Kopf */
   R(x - 11, y - 44 + b, 3, 6, GR); R(x + 8, y - 44 + b, 3, 6, GR);/* Ohren */
   R(x - 6, y - 43 + b, 4, 3, '#ffee9a'); R(x + 2, y - 43 + b, 4, 3, '#ffee9a');
@@ -482,12 +510,19 @@ function drawTroll(x, y, t) {
 
 /* Grete – uralte Stammkundin, sitzt gebeugt am Tisch */
 function drawGrete(x, y, t) {
-  var b = Math.sin(t * .028) * .4;
+  var ph = t * .039;
+  var b = Math.sin(ph * 2) * .4;
+  var sip = Math.max(0, Math.sin(ph));        /* hebt den Krug zum Mund */
   E(x, y, 8, 2.4, 'rgba(0,0,0,.25)');
   P([x - 9, y, x + 9, y, x + 7, y - 16 + b, x - 7, y - 16 + b], '#4a4450');   /* Rock */
   R(x - 7, y - 25 + b, 14, 10, '#5e5866');                                     /* Rücken, gebeugt */
-  R(x - 10, y - 24 + b, 3, 9, '#5e5866'); R(x + 7, y - 24 + b, 3, 9, '#5e5866');
-  R(x - 10, y - 16 + b, 3, 3, '#d8b79a'); R(x + 7, y - 16 + b, 3, 3, '#d8b79a');
+  R(x - 10, y - 24 + b, 3, 9, '#5e5866');
+  R(x + 7, y - 24 + b - sip * 4, 3, 9, '#5e5866');
+  R(x - 10, y - 16 + b, 3, 3, '#d8b79a');
+  R(x + 7, y - 16 + b - sip * 4, 3, 3, '#d8b79a');
+  /* Zinnkrug in der Hand */
+  R(x + 7, y - 21 + b - sip * 5, 4, 5, '#b8b3a4');
+  R(x + 7, y - 21 + b - sip * 5, 4, 1, '#d2ccbb');
   R(x - 4, y - 28 + b, 8, 4, '#d8b79a');                                       /* Hals */
   R(x - 5, y - 36 + b, 10, 9, '#d8b79a');                                      /* Kopf */
   P([x - 7, y - 36 + b, x + 7, y - 36 + b, x + 5, y - 41 + b, x - 5, y - 41 + b], '#8e8a96'); /* Haube */

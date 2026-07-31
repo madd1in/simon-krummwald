@@ -33,7 +33,7 @@ var touchHoldStart = 0, tapPulse = null;
 
 var state = { scene: 'lichtung', verb: 'gehe', inv: [], flags: {} };
 
-var actor = { x: 160, y: 150, tx: 160, ty: 150, face: 1, dist: 0, moving: false, res: null, visible: true };
+var actor = { x: 160, y: 150, tx: 160, ty: 150, face: 1, dist: 0, moving: false, res: null, visible: true, bendUntil: 0 };
 
 var VERBS = [
   { id: 'gehe', label: 'Gehe zu' }, { id: 'schau', label: 'Schau an' },
@@ -177,8 +177,17 @@ function render() {
     if (actor.moving) drawActorTrail();
     if (actor.visible) {
       var f = 0, bob = 0, blink = false;
-      if (actor.moving) f = 10 + (Math.floor(actor.dist / 4.2) % 6);
-      else { f = 20 + (Math.floor(T / 44) % 3); bob = Math.sin(T * .04) * .5; blink = (T % 190) < 7; }
+      if (actor.bendUntil > performance.now()) {
+        f = 40;                                            /* bückt sich */
+      } else if (actor.moving) {
+        f = 10 + (Math.floor(actor.dist / 4.2) % 6);
+      } else if (bubble && bubble.who === 'simon') {
+        f = 30 + (Math.floor(T / 8) % 2);                  /* redet */
+      } else {
+        f = 20 + (Math.floor(T / 44) % 3);
+        bob = Math.sin(T * .04) * .5;
+        blink = (T % 190) < 7;
+      }
       drawSimon(actor.x, actor.y + bob, actorScale(), f, actor.face, !!state.flags.hut, blink);
     }
     if (sc.front) sc.front(T, state.flags);
@@ -1028,13 +1037,24 @@ async function doAction(verb, a, b) {
   }
   await approach(h);
   if (verb === 'schau') { await (h.look ? h.look() : say('simon', 'Nichts Besonderes.')); return; }
-  if (verb === 'nimm') { await (h.take ? h.take() : say('simon', 'Das kann ich nicht mitnehmen.')); return; }
+  if (verb === 'nimm') {
+    if (h.take && h.rect && h.rect[1] > 100) await bendDown();   /* nur nach unten greifen */
+    await (h.take ? h.take() : say('simon', 'Das kann ich nicht mitnehmen.'));
+    return;
+  }
   if (verb === 'rede') { await (h.talk ? h.talk() : say('simon', 'Das antwortet mir nicht. Zum Glück.')); return; }
   if (verb === 'benutze') {
     if (h.use) { var r = await h.use(null); if (r !== false) return; }
     if (h.exit) { await h.exit(); return; }
     await say('simon', 'Damit kann ich so nichts anfangen.'); return;
   }
+}
+
+/* kurze Bückbewegung, bevor etwas vom Boden aufgehoben wird */
+function bendDown(ms) {
+  var d = ms || 300;
+  actor.bendUntil = performance.now() + d;
+  return new Promise(function (res) { setTimeout(res, d - 60); });
 }
 
 async function approach(h) {

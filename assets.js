@@ -25,6 +25,7 @@ var TILE_KINDS = ['gras', 'gras_dunkel', 'pfad', 'kopfstein', 'holzboden', 'fels
                   'wurzelboden', 'ziegel', 'magmastein', 'mondpfad',
                   'pilzmoos', 'schiefer', 'teppich', 'portalboden'];
 var atlasReady = false;
+var NPC_PHASES = 4;   /* Animationsphasen je NPC */
 
 /* ---------- kleiner Zeilen-Packer ---------- */
 var packX = 0, packY = 0, packRow = 0;
@@ -378,13 +379,14 @@ function bakeCharacters() {
       }
     }
   }
-  for (var p = 0; p < 3; p++) {
+  /* vier Phasen ergeben einen runden Bewegungszyklus (Periode t=160) */
+  for (var p = 0; p < NPC_PHASES; p++) {
     (function (ph) {
       var t = ph * 40;
-      bake('bruno_' + ph, 30, 48, 15, 46, function (ox, oy) { _rawBruno(ox, oy, t); });
-      bake('mathilda_' + ph, 26, 56, 13, 54, function (ox, oy) { _rawMathilda(ox, oy, t); });
+      bake('bruno_' + ph, 34, 48, 15, 46, function (ox, oy) { _rawBruno(ox, oy, t); });
+      bake('mathilda_' + ph, 28, 56, 13, 54, function (ox, oy) { _rawMathilda(ox, oy, t); });
       bake('grombold_' + ph, 46, 56, 23, 54, function (ox, oy) { _rawTroll(ox, oy, t); });
-      bake('grete_' + ph, 26, 46, 13, 44, function (ox, oy) { _rawGrete(ox, oy, t); });
+      bake('grete_' + ph, 28, 46, 13, 44, function (ox, oy) { _rawGrete(ox, oy, t); });
       bake('elster_' + ph, 26, 18, 13, 9, function (ox, oy) { _rawElster(ox, oy, t, 1); });
     })(p);
   }
@@ -471,17 +473,19 @@ function bakeAtlas() {
   drawSimon = function (x, y, s, frame, face, hat, blink) {
     var pose = 'idle' + (Math.abs(frame || 0) % 3);
     if (frame >= 10 && frame <= 15) pose = 'walk' + (frame - 10);
+    else if (frame === 30 || frame === 31) pose = 'talk' + (frame - 30);
+    else if (frame === 40) pose = 'bueck';
     else if (frame === 1) pose = 'walk1';
     else if (frame === 3) pose = 'walk4';
     sprite('simonpose_' + (hat ? 1 : 0) + '_' + (blink ? 1 : 0) + '_' + pose, x, y, s, face < 0);
   };
   drawIcon = function (id, x, y) { sprite('item_' + id, x, y, 1, false); };
-  drawBruno = function (x, y, t) { sprite('bruno_' + (Math.floor(t / 40) % 3), x, y, 1, false); };
-  drawMathilda = function (x, y, t) { sprite('mathilda_' + (Math.floor(t / 45) % 3), x, y, 1, false); };
-  drawTroll = function (x, y, t) { sprite('grombold_' + (Math.floor(t / 55) % 3), x, y, 1, false); };
-  drawElster = function (x, y, t) { sprite('elster_' + (Math.floor(t / 12) % 3), x, y, 1, false); };
+  drawBruno = function (x, y, t) { sprite('bruno_' + (Math.floor(t / 40) % NPC_PHASES), x, y, 1, false); };
+  drawMathilda = function (x, y, t) { sprite('mathilda_' + (Math.floor(t / 45) % NPC_PHASES), x, y, 1, false); };
+  drawTroll = function (x, y, t) { sprite('grombold_' + (Math.floor(t / 55) % NPC_PHASES), x, y, 1, false); };
+  drawElster = function (x, y, t) { sprite('elster_' + (Math.floor(t / 12) % NPC_PHASES), x, y, 1, false); };
   drawDrache = function (x, y, t, sleeping) { sprite('drache_' + (Math.floor(t / 60) % 2), x, y, 1, false); };
-  drawGrete = function (x, y, t) { sprite('grete_' + (Math.floor(t / 70) % 3), x, y, 1, false); };
+  drawGrete = function (x, y, t) { sprite('grete_' + (Math.floor(t / 70) % NPC_PHASES), x, y, 1, false); };
 
   atlasReady = true;
 }
