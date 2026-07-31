@@ -80,6 +80,7 @@ async function combine(a, b) {
   }
   if (k === 'fackel+feuerstein') {
     del('fackel'); add('fackel_an'); sfx('fire');
+    burst(actor.x + 8 * actor.face, actor.y - 26, 'funken', 18); screenShake(1.2, 220);
     await say('simon', 'Funke, Rauch, Flamme — und alle zehn Finger noch dran. Ein guter Tag.');
     return;
   }
@@ -519,6 +520,7 @@ SCENES.sumpf = {
   name: 'Nebelsumpf',
   light: { tint: 'rgba(120,160,150,.12)', rim: 'rgba(190,215,200,.35)', dx: 0, dy: -2 },
   ground: 'moor',
+  mirror: { x: 134, y: 126, rx: 34, ry: 9, alpha: .30, squash: .5 },
   walk: { x1: 12, x2: 300, y1: 108, y2: 138 },
   scaleMin: .6, scaleMax: .98,
   start: { x: 166, y: 112 },
@@ -555,7 +557,7 @@ SCENES.sumpf = {
       look: function () { return say('simon', 'Trübes, blubberndes Wasser. Es sieht giftig aus und riecht, als wäre es stolz darauf.'); },
       use: async function (item) {
         if (item === 'eimer') {
-          del('eimer'); add('eimer_voll'); sfx('water');
+          del('eimer'); add('eimer_voll'); sfx('water'); burst(actor.x + 10 * actor.face, actor.y - 6, 'wasser', 16);
           await say('simon', 'Ich schöpfe einen Eimer Sumpfwasser. Meine Mutter wäre so stolz.');
           return;
         }
@@ -617,7 +619,7 @@ async function sagZauberwort() {
     return;
   }
   await say('simon', 'Also gut. Räusper. KRIBBELKRABBEL!');
-  sfx('magic');
+  sfx('magic'); burst(58, 88, 'magie', 22); screenShake(1.6, 320);
   await say('narrator', 'Die Rune erlischt mit einem beleidigten Zischen. Der Riegel springt zurück.');
   sfx('door');
   state.flags.huetteOffen = true;
@@ -759,7 +761,7 @@ SCENES.huette = {
         }
         if (item === 'kaesebrot') {
           if (!state.flags.kesselPilz) { await say('simon', 'Käse kommt laut Rezept zuletzt. Und ich halte mich ausnahmsweise an Anweisungen.'); return; }
-          del('kaesebrot'); state.flags.kesselKaese = true; state.flags.kesselFertig = true; sfx('magic');
+          del('kaesebrot'); state.flags.kesselKaese = true; state.flags.kesselFertig = true; sfx('magic'); burst(168, 96, 'magie', 26);
           await say('narrator', 'Der Kessel gluckert, schäumt violett auf und wirft eine kleine Flasche aus, die Simon reflexhaft fängt.');
           add('schlafpulver');
           await say('simon', 'Ein Schlaftrank. Aus Sumpfwasser, Giftpilz und Käse. Ich hoffe inständig, dass ich den nie trinken muss.');
@@ -843,7 +845,7 @@ SCENES.hoehle = {
       look: dark(function () { return say('simon', 'Auf einem Felssockel schwebt ein violetter Kristall. Er pulsiert im Takt meines Herzschlags. Etwas zu schnell.'); }),
       take: dark(async function () {
         if (!state.flags.drachenSchlaf) {
-          sfx('roar');
+          sfx('roar'); screenShake(4, 900);
           await say('narrator', 'Simon streckt die Hand aus. Ein Augenlid des Drachen hebt sich einen Spalt. Ein tiefes Grollen rollt durch die Höhle.');
           await say('simon', 'Nein. Nein nein nein. Erst der Drache, dann der Kristall.');
           return;
@@ -892,7 +894,7 @@ SCENES.steinkreis = {
       },
       use: async function (item) {
         if (item === 'kristall') {
-          del('kristall'); state.flags.kristallPlatziert = true; sfx('magic');
+          del('kristall'); state.flags.kristallPlatziert = true; sfx('magic'); burst(162, 112, 'magie', 30); screenShake(2.4, 500);
           await say('narrator', 'Simon legt den Kristall in die Mulde. Er rastet mit einem satten Klicken ein, und violettes Licht schießt zwischen den Steinen empor.');
           if (!state.flags.hut) await say('simon', 'Das Portal reagiert! Aber ohne Hut nimmt mich da drüben keiner ernst. Erst der Hut.');
           else await say('simon', 'Kristall drin, Hut auf dem Kopf. Jetzt fehlt nur noch das Zauberwort.');
@@ -929,7 +931,8 @@ async function altarAktivieren() {
 /* ------------------------- FINALE ------------------------- */
 
 async function ende() {
-  sfx('portal');
+  sfx('portal'); screenShake(3.2, 1600);
+  for (var pb = 0; pb < 5; pb++) setTimeout(function () { burst(162, 108, 'magie', 18); }, pb * 260);
   await say('narrator', 'Die Runen flammen auf. Das Licht zwischen den Steinen wird dicht wie Wasser, und ein Wind kommt auf, der nach Zuhause riecht.');
   await say('narrator', 'Aus dem Sumpf hört man einen Troll gähnen. Im Dorf schmeckt Brunos Bier zum ersten Mal seit Jahren wieder richtig. Und hoch in einer Eiche bewundert eine Elster ihren neuen Knopf.');
   await say('simon', 'Krummwald, es war... nun ja. Es war.');

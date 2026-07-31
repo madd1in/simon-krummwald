@@ -31,6 +31,8 @@ var sceneEnteredAt = 0;
 var revealUntil = 0;
 var touchHoldStart = 0, tapPulse = null;
 var exitMarkers = [];      /* anklickbare Ausgangspfeile */
+var particles = [];        /* Staub, Funken, Magie */
+var shake = { amp: 0, until: 0 };
 
 var state = { scene: 'lichtung', verb: 'gehe', inv: [], flags: {} };
 
@@ -188,6 +190,7 @@ function update(dt, nowMs) {
   }
   if (wipe) { wipe.p += dt / wipe.ms; if (wipe.p >= 1) wipe = null; }
   if (toast && nowMs > toast.until) toast = null;
+  if (particles.length) updateParticles(dt);
 
   if (actor.moving) {
     var dx = actor.tx - actor.x, dy = actor.ty - actor.y;
@@ -226,6 +229,87 @@ function drawActorShadow(sc) {
   E(actor.x + off * .5, actor.y, 5.5 * s, 1.8 * s, 'rgba(0,0,0,.16)');
 }
 
+/* ---------------- Partikel und Erschütterung ---------------- */
+
+/* Wirft n Teilchen an einer Stelle aus. art: 'staub' | 'funken' | 'magie' | 'wasser' */
+function burst(x, y, art, n) {
+  n = n || 10;
+  var preset = {
+    staub:  { col: ['#c9b78e', '#a89771', '#ded0ae'], v: 14, up: 8,  grav: 22, life: 620, size: 1.4 },
+    funken: { col: ['#ffd23c', '#ff9a2e', '#fff3a8'], v: 34, up: 26, grav: 52, life: 480, size: 1.1 },
+    magie:  { col: ['#c48bff', '#e6d0ff', '#9b5de5'], v: 20, up: 24, grav: -6, life: 900, size: 1.5 },
+    wasser: { col: ['#7fb0a0', '#a8ccbe', '#4d6b5c'], v: 22, up: 20, grav: 46, life: 520, size: 1.2 }
+  }[art] || { col: ['#fff'], v: 20, up: 14, grav: 30, life: 500, size: 1.3 };
+
+  for (var i = 0; i < n; i++) {
+    var a = (Math.random() - .5) * Math.PI;
+    particles.push({
+      x: x + (Math.random() - .5) * 4,
+      y: y + (Math.random() - .5) * 3,
+      vx: Math.sin(a) * preset.v * (.4 + Math.random()),
+      vy: -preset.up * (.4 + Math.random()),
+      g: preset.grav,
+      col: preset.col[(Math.random() * preset.col.length) | 0],
+      size: preset.size * (.7 + Math.random() * .6),
+      life: preset.life * (.6 + Math.random() * .7),
+      age: 0
+    });
+  }
+  if (particles.length > 220) particles.splice(0, particles.length - 220);
+}
+
+function updateParticles(dt) {
+  for (var i = particles.length - 1; i >= 0; i--) {
+    var p = particles[i];
+    p.age += dt;
+    if (p.age >= p.life) { particles.splice(i, 1); continue; }
+    var d = dt / 1000;
+    p.vy += p.g * d;
+    p.x += p.vx * d;
+    p.y += p.vy * d;
+  }
+}
+
+function drawParticles() {
+  for (var i = 0; i < particles.length; i++) {
+    var p = particles[i], t = 1 - p.age / p.life;
+    g.globalAlpha = Math.max(0, Math.min(1, t * 1.4));
+    R(p.x, p.y, p.size, p.size, p.col);
+  }
+  g.globalAlpha = 1;
+}
+
+/* Kurzes Rütteln des Bildes */
+function screenShake(amp, ms) {
+  shake.amp = Math.max(shake.amp, amp || 2);
+  shake.until = Math.max(shake.until, performance.now() + (ms || 300));
+}
+
+function shakeOffset() {
+  var left = shake.until - performance.now();
+  if (left <= 0) { shake.amp = 0; return null; }
+  var f = Math.min(1, left / 260) * shake.amp;
+  return { x: (Math.random() - .5) * 2 * f, y: (Math.random() - .5) * 2 * f };
+}
+
+/* Spiegelung der Figur auf einer Wasserfläche */
+function drawReflection(sc) {
+  var m = sc && sc.mirror;
+  if (!m || !actor.visible) return;
+  if (actor.x < m.x - m.rx - 8 || actor.x > m.x + m.rx + 8) return;
+  if (Math.abs(actor.y - m.y) > 30) return;
+
+  var s = actorScale();
+  g.save();
+  g.beginPath(); g.ellipse(m.x, m.y, m.rx, m.ry, 0, 0, 7); g.clip();
+  g.globalAlpha = m.alpha || .3;
+  g.translate(actor.x + Math.sin(T * .04) * .6, m.y + (m.y - actor.y) * .18);
+  g.scale(1, -(m.squash || .55));
+  drawSimon(0, 0, s, 20, actor.face, !!state.flags.hut, false);
+  g.restore();
+  g.globalAlpha = 1;
+}
+
 function actorScale() {
   var sc = SCENES[state.scene];
   var b = sc && sc.walk ? sc.walk : { y1: 100, y2: 186 };
@@ -246,6 +330,7 @@ function render() {
     sc.draw(T, state.flags);
     drawSceneAccents(T);
     if (actor.moving) drawActorTrail();
+    drawReflection(sc);
     if (actor.visible) drawActorShadow(sc);
     if (actor.visible) {
       var f = 0, bob = 0, blink = false;
@@ -263,6 +348,7 @@ function render() {
       drawSimon(actor.x, actor.y + bob, actorScale(), f, actor.face, !!state.flags.hut, blink);
     }
     if (sc.front) sc.front(T, state.flags);
+    if (particles.length) drawParticles();
     if (sc.fx) drawFX(sc.fx, T);
     if (state.scene === 'hoehle' && has('fackel_an')) torchLight(actor.x, actor.y - 26 * actorScale());
     if (sc.tint) { g.fillStyle = sc.tint; g.fillRect(0, 0, VW, VH); }
@@ -270,7 +356,12 @@ function render() {
   }
 
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(world, 0, 0, cv.width, cv.height);
+  var sh = shakeOffset();
+  if (sh) {
+    ctx.drawImage(world, Math.round(sh.x * scale), Math.round(sh.y * scale), cv.width, cv.height);
+  } else {
+    ctx.drawImage(world, 0, 0, cv.width, cv.height);
+  }
 
   if (mode === 'title') drawTitleText();
   else if (mode === 'ending') drawEndingText();
@@ -1219,6 +1310,8 @@ async function doAction(verb, a, b) {
 function bendDown(ms) {
   var d = ms || 300;
   actor.bendUntil = performance.now() + d;
+  var s = actorScale();
+  setTimeout(function () { burst(actor.x + 6 * actor.face * s, actor.y - 1, 'staub', 7); }, d - 130);
   return new Promise(function (res) { setTimeout(res, d - 60); });
 }
 
