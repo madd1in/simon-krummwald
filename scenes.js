@@ -48,6 +48,14 @@ var MAP_HUETTE = [
   'HHHHHHHHHHHHHHHHHHHH',
   'HHHHHHHHHHHHHHHHHHHH'
 ];
+var MAP_WIRTSHAUS = [
+  'HHHHHHHHHHHHHHHHHHHH',
+  'HHHHHHHHHHHHHHHHHHHH',
+  'HHHHHHHHHHHHHHHHHHHH',
+  'HHHHHHHHHHHHHHHHHHHH',
+  'HHHHHHHHHHHHHHHHHHHH',
+  'HHHHHHHHHHHHHHHHHHHH'
+];
 var MAP_HOEHLE = [
   'FFFFFFFFFFFFFFFFFFFF',
   'FFFFFFFFFFFFFFFFFFFF',
@@ -112,17 +120,26 @@ function bgLichtung(t, F) {
   cloud(210, 12, .85, 'rgba(255,255,255,.7)');
   cloud(268, 30, .6, 'rgba(255,255,255,.55)');
 
-  /* ferner Waldrand */
-  for (var i = 0; i < 26; i++) {
-    var x = i * 13 + rnd(i) * 8;
-    E(x, 82 + rnd(i + 9) * 4, 12, 14 + rnd(i + 3) * 8, '#20401f');
+  /* ferner Waldrand – zwei Tiefenebenen */
+  for (var i = 0; i < 22; i++) {
+    var x = i * 15.5 + rnd(i) * 8;
+    leafCanopy(x, 74 + rnd(i + 9) * 5, 12, 11 + rnd(i + 3) * 5, i * 3.3, '#16300f', '#1d3f16', '#25501c');
   }
-  R(0, 88, VW, 8, '#25491f');
+  for (var i2 = 0; i2 < 20; i2++) {
+    var x2 = i2 * 17 + rnd(i2 + 40) * 9;
+    R(x2 - 1.5, 84, 3, 12, '#2e2416');
+    leafCanopy(x2, 84 + rnd(i2 + 19) * 4, 14, 12 + rnd(i2 + 13) * 5, i2 * 5.1 + 7, '#1d4318', '#2a5c22', '#356f2b');
+  }
+  R(0, 92, VW, 5, '#25491f');
 
   /* Wiese als Tilemap */
   drawTilemap(MAP_LICHTUNG, LEG, 0, 96);
   groundShade(96, 200, .32, -.06);
   grassTufts(0, VW, 96, 196, 4.2, '#2f6323', '#6ba43c');
+
+  /* Wolkenschatten und Lichtstrahlen durch die Krone */
+  cloudShadows(t, 96, 200, .09);
+  godRays(52, 40, t, 5, 150, 'rgba(255,246,200,.055)');
 
   /* Vögel am Himmel */
   for (var v = 0; v < 3; v++) {
@@ -161,12 +178,10 @@ function bgLichtung(t, F) {
   P([bx - 20, 106, bx + 20, 106, bx + 9, 96, bx - 9, 96], '#5b3d20');   /* Wurzeln */
   L(bx + 6, 58, bx + 26, 46, '#5b3d20', 3);
   L(bx - 6, 50, bx - 24, 40, '#5b3d20', 3);
-  E(bx, 30, 40, 24, '#1f4a1c');
-  E(bx - 22, 34, 20, 15, '#2a5c22');
-  E(bx + 24, 32, 19, 14, '#2a5c22');
-  E(bx - 6, 16, 24, 15, '#356f2b');
-  E(bx + 18, 18, 17, 12, '#3d7b30');
-  E(bx - 26, 22, 14, 10, '#2a5c22');
+  leafCanopy(bx, 30, 42, 25, 3.7, '#1b4218', '#2a5c22', '#3d7b30');
+  leafCanopy(bx - 24, 34, 20, 15, 11.3, '#1b4218', '#2a5c22', '#3d7b30');
+  leafCanopy(bx + 25, 31, 19, 14, 19.1, '#1b4218', '#2a5c22', '#3d7b30');
+  leafCanopy(bx - 4, 15, 25, 15, 27.5, '#22521d', '#316827', '#478a36');
 
   /* Nest mit Hut */
   var nx = 46, ny = 26;
@@ -234,11 +249,13 @@ function bgDorf(t, F) {
   R(20, 52, 20, 18, '#3a4a5c'); R(20, 52, 20, 18, '#4a6076');  /* Fenster */
   L(30, 52, 30, 70, '#5e4429', 2); L(20, 61, 40, 61, '#5e4429', 2);
   R(70, 50, 20, 18, '#4a6076'); L(80, 50, 80, 68, '#5e4429', 2); L(70, 59, 90, 59, '#5e4429', 2);
-  /* Tür */
+  /* offene Tür ins Wirtshaus */
   R(44, 62, 22, 40, '#3a2a1c');
-  R(46, 64, 18, 36, '#2b1e12');
-  drawBruno(55, 102, t);
-  R(62, 80, 2, 2, '#c8a44a');
+  R(46, 64, 18, 38, '#231a10');
+  var warm = .45 + Math.sin(t * .05) * .12;
+  R(48, 78, 14, 24, 'rgba(255,170,70,' + (warm * .35) + ')');
+  P([46, 102, 64, 102, 70, 112, 40, 112], 'rgba(255,180,90,' + (warm * .16) + ')');
+  R(66, 64, 3, 38, '#54402a');
   /* Wirtshausschild */
   L(102, 40, 118, 40, '#4a3a28', 2);
   R(106, 41, 22, 16, '#7d5a2e'); R(107, 42, 20, 14, '#a3763a');
@@ -525,6 +542,84 @@ function bgHuette(t, F) {
   L(0, 0, 26, 22, 'rgba(220,220,220,.25)', 1);
   L(0, 12, 20, 22, 'rgba(220,220,220,.18)', 1);
   L(12, 0, 24, 16, 'rgba(220,220,220,.18)', 1);
+}
+
+/* ------------------------------------------------------------
+   4b. WIRTSHAUS "ZUM KRUMMEN KRUG" (innen)
+   ------------------------------------------------------------ */
+function bgWirtshaus(t, F) {
+  /* Wand mit Fachwerk */
+  band(0, 116, '#7d6b4e', '#5f5138');
+  for (var i = 0; i < 5; i++) R(0, 14 + i * 22, VW, 4, '#4a3a24');
+  for (var b = 0; b < 7; b++) R(b * 48, 0, 5, 116, '#4a3a24');
+  /* Deckenbalken */
+  R(0, 0, VW, 10, '#3d3020');
+  for (var db = 0; db < 6; db++) R(db * 56 + 10, 0, 8, 14, '#4a3a24');
+
+  /* Boden */
+  drawTilemap(MAP_WIRTSHAUS, LEG, 0, 112);
+  groundShade(112, 200, .34, .05);
+
+  /* Kamin rechts */
+  prop('kaminfeuer', 268, 150);
+  flame(258, 146, 10, t, true);
+  flame(272, 147, 12, t * 1.2 + 3, true);
+  flame(284, 146, 9, t * .9 + 7, true);
+  var fl = .45 + Math.sin(t * .12) * .12;
+  E(268, 140, 60, 46, 'rgba(255,150,50,' + (fl * .12) + ')');
+
+  /* Tresen links */
+  R(8, 118, 104, 8, '#6b4f2a');
+  R(8, 118, 104, 2, '#8a6a3a');
+  R(8, 126, 104, 22, '#54401f');
+  for (var p = 0; p < 6; p++) R(14 + p * 18, 128, 3, 18, '#42320f');
+  /* Fässer hinter dem Tresen */
+  prop('fass', 26, 116, .9);
+  prop('fass', 52, 114, .8);
+  /* Regal mit Krügen */
+  R(6, 46, 96, 4, '#5c4525'); R(6, 70, 96, 4, '#5c4525');
+  for (var k = 0; k < 7; k++) prop('krug', 16 + k * 13, 46, .9);
+  for (var k2 = 0; k2 < 6; k2++) prop('krug', 22 + k2 * 14, 70, .8);
+
+  /* Fenster hinten */
+  R(140, 26, 34, 30, '#3a3226');
+  R(143, 29, 28, 24, '#5d7a8f');
+  R(143, 29, 28, 9, '#7d9aaf');
+  L(157, 29, 157, 53, '#3a3226', 2); L(143, 41, 171, 41, '#3a3226', 2);
+  P([136, 24, 178, 24, 174, 19, 140, 19], '#5c4525');
+
+  /* Wandbild */
+  R(196, 30, 30, 24, '#4a3a24'); R(199, 33, 24, 18, '#6b7a5a');
+  E(211, 44, 8, 5, '#8a9a6a'); P([203, 44, 211, 34, 219, 44], '#5a6a4a');
+
+  /* Tür links unten (Ausgang) */
+  R(0, 92, 22, 56, '#3a2c1e');
+  R(2, 95, 18, 50, '#5a4028');
+  E(17, 120, 2.5, 2.5, '#c8a44a');
+
+  /* Kerzen an der Wand */
+  prop('kerze', 122, 60, 1.1);
+  prop('kerze', 244, 58, 1.1);
+
+  /* Tische und Stühle */
+  prop('tisch', 150, 168);
+  prop('stuhl', 118, 172, 1);
+  prop('stuhl', 186, 170, 1);
+  prop('tisch', 62, 196, 1.15);
+  prop('stuhl', 24, 198, 1.1);
+  prop('krug', 146, 148, 1.1);
+  prop('krug', 158, 149, 1);
+  prop('krug', 56, 176, 1.2);
+
+  /* Figuren */
+  drawBruno(60, 118, t);
+  drawGrete(196, 170, t);
+
+  /* Rauch und Funkenflug vom Kamin */
+  for (var s = 0; s < 6; s++) {
+    var sp = ((t * .014 + s * .17) % 1);
+    E(266 + Math.sin(sp * 6 + s) * 8, 132 - sp * 40, 1 + sp * 2.4, 1 + sp * 2.4, 'rgba(255,170,80,' + (.45 - sp * .45) + ')');
+  }
 }
 
 /* ------------------------------------------------------------

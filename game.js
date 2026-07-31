@@ -10,6 +10,7 @@ var SPEAKERS = {
   bruno:     { name: 'Bruno',    color: '#ff9c7a' },
   mathilda:  { name: 'Mathilda', color: '#d0a8ff' },
   grombold:  { name: 'Grombold', color: '#a8d86a' },
+  grete:     { name: 'Grete',    color: '#e0d8ff' },
   drache:    { name: 'Drache',   color: '#ff7a86' }
 };
 
@@ -207,7 +208,7 @@ SCENES.dorf = {
   walk: { x1: 12, x2: 308, y1: 108, y2: 138 },
   scaleMin: .6, scaleMax: .98,
   start: { x: 40, y: 122 },
-  speakers: { bruno: { x: 58, y: 58 }, mathilda: { x: 232, y: 50 } },
+  speakers: { mathilda: { x: 232, y: 50 } },
   draw: bgDorf,
   front: function (t) {
     P([0, 200, 0, 176, 26, 184, 34, 200], '#2a241c');
@@ -215,20 +216,17 @@ SCENES.dorf = {
   },
   hotspots: [
     {
-      id: 'wirtshaus', name: 'Wirtshaus', rect: [4, 10, 116, 92], go: [40, 118],
-      look: function () { return say('simon', 'Das Wirtshaus "Zum Krummen Krug". Aus dem Inneren riecht es nach Bier, Kohl und alten Streitigkeiten.'); },
-      use: function () { return say('simon', 'Bruno steht in der Tür wie ein sehr breiter Türsteher aus Butter. Da komme ich nicht vorbei.'); }
+      id: 'wirtshaus', name: 'Wirtshaus', rect: [4, 10, 116, 52], go: [56, 120],
+      look: function () { return say('simon', 'Das Wirtshaus "Zum Krummen Krug". Aus dem Inneren riecht es nach Bier, Kohl und alten Streitigkeiten.'); }
+    },
+    {
+      id: 'wirtshaustuer', name: 'Wirtshaustür', rect: [42, 60, 28, 44], go: [58, 122],
+      look: function () { return say('simon', 'Die Tür steht offen. Drinnen flackert Feuerschein, und jemand schrubbt lustlos einen Tresen.'); },
+      exit: function () { return goScene('wirtshaus', 30, 150, 1); }
     },
     {
       id: 'schild_wirt', name: 'Wirtshausschild', rect: [102, 38, 30, 22], go: [96, 116],
       look: function () { return say('narrator', 'Ein bemalter Krug auf verwittertem Holz. Darunter steht: "Heute wie gestern."'); }
-    },
-    {
-      id: 'bruno', name: 'Wirt Bruno', rect: [42, 58, 30, 46], go: [70, 120], face: -1,
-      look: function () { return say('simon', 'Bruno, der Wirt. Gebaut wie ein Fass und ungefähr genauso gesprächig — außer beim Thema Bier.'); },
-      talk: talkBruno,
-      give: giveBruno,
-      use: function (item) { if (item) return giveBruno(item); return say('simon', 'Ich sollte mit ihm reden statt an ihm herumzufummeln.'); }
     },
     {
       id: 'brunnen', name: 'Brunnen', rect: [120, 84, 58, 58], go: [112, 134], face: 1, def: 'schau',
@@ -385,6 +383,118 @@ async function giveMathilda(item) {
   }
   if (item === 'kaesebrot') { await say('mathilda', 'Ich esse nichts, was ich nicht selbst verkauft habe.'); return; }
   await say('mathilda', 'Das kaufe ich nicht an. Ich bin wählerisch, nicht verzweifelt.');
+}
+
+/* --------------------- WIRTSHAUS (innen) --------------------- */
+SCENES.wirtshaus = {
+  name: 'Zum Krummen Krug',
+  walk: { x1: 14, x2: 300, y1: 128, y2: 152 },
+  scaleMin: .78, scaleMax: 1.05,
+  start: { x: 30, y: 150 },
+  speakers: { bruno: { x: 60, y: 74 }, grete: { x: 196, y: 128 } },
+  draw: bgWirtshaus, fx: 'dust',
+  onEnter: async function () {
+    if (!state.flags.wirtshausGesehen) {
+      state.flags.wirtshausGesehen = true;
+      await say('narrator', 'Drinnen ist es warm, dunkel und riecht nach Jahrzehnten. Im Kamin knackt ein Feuer, hinter dem Tresen poliert Bruno einen Krug, der schon sauber ist.');
+      await say('simon', 'Endlich ein Ort mit Dach. Und mit Bier, das ich mir nicht leisten kann.');
+    }
+  },
+  hotspots: [
+    {
+      id: 'wand', name: 'Wandbild', rect: [192, 26, 38, 32], go: [206, 132],
+      look: function () { return say('simon', 'Ein gemalter Hügel mit einem gemalten Baum. Beide sehen aus, als hätten sie den Maler enttäuscht.'); }
+    },
+    {
+      id: 'fenster', name: 'Fenster', rect: [134, 18, 46, 42], go: [156, 132],
+      look: function () { return say('simon', 'Von hier sieht man den Marktplatz. Mathilda bewacht ihren Krempel wie ein Drache sein Gold. Nur mit mehr Ausdauer.'); }
+    },
+    {
+      id: 'regal', name: 'Krugregal', rect: [4, 42, 100, 34], go: [56, 132],
+      look: function () { return say('simon', 'Dreizehn Krüge, alle poliert. Einer fehlt — man sieht den Staubrand.'); },
+      take: function () { return say('simon', 'Brunos Krüge fasse ich nicht an. Ich habe meine Hände noch gern.'); }
+    },
+    {
+      id: 'tresen', name: 'Tresen', rect: [6, 116, 108, 32], go: [70, 136], face: -1,
+      look: function () { return say('simon', 'Ein Tresen aus massivem Holz, blank gescheuert von Ellbogen, die hier älter wurden.'); },
+      use: function (item) {
+        if (item) return false;
+        return say('simon', 'Ich klopfe auf den Tresen wie ein Mann von Welt. Es passiert nichts. Ich bin kein Mann von Welt.');
+      }
+    },
+    {
+      id: 'kamin', name: 'Kamin', rect: [248, 106, 44, 46], go: [240, 146], face: 1,
+      look: function () { return say('simon', 'Ein ordentliches Feuer. Das erste wirklich Gemütliche, das mir in dieser Welt begegnet ist.'); },
+      use: async function (item) {
+        if (item === 'fackel') {
+          del('fackel'); add('fackel_an'); sfx('fire');
+          await say('simon', 'Ich halte die Fackel ins Feuer. Sie fängt sofort. Manchmal ist die einfachste Lösung die richtige.');
+          return;
+        }
+        if (item === 'fackel_an') { await say('simon', 'Sie brennt bereits. Noch mehr Feuer wäre gierig.'); return; }
+        if (item) return false;
+        await say('simon', 'Ich wärme mir die Hände. Für einen Moment ist alles in Ordnung.');
+      }
+    },
+    {
+      id: 'tische', name: 'Tische', rect: [110, 146, 100, 34], go: [150, 150],
+      look: function () { return say('simon', 'Schwere Holztische mit eingeritzten Initialen. "B. + M." steht da. Jemand hat es später wütend durchgestrichen.'); }
+    },
+    {
+      id: 'grete', name: 'Grete', rect: [180, 122, 34, 40], go: [176, 150], face: 1,
+      look: function () { return say('simon', 'Eine sehr alte Frau mit einem sehr leeren Krug. Sie sieht aus, als hätte sie hier schon gesessen, bevor das Haus gebaut wurde.'); },
+      talk: talkGrete,
+      give: function (item) {
+        if (item === 'bierkrug') { return say('grete', 'Behalt ihn, Junge. Der gehört Bruno, und Bruno merkt sowas.'); }
+        return say('grete', 'Ich nehme nichts an. In meinem Alter sammelt man nur noch Erinnerungen und Zipperlein.');
+      }
+    },
+    {
+      id: 'bruno', name: 'Wirt Bruno', rect: [44, 74, 32, 46], go: [66, 134], face: -1,
+      look: function () { return say('simon', 'Bruno, der Wirt. Gebaut wie ein Fass und ungefähr genauso gesprächig — außer beim Thema Bier.'); },
+      talk: talkBruno,
+      give: giveBruno,
+      use: function (item) { if (item) return giveBruno(item); return say('simon', 'Ich sollte mit ihm reden statt an ihm herumzufummeln.'); }
+    },
+    {
+      id: 'tuer', name: 'Tür nach draußen', rect: [0, 90, 26, 60], go: [22, 140],
+      look: function () { return say('simon', 'Zurück auf den Marktplatz.'); },
+      exit: function () { return goScene('dorf', 70, 128, 1); }
+    }
+  ]
+};
+
+async function talkGrete() {
+  await say('grete', 'Setz dich nicht auf den Stuhl da. Da sitzt seit vierzig Jahren keiner mehr.');
+  while (true) {
+    var opts = ['Wer bist du?', 'Was weißt du über den Steinkreis?', 'Erzähl mir vom alten Zauberer.'];
+    if (state.flags.hut) opts.push('Wie gefällt dir mein Hut?');
+    opts.push('Ich muss weiter.');
+    var i = await choose(opts);
+    var pick = opts[i];
+    if (pick === 'Wer bist du?') {
+      await say('grete', 'Grete. Ich sitze hier. Das ist mein Beruf und mein Hobby.');
+      await say('grete', 'Früher war ich Hebamme. Die halbe Straße da draußen hab ich auf die Welt geholt. Danken tut mir keiner.');
+      await say('simon', 'Ich danke Ihnen. Vorsorglich, falls Sie irgendwann auch mich rausholen müssen.');
+    } else if (pick === 'Was weißt du über den Steinkreis?') {
+      await say('grete', 'Die Steine da oben sind älter als alles. Bei Vollmond summen sie. Meine Mutter sagte, sie warten auf etwas.');
+      await say('grete', 'Und einmal, da war ich ein Kind, ist einer hindurchgegangen. Ein Fremder mit einem spitzen Hut.');
+      await say('simon', 'Ein Fremder mit spitzem Hut. Das kommt mir bekannt vor.');
+      await say('grete', 'Er kam nie zurück. Oder er kam zurück und niemand hat ihn erkannt. Bei Zauberern weiß man das nie.');
+      state.flags.greteSteinkreis = true;
+    } else if (pick === 'Erzähl mir vom alten Zauberer.') {
+      await say('grete', 'Der aus dem Sumpf? Netter Kerl. Hat mir mal eine Warze weggezaubert und dafür drei Wochen lang Frösche geregnet.');
+      await say('grete', 'Er hat sich alles aufgeschrieben. Alles. Sogar seine Einkaufszettel waren Zaubersprüche.');
+      await say('simon', 'Das erklärt das Buch. Und den Brunnen. Und vermutlich noch einiges, was ich noch nicht gefunden habe.');
+    } else if (pick === 'Wie gefällt dir mein Hut?') {
+      await say('grete', 'Genau so einer war das damals. Genau so einer.');
+      await say('grete', 'Geh nach Hause, Junge. Solange du noch weißt, wo das ist.');
+      await say('simon', 'Genau das habe ich vor.');
+    } else {
+      await say('grete', 'Ja, ja. Geht ihr alle.');
+      return;
+    }
+  }
 }
 
 /* -------------------------- SUMPF -------------------------- */
@@ -833,8 +943,8 @@ function questSteps() {
       'Die Lösung des Rätsels ist "Ein Hemd" — die Option erscheint, wenn du das Buch gelesen hast.' ] },
     { key: 'krug', title: 'Bruno seinen Bierkrug zurückbringen', done: function () { return F.krugAbgegeben; }, texts: [
       'Jemand im Dorf vermisst etwas, das jetzt in deiner Tasche steckt.',
-      'Bruno will seinen Bierkrug zurück — und zahlt dafür.',
-      'Bierkrug im Inventar anklicken, dann auf Bruno klicken. Es gibt Münzen und ein Käsebrot.' ] },
+      'Bruno steht im Wirtshaus hinter dem Tresen und will seinen Bierkrug zurück — er zahlt dafür.',
+      'Bierkrug im Inventar anklicken, dann drinnen im Wirtshaus auf Bruno klicken. Es gibt Münzen und ein Käsebrot.' ] },
     { key: 'knopf', title: 'Etwas Glänzendes für die Elster besorgen', done: function () { return F.knopfWeg; }, texts: [
       'Für den Vogel brauchst du etwas, das viel zu sehr glänzt.',
       'Mathilda verkauft einen glänzenden Knopf — für genau fünf Kupfermünzen.',

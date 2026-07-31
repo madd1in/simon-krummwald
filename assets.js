@@ -233,6 +233,7 @@ function bakeCharacters() {
       bake('bruno_' + ph, 30, 48, 15, 46, function (ox, oy) { _rawBruno(ox, oy, t); });
       bake('mathilda_' + ph, 26, 56, 13, 54, function (ox, oy) { _rawMathilda(ox, oy, t); });
       bake('grombold_' + ph, 46, 56, 23, 54, function (ox, oy) { _rawTroll(ox, oy, t); });
+      bake('grete_' + ph, 26, 46, 13, 44, function (ox, oy) { _rawGrete(ox, oy, t); });
       bake('elster_' + ph, 26, 18, 13, 9, function (ox, oy) { _rawElster(ox, oy, t, 1); });
     })(p);
   }
@@ -278,6 +279,7 @@ function bakeAtlas() {
   _rawSimon = drawSimon; _rawIcon = drawIcon;
   _rawBruno = drawBruno; _rawMathilda = drawMathilda;
   _rawTroll = drawTroll; _rawElster = drawElster; _rawDrache = drawDrache;
+  _rawGrete = drawGrete;
 
   bakeTiles();
   bakeCharacters();
@@ -295,11 +297,12 @@ function bakeAtlas() {
   drawTroll = function (x, y, t) { sprite('grombold_' + (Math.floor(t / 55) % 3), x, y, 1, false); };
   drawElster = function (x, y, t) { sprite('elster_' + (Math.floor(t / 12) % 3), x, y, 1, false); };
   drawDrache = function (x, y, t, sleeping) { sprite('drache_' + (Math.floor(t / 60) % 2), x, y, 1, false); };
+  drawGrete = function (x, y, t) { sprite('grete_' + (Math.floor(t / 70) % 3), x, y, 1, false); };
 
   atlasReady = true;
 }
 
-var _rawSimon, _rawIcon, _rawBruno, _rawMathilda, _rawTroll, _rawElster, _rawDrache;
+var _rawSimon, _rawIcon, _rawBruno, _rawMathilda, _rawTroll, _rawElster, _rawDrache, _rawGrete;
 
 /* ---------- Atlas als PNG exportieren ---------- */
 function exportAtlas() {

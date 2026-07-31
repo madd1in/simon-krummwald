@@ -116,6 +116,7 @@ var TRACKS = {
   dorf:       { bpm: 124, root: 60, mode: [0, 2, 4, 5, 7, 9], chords: [0, 0, 5, 7], lead: 'square', bass: 'triangle', echo: 0.06, dens: .85 },
   sumpf:      { bpm: 76,  root: 50, mode: [0, 2, 3, 5, 7, 10], chords: [0, 3, 0, 8], lead: 'triangle', bass: 'sine', echo: 0.30, dens: .45 },
   huette:     { bpm: 92,  root: 55, mode: [0, 3, 5, 7, 10], chords: [0, 7, 3, 5], lead: 'triangle', bass: 'sine', echo: 0.22, dens: .55 },
+  wirtshaus:  { bpm: 132, root: 57, mode: [0, 2, 4, 5, 7, 9], chords: [0, 5, 0, 7], lead: 'square', bass: 'triangle', echo: 0.10, dens: .90 },
   hoehle:     { bpm: 66,  root: 45, mode: [0, 1, 5, 7, 8], chords: [0, 0, 6, 5], lead: 'sine', bass: 'sine', echo: 0.42, dens: .38 },
   steinkreis: { bpm: 84,  root: 52, mode: [0, 2, 4, 7, 11], chords: [0, 9, 5, 7], lead: 'triangle', bass: 'sine', echo: 0.36, dens: .60 },
   titel:      { bpm: 92,  root: 52, mode: [0, 2, 4, 7, 9], chords: [0, 9, 5, 7], lead: 'square', bass: 'triangle', echo: 0.24, dens: .65 },

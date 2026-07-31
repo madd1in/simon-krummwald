@@ -57,6 +57,60 @@ function grassTufts(x0, x1, y0, y1, seed, c1, c2) {
   }
 }
 
+/* Blattkrone aus vielen Büscheln – ersetzt glatte Ellipsen */
+function leafCanopy(cx, cy, rx, ry, seed, dark, mid, light) {
+  E(cx, cy, rx, ry, dark);
+  var i, a, r, x, y, s;
+  for (i = 0; i < 46; i++) {
+    a = rnd(seed + i * 1.7) * 6.283;
+    r = 0.35 + Math.sqrt(rnd(seed + i * 3.1)) * 0.72;
+    x = cx + Math.cos(a) * rx * r;
+    y = cy + Math.sin(a) * ry * r;
+    s = 2.5 + rnd(seed + i * 5.3) * 3.5;
+    var up = (y - cy) / ry;
+    E(x, y, s, s * .78, up < -0.15 ? light : (up < 0.3 ? mid : dark));
+  }
+  /* Lichtkante oben links */
+  for (i = 0; i < 12; i++) {
+    a = 3.4 + rnd(seed + i * 2.3) * 1.9;
+    x = cx + Math.cos(a) * rx * .82;
+    y = cy + Math.sin(a) * ry * .82;
+    E(x, y, 2 + rnd(seed + i) * 1.6, 1.6, light);
+  }
+  /* einzelne Blattlöcher für Struktur */
+  for (i = 0; i < 7; i++) {
+    a = rnd(seed + i * 7.7) * 6.283;
+    r = Math.sqrt(rnd(seed + i * 2.9)) * .6;
+    E(cx + Math.cos(a) * rx * r, cy + Math.sin(a) * ry * r, 1.6, 1.2, dark);
+  }
+}
+
+/* Wolkenschatten, die über den Boden ziehen */
+function cloudShadows(t, y0, y1, strength) {
+  for (var i = 0; i < 3; i++) {
+    var x = ((t * .09 + i * 130) % 460) - 70;
+    var w = 60 + i * 22;
+    g.save();
+    g.beginPath();
+    g.ellipse(x, y0 + (y1 - y0) * (.3 + i * .22), w, (y1 - y0) * .3, 0, 0, 7);
+    g.fillStyle = 'rgba(20,30,20,' + (strength || .10) + ')';
+    g.fill();
+    g.restore();
+  }
+}
+
+/* Lichtstrahlen aus einer Richtung */
+function godRays(x0, y0, t, n, len, col) {
+  for (var i = 0; i < n; i++) {
+    var a = 0.55 + i * 0.11 + Math.sin(t * .01 + i) * .012;
+    var w = 5 + (i % 3) * 4;
+    P([x0 + i * 5, y0,
+       x0 + i * 5 + w, y0,
+       x0 + i * 5 + w + Math.cos(a) * len, y0 + Math.sin(a) * len,
+       x0 + i * 5 + Math.cos(a) * len, y0 + Math.sin(a) * len], col);
+  }
+}
+
 function bush(cx, cy, r, c) {
   E(cx, cy, r, r * .72, shade(c, .78));
   E(cx - r * .4, cy - r * .25, r * .6, r * .5, c);
@@ -272,6 +326,24 @@ function drawTroll(x, y, t) {
   R(x - 2, y - 40 + b, 4, 2, GR2);
 }
 
+/* Grete – uralte Stammkundin, sitzt gebeugt am Tisch */
+function drawGrete(x, y, t) {
+  var b = Math.sin(t * .028) * .4;
+  E(x, y, 8, 2.4, 'rgba(0,0,0,.25)');
+  P([x - 9, y, x + 9, y, x + 7, y - 16 + b, x - 7, y - 16 + b], '#4a4450');   /* Rock */
+  R(x - 7, y - 25 + b, 14, 10, '#5e5866');                                     /* Rücken, gebeugt */
+  R(x - 10, y - 24 + b, 3, 9, '#5e5866'); R(x + 7, y - 24 + b, 3, 9, '#5e5866');
+  R(x - 10, y - 16 + b, 3, 3, '#d8b79a'); R(x + 7, y - 16 + b, 3, 3, '#d8b79a');
+  R(x - 4, y - 28 + b, 8, 4, '#d8b79a');                                       /* Hals */
+  R(x - 5, y - 36 + b, 10, 9, '#d8b79a');                                      /* Kopf */
+  P([x - 7, y - 36 + b, x + 7, y - 36 + b, x + 5, y - 41 + b, x - 5, y - 41 + b], '#8e8a96'); /* Haube */
+  R(x - 7, y - 37 + b, 14, 2, '#8e8a96');
+  R(x - 6, y - 34 + b, 2, 5, '#c8c4ce'); R(x + 4, y - 34 + b, 2, 5, '#c8c4ce'); /* Haarsträhnen */
+  R(x - 3, y - 33 + b, 2, 1, '#2a2620'); R(x + 1, y - 33 + b, 2, 1, '#2a2620'); /* zusammengekniffene Augen */
+  P([x + 3, y - 32 + b, x + 6, y - 31 + b, x + 3, y - 30 + b], '#c9a68a');
+  R(x - 2, y - 29 + b, 4, 1, '#8c6a5a');
+}
+
 /* Drache – schlafend, zusammengerollt */
 function drawDrache(x, y, t, sleeping) {
   var br = Math.sin(t * .03) * 1.2;
@@ -465,6 +537,38 @@ var PROPS = {
       E(gx, gy, 2.4, 1.7, rnd(i + 5) > .5 ? '#e9b54a' : '#c98a30');
     }
     E(x - 4, y - 6, 2.4, 1.7, '#f4d888');
+  } },
+
+  /* --- Wirtshaus --- */
+  tisch: { w: 40, h: 22, ox: 20, oy: 21, draw: function (x, y) {
+    R(x - 17, y - 14, 34, 4, '#7d5a2e');
+    R(x - 17, y - 14, 34, 1, '#96703c');
+    R(x - 14, y - 10, 4, 10, '#5c4525'); R(x + 10, y - 10, 4, 10, '#5c4525');
+    R(x - 12, y - 6, 24, 2, '#6b4f2a');
+    E(x, y, 17, 3, 'rgba(0,0,0,.25)');
+  } },
+  stuhl: { w: 16, h: 24, ox: 8, oy: 23, draw: function (x, y) {
+    R(x - 6, y - 10, 12, 3, '#6b4f2a');
+    R(x - 6, y - 22, 3, 13, '#5c4525'); R(x + 3, y - 22, 3, 13, '#5c4525');
+    R(x - 6, y - 20, 12, 2, '#7d5a2e'); R(x - 6, y - 16, 12, 2, '#7d5a2e');
+    R(x - 5, y - 7, 2, 7, '#4a3a1e'); R(x + 3, y - 7, 2, 7, '#4a3a1e');
+    E(x, y, 7, 2, 'rgba(0,0,0,.22)');
+  } },
+  krug: { w: 10, h: 12, ox: 5, oy: 11, draw: function (x, y) {
+    R(x - 3, y - 8, 6, 8, '#c9c4b4'); R(x - 3, y - 8, 6, 2, '#e6e2d3');
+    R(x - 2, y - 10, 4, 2, '#f4f1e6');
+    L(x + 4, y - 6, x + 6, y - 4, '#c9c4b4', 1);
+  } },
+  kaminfeuer: { w: 40, h: 44, ox: 20, oy: 43, draw: function (x, y) {
+    R(x - 18, y - 40, 36, 40, '#4a4038');
+    R(x - 14, y - 32, 28, 32, '#1c1712');
+    for (var i = 0; i < 10; i++) {
+      var bx = x - 18 + (i % 5) * 8, by = y - 40 + Math.floor(i / 5) * 5;
+      R(bx, by, 7, 4, i % 2 ? '#5d5148' : '#6b5e53');
+    }
+    R(x - 20, y - 44, 40, 5, '#6b5e53'); R(x - 20, y - 44, 40, 1, '#82746a');
+    L(x - 10, y - 6, x + 10, y - 10, '#4a3119', 2);
+    L(x - 8, y - 10, x + 9, y - 5, '#5b3d20', 2);
   } },
 
   /* --- Himmel --- */
