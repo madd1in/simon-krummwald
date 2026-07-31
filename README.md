@@ -19,33 +19,45 @@ Ohne Hut geht er nicht nach Hause. So einfach ist das.
 
 ## Steuerung
 
+Es gibt keine Verbleiste. Ein Linksklick tut das, was an dieser Stelle sinnvoll ist:
+Wege werden gegangen, Leute angesprochen, Dinge aufgehoben oder bedient.
+
 | Eingabe | Wirkung |
 |---|---|
-| Linksklick | Aktion mit dem gewählten Verb ausführen |
-| Rechtsklick | Schnelles „Schau an" |
-| Tasten 1–6 | Verb wechseln |
+| Linksklick | Handeln (gehen, nehmen, reden, bedienen) |
+| Rechtsklick | Anschauen |
+| Klick während des Laufens | Weg abkürzen |
+| I oder Tab | Inventarleiste festpinnen |
+| J | Tagebuch mit den offenen Zielen |
 | H | Hinweis (dreistufig, von vage bis konkret) |
 | M | Musik an/aus |
 | A | Sprite-Atlas als PNG exportieren |
-| F5 | Neustart |
 
-**Mobil:** Tippen = Aktion, langes Drücken = Anschauen. Im Hochformat dreht sich
-das Bild automatisch ins Querformat; über die Schaltfläche unten rechts geht es in den Vollbildmodus.
+**Gegenstände benutzen:** Ein Klick auf ein Stück im Inventar nimmt es in die Hand.
+Ein zweiter Klick darauf benutzt es (Buch lesen, Fackel anzünden). Klickt man
+stattdessen auf etwas in der Welt, wird es damit kombiniert.
 
-Gegenstände kombiniert man, indem man mit dem Verb **Benutze** erst einen
-Gegenstand im Inventar und dann das Ziel anklickt.
+**Mobil:** Tippen = handeln, langes Drücken = anschauen. Im Hochformat dreht sich
+das Bild automatisch ins Querformat; über die Schaltfläche oben rechts geht es in den Vollbildmodus.
+
+Der Spielstand wird automatisch gespeichert — beim nächsten Aufruf steht
+„Fortsetzen" im Titelmenü.
 
 ## Features
 
 - **Sechs Schauplätze:** Lichtung, Dorf Krummwald, Nebelsumpf, Zaubererhütte, Drachenhöhle, Steinkreis
-- **Klassische Verbleiste** mit Inventar, wie es sich gehört
+- **Minimales HUD:** kein Verbkasten, der die Hälfte des Bildes frisst – die Szene nutzt die volle Fläche
 - **14 verzahnte Rätsel** ohne Sackgassen – man kann sich nicht aussperren
 - **Dialogsystem** mit Antwortauswahl und fünf sprechenden Figuren
 - **Sprachausgabe** über die Web Speech API – jede Figur hat ihre eigene Stimmlage
 - **Prozedurale Musik & Soundeffekte** aus der Web Audio API, pro Schauplatz ein eigener Track
-- **Hinweissystem**, das den Spielstand auswertet und den nächsten sinnvollen Schritt nennt
-- **Sprite-Atlas & Tilemaps:** alle Figuren, Icons und Bodenkacheln werden beim Start
-  in einen Atlas gebacken und danach als Sprites geblittet
+- **Hinweissystem und Tagebuch**, die den Spielstand auswerten und den nächsten Schritt nennen
+- **Automatischer Spielstand** in localStorage
+- **Sprite-Atlas & Tilemaps:** Figuren, 25 Deko-Objekte, Icons und zwölf Bodenkachelarten
+  werden beim Start in einen Atlas gebacken und danach als Sprites geblittet;
+  benachbarte Kachelarten werden an den Kanten verzahnt
+- **Atmosphäre:** Regen im Sumpf, Glühwürmchen am Steinkreis, Staub in der Hütte,
+  Funken in der Höhle, Fackelschein, Vordergrund-Ebenen, Vignette
 - **Auflösungsunabhängig:** 320×200-Pixelbild, das sich stufenlos an jeden Bildschirm anpasst
 
 ## Technik
