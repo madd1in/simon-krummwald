@@ -135,15 +135,55 @@ function tileFill(kind, x0, y0, x1, y1) {
   }
 }
 
+/* Leitfarbe je Kachelart – für die Kantenverzahnung */
+var TILE_COL = {
+  gras: '#4a8531', gras_dunkel: '#3f7129', pfad: '#ac9463', kopfstein: '#6f6a5d',
+  holzboden: '#6e5637', fels: '#4a4152', moor: '#4b5439', nachtgras: '#33452f'
+};
+
 /* Eine echte Tilemap: Zeilen aus Zeichen, Legende ordnet Kachelnamen zu */
 function drawTilemap(map, legend, x0, y0) {
-  for (var r = 0; r < map.length; r++) {
-    var row = map[r];
-    for (var c = 0; c < row.length; c++) {
-      var kind = legend[row[c]];
+  var r, c, row, kind, v;
+  for (r = 0; r < map.length; r++) {
+    row = map[r];
+    for (c = 0; c < row.length; c++) {
+      kind = legend[row[c]];
       if (!kind) continue;
-      var v = Math.floor(rnd(c * 3.3 + r * 7.1) * 4);
+      v = Math.floor(rnd(c * 3.3 + r * 7.1) * 4);
       sprite('tile_' + kind + '_' + v, x0 + c * TILE, y0 + r * TILE, 1, false);
+    }
+  }
+  tilemapEdges(map, legend, x0, y0);
+}
+
+/* Verzahnt benachbarte Kachelarten, damit keine Rechtecke stehen bleiben */
+function tilemapEdges(map, legend, x0, y0) {
+  var dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  for (var r = 0; r < map.length; r++) {
+    for (var c = 0; c < map[r].length; c++) {
+      var here = legend[map[r][c]];
+      if (!here) continue;
+      for (var d = 0; d < dirs.length; d++) {
+        var nc = c + dirs[d][0], nr = r + dirs[d][1];
+        if (nr < 0 || nr >= map.length || nc < 0 || nc >= map[r].length) continue;
+        var there = legend[map[nr][nc]];
+        if (!there || there === here) continue;
+        var col = TILE_COL[there];
+        if (!col) continue;
+        var bx = x0 + c * TILE, by = y0 + r * TILE;
+        /* Flecken der Nachbarart über die Grenze streuen */
+        for (var i = 0; i < 7; i++) {
+          var s = c * 17.3 + r * 5.9 + d * 3.1 + i * 1.7;
+          var t = rnd(s), u = rnd(s + 0.5) * 0.42;
+          var px, py;
+          if (dirs[d][0] === 1) { px = bx + TILE - u * TILE; py = by + t * TILE; }
+          else if (dirs[d][0] === -1) { px = bx + u * TILE - 2; py = by + t * TILE; }
+          else if (dirs[d][1] === 1) { px = bx + t * TILE; py = by + TILE - u * TILE; }
+          else { px = bx + t * TILE; py = by + u * TILE - 2; }
+          var w = 1 + rnd(s + 2) * 3, h = 1 + rnd(s + 3) * 2;
+          R(px, py, w, h, col);
+        }
+      }
     }
   }
 }

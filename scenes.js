@@ -132,9 +132,14 @@ function bgLichtung(t, F) {
   /* Große Eiche links */
   var bx = 52;
   R(bx - 9, 40, 18, 66, '#5b3d20');
-  R(bx - 9, 40, 4, 66, '#6f4c28');
-  R(bx + 5, 40, 4, 66, '#442d17');
-  for (var k = 0; k < 9; k++) R(bx - 8, 46 + k * 7, 16, 1, '#3d2915');
+  R(bx - 9, 40, 3, 66, '#6f4c28');
+  R(bx + 6, 40, 3, 66, '#442d17');
+  /* senkrechte Rindenmaserung */
+  for (var k = 0; k < 7; k++) {
+    var kx = bx - 7 + k * 2.4;
+    R(kx, 42 + rnd(k) * 8, 1, 40 + rnd(k + 3) * 22, k % 2 ? '#4e341b' : '#664425');
+  }
+  R(bx - 4, 62, 1, 10, '#3d2915'); R(bx + 2, 84, 1, 8, '#3d2915');
   P([bx - 20, 106, bx + 20, 106, bx + 9, 96, bx - 9, 96], '#5b3d20');   /* Wurzeln */
   L(bx + 6, 58, bx + 26, 46, '#5b3d20', 3);
   L(bx - 6, 50, bx - 24, 40, '#5b3d20', 3);
