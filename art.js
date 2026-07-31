@@ -49,11 +49,14 @@ function shade(h, f) {
 /* ---------- Landschafts-Bausteine ---------- */
 
 function grassTufts(x0, x1, y0, y1, seed, c1, c2) {
-  for (var i = 0; i < 70; i++) {
+  /* feine Halme – bei hoher Renderauflösung wirken sie als Struktur,
+     nicht als Klötzchen */
+  for (var i = 0; i < 150; i++) {
     var s = seed + i * 3.3;
     var x = x0 + rnd(s) * (x1 - x0), y = y0 + rnd(s + 1) * (y1 - y0);
-    var h = 2 + (rnd(s + 2) * 3 | 0);
-    R(x, y, 1, h, rnd(s + 3) > .5 ? c1 : c2);
+    var h = 1.6 + rnd(s + 2) * 3.2;
+    var lean = (rnd(s + 4) - .5) * 1.4;
+    L(x, y + h, x + lean, y, rnd(s + 3) > .5 ? c1 : c2, 0.5);
   }
 }
 

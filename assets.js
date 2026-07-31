@@ -26,6 +26,7 @@ var TILE_KINDS = ['gras', 'gras_dunkel', 'pfad', 'kopfstein', 'holzboden', 'fels
                   'pilzmoos', 'schiefer', 'teppich', 'portalboden'];
 var atlasReady = false;
 var NPC_PHASES = 4;   /* Animationsphasen je NPC */
+var PX = 1 / 3;       /* feinste sinnvolle Detailgröße bei RES=3 */
 
 /* ---------- kleiner Zeilen-Packer ---------- */
 var packX = 0, packY = 0, packRow = 0;
@@ -150,24 +151,24 @@ function tilePixels(kind, seed) {
   switch (kind) {
     case 'gras':
       R(0, 0, TILE, TILE, '#4a8531');
-      for (i = 0; i < 20; i++) {
+      for (i = 0; i < 60; i++) {
         r = rnd(seed + i * 3.7); x = r * TILE; y = rnd(seed + i * 1.3) * TILE;
-        R(x, y, 1, 1, r > .5 ? '#457c2d' : '#508d36');
+        R(x, y, PX * 1.4, PX * 1.4, r > .5 ? '#457c2d' : '#508d36');
       }
-      for (i = 0; i < 3; i++) { x = rnd(seed + i * 9.1) * TILE; y = rnd(seed + i * 5.5) * TILE; R(x, y, 1, 2, '#57953b'); }
+      for (i = 0; i < 9; i++) { x = rnd(seed + i * 9.1) * TILE; y = rnd(seed + i * 5.5) * TILE; R(x, y, PX * 1.4, PX * 2.6, '#57953b'); }
       break;
     case 'gras_dunkel':
       R(0, 0, TILE, TILE, '#3f7129');
-      for (i = 0; i < 18; i++) { x = rnd(seed + i * 2.9) * TILE; y = rnd(seed + i * 4.1) * TILE; R(x, y, 1, 1, rnd(seed + i) > .5 ? '#396827' : '#457c2d'); }
+      for (i = 0; i < 54; i++) { x = rnd(seed + i * 2.9) * TILE; y = rnd(seed + i * 4.1) * TILE; R(x, y, PX * 1.4, PX * 1.4, rnd(seed + i) > .5 ? '#396827' : '#457c2d'); }
       break;
     case 'pfad':
       R(0, 0, TILE, TILE, '#ac9463');
-      for (i = 0; i < 22; i++) { x = rnd(seed + i * 2.3) * TILE; y = rnd(seed + i * 3.9) * TILE; R(x, y, 1 + (i % 2), 1, rnd(seed + i * 5) > .5 ? '#a48c5c' : '#b59d6b'); }
-      for (i = 0; i < 3; i++) { x = rnd(seed + i * 7.3) * TILE; y = rnd(seed + i * 8.1) * TILE; E(x, y, 1.4, 1, '#9a8354'); }
+      for (i = 0; i < 66; i++) { x = rnd(seed + i * 2.3) * TILE; y = rnd(seed + i * 3.9) * TILE; R(x, y, PX * (1.4 + (i % 2)), PX * 1.4, rnd(seed + i * 5) > .5 ? '#a48c5c' : '#b59d6b'); }
+      for (i = 0; i < 9; i++) { x = rnd(seed + i * 7.3) * TILE; y = rnd(seed + i * 8.1) * TILE; E(x, y, 1.4, 1, '#9a8354'); }
       break;
     case 'kopfstein':
       R(0, 0, TILE, TILE, '#6f6a5d');
-      for (i = 0; i < 8; i++) {
+      for (i = 0; i < 24; i++) {
         x = (i % 3) * 5 + (Math.floor(i / 3) % 2) * 2, y = Math.floor(i / 3) * 5;
         R(x + 1, y + 1, 4, 4, rnd(seed + i * 3.3) > .5 ? '#7a7365' : '#6d675b');
         R(x + 1, y + 1, 4, 1, '#847d6e');
@@ -176,71 +177,71 @@ function tilePixels(kind, seed) {
     case 'holzboden':
       R(0, 0, TILE, TILE, '#6e5637');
       R(0, 5, TILE, 1, '#4d3a24'); R(0, 11, TILE, 1, '#4d3a24');
-      for (i = 0; i < 14; i++) { x = rnd(seed + i * 4.7) * TILE; y = rnd(seed + i * 2.1) * TILE; R(x, y, 2, 1, rnd(seed + i) > .5 ? '#7d6340' : '#5f4a2f'); }
+      for (i = 0; i < 42; i++) { x = rnd(seed + i * 4.7) * TILE; y = rnd(seed + i * 2.1) * TILE; R(x, y, PX * 2.6, PX * 1.4, rnd(seed + i) > .5 ? '#7d6340' : '#5f4a2f'); }
       break;
     case 'fels':
       R(0, 0, TILE, TILE, '#4a4152');
-      for (i = 0; i < 18; i++) { x = rnd(seed + i * 3.1) * TILE; y = rnd(seed + i * 5.7) * TILE; E(x, y, 1 + rnd(seed + i) * 2, 1, rnd(seed + i * 2) > .5 ? '#5c5266' : '#3a3244'); }
+      for (i = 0; i < 54; i++) { x = rnd(seed + i * 3.1) * TILE; y = rnd(seed + i * 5.7) * TILE; E(x, y, 1 + rnd(seed + i) * 2, 1, rnd(seed + i * 2) > .5 ? '#5c5266' : '#3a3244'); }
       break;
     case 'moor':
       R(0, 0, TILE, TILE, '#4b5439');
-      for (i = 0; i < 20; i++) { x = rnd(seed + i * 2.7) * TILE; y = rnd(seed + i * 6.3) * TILE; R(x, y, 2, 1, rnd(seed + i) > .5 ? '#3d4630' : '#5b6644'); }
-      for (i = 0; i < 3; i++) { x = rnd(seed + i * 9.7) * TILE; y = rnd(seed + i * 4.3) * TILE; E(x, y, 2, 1, '#2f3a28'); }
+      for (i = 0; i < 60; i++) { x = rnd(seed + i * 2.7) * TILE; y = rnd(seed + i * 6.3) * TILE; R(x, y, PX * 2.6, PX * 1.4, rnd(seed + i) > .5 ? '#3d4630' : '#5b6644'); }
+      for (i = 0; i < 9; i++) { x = rnd(seed + i * 9.7) * TILE; y = rnd(seed + i * 4.3) * TILE; E(x, y, 2, 1, '#2f3a28'); }
       break;
     case 'nachtgras':
       R(0, 0, TILE, TILE, '#33452f');
-      for (i = 0; i < 20; i++) { x = rnd(seed + i * 3.3) * TILE; y = rnd(seed + i * 2.7) * TILE; R(x, y, 1, 2, rnd(seed + i) > .5 ? '#2a3a26' : '#40593a'); }
+      for (i = 0; i < 60; i++) { x = rnd(seed + i * 3.3) * TILE; y = rnd(seed + i * 2.7) * TILE; R(x, y, PX * 1.4, PX * 2.6, rnd(seed + i) > .5 ? '#2a3a26' : '#40593a'); }
       break;
     case 'erde':
       R(0, 0, TILE, TILE, '#6b5334');
-      for (i = 0; i < 24; i++) { x = rnd(seed + i * 2.7) * TILE; y = rnd(seed + i * 4.3) * TILE; R(x, y, 1 + (i % 2), 1, rnd(seed + i * 3) > .5 ? '#5f4a2e' : '#775c3c'); }
+      for (i = 0; i < 72; i++) { x = rnd(seed + i * 2.7) * TILE; y = rnd(seed + i * 4.3) * TILE; R(x, y, PX * (1.4 + (i % 2)), PX * 1.4, rnd(seed + i * 3) > .5 ? '#5f4a2e' : '#775c3c'); }
       break;
     case 'kies':
       R(0, 0, TILE, TILE, '#7d786c');
-      for (i = 0; i < 22; i++) { x = rnd(seed + i * 3.9) * TILE; y = rnd(seed + i * 2.1) * TILE; E(x, y, 1 + rnd(seed + i) * 1.4, 1, rnd(seed + i * 2) > .5 ? '#6d685e' : '#8d887c'); }
+      for (i = 0; i < 66; i++) { x = rnd(seed + i * 3.9) * TILE; y = rnd(seed + i * 2.1) * TILE; E(x, y, 1 + rnd(seed + i) * 1.4, 1, rnd(seed + i * 2) > .5 ? '#6d685e' : '#8d887c'); }
       break;
     case 'blumenwiese':
       R(0, 0, TILE, TILE, '#4a8531');
-      for (i = 0; i < 16; i++) { x = rnd(seed + i * 3.7) * TILE; y = rnd(seed + i * 1.3) * TILE; R(x, y, 1, 1, rnd(seed + i) > .5 ? '#457c2d' : '#508d36'); }
-      for (i = 0; i < 4; i++) {
+      for (i = 0; i < 48; i++) { x = rnd(seed + i * 3.7) * TILE; y = rnd(seed + i * 1.3) * TILE; R(x, y, PX * 1.4, PX * 1.4, rnd(seed + i) > .5 ? '#457c2d' : '#508d36'); }
+      for (i = 0; i < 12; i++) {
         x = 2 + rnd(seed + i * 9.3) * 12; y = 2 + rnd(seed + i * 4.1) * 12;
-        R(x, y, 1, 1, ['#e8d24a', '#e07ab0', '#f2f2f2', '#e8d24a'][i % 4]);
+        R(x, y, PX * 1.4, PX * 1.4, ['#e8d24a', '#e07ab0', '#f2f2f2', '#e8d24a'][i % 4]);
       }
       break;
     case 'moorwasser':
       R(0, 0, TILE, TILE, '#4b5439');
       E(8, 9, 6, 4, '#22362b'); E(7, 8, 4.4, 2.6, '#2c4436');
       R(4, 7, 3, 1, 'rgba(150,190,150,.2)');
-      for (i = 0; i < 8; i++) { x = rnd(seed + i * 2.3) * TILE; y = rnd(seed + i * 5.1) * TILE; R(x, y, 1, 1, '#3d4630'); }
+      for (i = 0; i < 24; i++) { x = rnd(seed + i * 2.3) * TILE; y = rnd(seed + i * 5.1) * TILE; R(x, y, PX * 1.4, PX * 1.4, '#3d4630'); }
       break;
     case 'laub':
       R(0, 0, TILE, TILE, '#416c2d');
-      for (i = 0; i < 13; i++) {
+      for (i = 0; i < 39; i++) {
         x = rnd(seed + i * 3.9) * TILE; y = rnd(seed + i * 6.7) * TILE;
         P([x - 1, y, x + 2, y - 1, x + 1, y + 2], i % 3 ? '#8a6630' : '#b17a33');
       }
-      for (i = 0; i < 7; i++) { x = rnd(seed + i * 8.1) * TILE; y = rnd(seed + i * 2.7) * TILE; R(x, y, 1, 2, '#315b27'); }
+      for (i = 0; i < 21; i++) { x = rnd(seed + i * 8.1) * TILE; y = rnd(seed + i * 2.7) * TILE; R(x, y, PX * 1.4, PX * 2.6, '#315b27'); }
       break;
     case 'dielen':
       R(0, 0, TILE, TILE, '#4e3926');
       R(0, 4, TILE, 1, '#2e2219'); R(0, 9, TILE, 1, '#2e2219'); R(0, 14, TILE, 1, '#2e2219');
       R(5, 0, 1, 4, '#695038'); R(12, 5, 1, 4, '#695038'); R(3, 10, 1, 4, '#695038');
-      for (i = 0; i < 8; i++) { x = rnd(seed + i * 3.2) * TILE; y = rnd(seed + i * 7.1) * TILE; R(x, y, 2, 1, '#78583a'); }
+      for (i = 0; i < 24; i++) { x = rnd(seed + i * 3.2) * TILE; y = rnd(seed + i * 7.1) * TILE; R(x, y, PX * 2.6, PX * 1.4, '#78583a'); }
       break;
     case 'kristallfels':
       R(0, 0, TILE, TILE, '#3b3347');
-      for (i = 0; i < 15; i++) { x = rnd(seed + i * 3.1) * TILE; y = rnd(seed + i * 5.7) * TILE; E(x, y, 1 + rnd(seed + i) * 2, 1, i % 3 ? '#4c4258' : '#2e2838'); }
+      for (i = 0; i < 45; i++) { x = rnd(seed + i * 3.1) * TILE; y = rnd(seed + i * 5.7) * TILE; E(x, y, 1 + rnd(seed + i) * 2, 1, i % 3 ? '#4c4258' : '#2e2838'); }
       P([3, 13, 5, 7, 7, 13], '#6f45a9'); R(5, 8, 1, 4, '#b18ae8');
       R(12, 3, 1, 2, '#9362cf');
       break;
     case 'runengras':
       R(0, 0, TILE, TILE, '#2e3e2b');
-      for (i = 0; i < 14; i++) { x = rnd(seed + i * 3.3) * TILE; y = rnd(seed + i * 2.7) * TILE; R(x, y, 1, 2, '#263523'); }
+      for (i = 0; i < 42; i++) { x = rnd(seed + i * 3.3) * TILE; y = rnd(seed + i * 2.7) * TILE; R(x, y, PX * 1.4, PX * 2.6, '#263523'); }
       L(5, 11, 8, 5, '#6f62a5', 1); L(8, 5, 11, 11, '#6f62a5', 1); L(6, 9, 10, 9, '#9b83d2', 1);
       break;
     case 'moospflaster':
       R(0, 0, TILE, TILE, '#67685a');
-      for (i = 0; i < 8; i++) {
+      for (i = 0; i < 24; i++) {
         x = (i % 3) * 5 + (Math.floor(i / 3) % 2) * 2; y = Math.floor(i / 3) * 5;
         R(x + 1, y + 1, 4, 4, i % 2 ? '#737468' : '#5d6054');
         R(x + 1, y + 1, 4, 1, '#838579');
@@ -250,31 +251,31 @@ function tilePixels(kind, seed) {
       break;
     case 'sumpfschlamm':
       R(0, 0, TILE, TILE, '#4b4934');
-      for (i = 0; i < 16; i++) { x = rnd(seed + i * 4.2) * TILE; y = rnd(seed + i * 1.9) * TILE; E(x, y, 2 + rnd(seed + i) * 3, 1, i % 3 ? '#56543b' : '#393b2c'); }
+      for (i = 0; i < 48; i++) { x = rnd(seed + i * 4.2) * TILE; y = rnd(seed + i * 1.9) * TILE; E(x, y, 2 + rnd(seed + i) * 3, 1, i % 3 ? '#56543b' : '#393b2c'); }
       E(5, 6, 3, 1.5, '#252e27'); E(12, 12, 2.5, 1.2, '#30382d');
       break;
     case 'asche':
       R(0, 0, TILE, TILE, '#39343c');
-      for (i = 0; i < 22; i++) { x = rnd(seed + i * 2.4) * TILE; y = rnd(seed + i * 5.6) * TILE; R(x, y, 1 + (i % 2), 1, i % 4 ? '#443e47' : '#5d4a43'); }
+      for (i = 0; i < 66; i++) { x = rnd(seed + i * 2.4) * TILE; y = rnd(seed + i * 5.6) * TILE; R(x, y, PX * (1.4 + (i % 2)), PX * 1.4, i % 4 ? '#443e47' : '#5d4a43'); }
       R(3, 10, 5, 1, '#2b282f'); R(11, 4, 3, 1, '#6a5046');
       break;
     case 'sternengras':
       R(0, 0, TILE, TILE, '#293b31');
-      for (i = 0; i < 14; i++) { x = rnd(seed + i * 3.8) * TILE; y = rnd(seed + i * 2.4) * TILE; R(x, y, 1, 2, '#355043'); }
-      for (i = 0; i < 3; i++) {
+      for (i = 0; i < 42; i++) { x = rnd(seed + i * 3.8) * TILE; y = rnd(seed + i * 2.4) * TILE; R(x, y, PX * 1.4, PX * 2.6, '#355043'); }
+      for (i = 0; i < 9; i++) {
         x = 3 + rnd(seed + i * 7.7) * 10; y = 3 + rnd(seed + i * 9.1) * 10;
         R(x - 1, y, 3, 1, '#8d79c6'); R(x, y - 1, 1, 3, '#b29be8');
       }
       break;
     case 'wurzelboden':
       R(0, 0, TILE, TILE, '#51472f');
-      for (i = 0; i < 14; i++) { x = rnd(seed + i * 2.8) * TILE; y = rnd(seed + i * 6.1) * TILE; R(x, y, 1, 1, i % 2 ? '#66563a' : '#3d3828'); }
+      for (i = 0; i < 42; i++) { x = rnd(seed + i * 2.8) * TILE; y = rnd(seed + i * 6.1) * TILE; R(x, y, PX * 1.4, PX * 1.4, i % 2 ? '#66563a' : '#3d3828'); }
       L(-2, 12, 7, 7, '#76583a', 2); L(7, 7, 17, 10, '#5f452f', 2);
       L(5, 8, 3, 3, '#8b6742', 1); L(10, 8, 13, 4, '#8b6742', 1);
       break;
     case 'ziegel':
       R(0, 0, TILE, TILE, '#745044');
-      for (i = 0; i < 4; i++) {
+      for (i = 0; i < 12; i++) {
         y = i * 4; R(0, y, TILE, 1, '#3f3533');
         var off = (i % 2) * 4;
         for (x = off; x < TILE; x += 8) R(x, y, 1, 4, '#493a36');
@@ -283,27 +284,27 @@ function tilePixels(kind, seed) {
       break;
     case 'magmastein':
       R(0, 0, TILE, TILE, '#2d2930');
-      for (i = 0; i < 14; i++) { x = rnd(seed + i * 4.1) * TILE; y = rnd(seed + i * 2.9) * TILE; E(x, y, 1 + rnd(seed + i) * 2, 1, '#403942'); }
+      for (i = 0; i < 42; i++) { x = rnd(seed + i * 4.1) * TILE; y = rnd(seed + i * 2.9) * TILE; E(x, y, 1 + rnd(seed + i) * 2, 1, '#403942'); }
       L(2, 4, 7, 8, '#9c3e2c', 1); L(7, 8, 13, 5, '#da6736', 1);
       L(7, 8, 10, 14, '#7d3027', 1); R(7, 7, 2, 2, '#f0a04b');
       break;
     case 'mondpfad':
       R(0, 0, TILE, TILE, '#555267');
-      for (i = 0; i < 13; i++) { x = rnd(seed + i * 3.6) * TILE; y = rnd(seed + i * 5.4) * TILE; E(x, y, 1 + rnd(seed + i) * 2.2, 1, i % 2 ? '#666279' : '#484657'); }
+      for (i = 0; i < 39; i++) { x = rnd(seed + i * 3.6) * TILE; y = rnd(seed + i * 5.4) * TILE; E(x, y, 1 + rnd(seed + i) * 2.2, 1, i % 2 ? '#666279' : '#484657'); }
       E(6, 7, 3, 2, '#81789c'); R(11, 11, 3, 1, '#aaa0c2');
       R(3, 3, 1, 1, '#d4c8e8');
       break;
     case 'pilzmoos':
       R(0, 0, TILE, TILE, '#38523a');
-      for (i = 0; i < 18; i++) { x = rnd(seed + i * 3.1) * TILE; y = rnd(seed + i * 6.4) * TILE; E(x, y, 1.8, 1, i % 2 ? '#476746' : '#2d4432'); }
-      for (i = 0; i < 3; i++) {
+      for (i = 0; i < 54; i++) { x = rnd(seed + i * 3.1) * TILE; y = rnd(seed + i * 6.4) * TILE; E(x, y, 1.8, 1, i % 2 ? '#476746' : '#2d4432'); }
+      for (i = 0; i < 9; i++) {
         x = 3 + rnd(seed + i * 7.2) * 10; y = 5 + rnd(seed + i * 4.8) * 8;
         R(x, y, 1, 3, '#c9c2b5'); E(x, y - 1, 2, 1.3, i % 2 ? '#b45357' : '#a883cf');
       }
       break;
     case 'schiefer':
       R(0, 0, TILE, TILE, '#484d54');
-      for (i = 0; i < 7; i++) {
+      for (i = 0; i < 21; i++) {
         x = (i % 3) * 6 - 1; y = Math.floor(i / 3) * 6;
         P([x, y + 1, x + 6, y, x + 5, y + 5, x - 1, y + 6], i % 2 ? '#535961' : '#3d4248');
         L(x, y + 1, x + 6, y, '#697079', 1);
@@ -318,7 +319,7 @@ function tilePixels(kind, seed) {
       break;
     case 'portalboden':
       R(0, 0, TILE, TILE, '#34314a');
-      for (i = 0; i < 11; i++) { x = rnd(seed + i * 4.4) * TILE; y = rnd(seed + i * 2.2) * TILE; R(x, y, 1, 1, '#494466'); }
+      for (i = 0; i < 33; i++) { x = rnd(seed + i * 4.4) * TILE; y = rnd(seed + i * 2.2) * TILE; R(x, y, PX * 1.4, PX * 1.4, '#494466'); }
       E(8, 8, 6, 6, '#4a416c'); E(8, 8, 4, 4, '#5b4d83'); E(8, 8, 2, 2, '#7560aa');
       R(7, 2, 2, 3, '#a58bd8'); R(7, 11, 2, 3, '#a58bd8');
       R(2, 7, 3, 2, '#a58bd8'); R(11, 7, 3, 2, '#a58bd8');
