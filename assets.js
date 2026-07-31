@@ -107,11 +107,34 @@ function tilePixels(kind, seed) {
       R(0, 0, TILE, TILE, '#33452f');
       for (i = 0; i < 20; i++) { x = rnd(seed + i * 3.3) * TILE; y = rnd(seed + i * 2.7) * TILE; R(x, y, 1, 2, rnd(seed + i) > .5 ? '#2a3a26' : '#40593a'); }
       break;
+    case 'erde':
+      R(0, 0, TILE, TILE, '#6b5334');
+      for (i = 0; i < 24; i++) { x = rnd(seed + i * 2.7) * TILE; y = rnd(seed + i * 4.3) * TILE; R(x, y, 1 + (i % 2), 1, rnd(seed + i * 3) > .5 ? '#5f4a2e' : '#775c3c'); }
+      break;
+    case 'kies':
+      R(0, 0, TILE, TILE, '#7d786c');
+      for (i = 0; i < 22; i++) { x = rnd(seed + i * 3.9) * TILE; y = rnd(seed + i * 2.1) * TILE; E(x, y, 1 + rnd(seed + i) * 1.4, 1, rnd(seed + i * 2) > .5 ? '#6d685e' : '#8d887c'); }
+      break;
+    case 'blumenwiese':
+      R(0, 0, TILE, TILE, '#4a8531');
+      for (i = 0; i < 16; i++) { x = rnd(seed + i * 3.7) * TILE; y = rnd(seed + i * 1.3) * TILE; R(x, y, 1, 1, rnd(seed + i) > .5 ? '#457c2d' : '#508d36'); }
+      for (i = 0; i < 4; i++) {
+        x = 2 + rnd(seed + i * 9.3) * 12; y = 2 + rnd(seed + i * 4.1) * 12;
+        R(x, y, 1, 1, ['#e8d24a', '#e07ab0', '#f2f2f2', '#e8d24a'][i % 4]);
+      }
+      break;
+    case 'moorwasser':
+      R(0, 0, TILE, TILE, '#4b5439');
+      E(8, 9, 6, 4, '#22362b'); E(7, 8, 4.4, 2.6, '#2c4436');
+      R(4, 7, 3, 1, 'rgba(150,190,150,.2)');
+      for (i = 0; i < 8; i++) { x = rnd(seed + i * 2.3) * TILE; y = rnd(seed + i * 5.1) * TILE; R(x, y, 1, 1, '#3d4630'); }
+      break;
   }
 }
 
 function bakeTiles() {
-  var kinds = ['gras', 'gras_dunkel', 'pfad', 'kopfstein', 'holzboden', 'fels', 'moor', 'nachtgras'];
+  var kinds = ['gras', 'gras_dunkel', 'pfad', 'kopfstein', 'holzboden', 'fels', 'moor', 'nachtgras',
+               'erde', 'kies', 'blumenwiese', 'moorwasser'];
   for (var k = 0; k < kinds.length; k++) {
     /* mehrere Varianten, damit die Böden nicht sichtbar kacheln */
     for (var v = 0; v < 4; v++) {
@@ -138,7 +161,8 @@ function tileFill(kind, x0, y0, x1, y1) {
 /* Leitfarbe je Kachelart – für die Kantenverzahnung */
 var TILE_COL = {
   gras: '#4a8531', gras_dunkel: '#3f7129', pfad: '#ac9463', kopfstein: '#6f6a5d',
-  holzboden: '#6e5637', fels: '#4a4152', moor: '#4b5439', nachtgras: '#33452f'
+  holzboden: '#6e5637', fels: '#4a4152', moor: '#4b5439', nachtgras: '#33452f',
+  erde: '#6b5334', kies: '#7d786c', blumenwiese: '#4a8531', moorwasser: '#4b5439'
 };
 
 /* Eine echte Tilemap: Zeilen aus Zeichen, Legende ordnet Kachelnamen zu */
@@ -219,6 +243,19 @@ function bakeCharacters() {
   }
 }
 
+/* Alle Deko-Objekte aus der PROPS-Tabelle backen */
+function bakeProps() {
+  for (var name in PROPS) {
+    (function (n) {
+      var p = PROPS[n];
+      bake('prop_' + n, p.w, p.h, p.ox, p.oy, function (ox, oy) { p.draw(ox, oy); });
+    })(name);
+  }
+}
+
+/* Deko blitten – Ursprung unten mittig */
+function prop(name, x, y, s, flip) { sprite('prop_' + name, x, y, s || 1, !!flip); }
+
 function bakeIcons() {
   var ids = Object.keys(ITEMS);
   for (var i = 0; i < ids.length; i++) {
@@ -232,7 +269,7 @@ function bakeIcons() {
 
 function bakeAtlas() {
   ATLAS = document.createElement('canvas');
-  ATLAS.width = 1024; ATLAS.height = 512;
+  ATLAS.width = 1024; ATLAS.height = 768;
   AX = ATLAS.getContext('2d');
   AX.imageSmoothingEnabled = false;
   packX = 0; packY = 0; packRow = 0;
@@ -244,6 +281,7 @@ function bakeAtlas() {
 
   bakeTiles();
   bakeCharacters();
+  bakeProps();
   bakeIcons();
 
   /* ---- ab jetzt: Blits statt Neuzeichnen ---- */

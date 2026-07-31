@@ -124,6 +124,24 @@ function bgLichtung(t, F) {
   groundShade(96, 200, .32, -.06);
   grassTufts(0, VW, 96, 196, 4.2, '#2f6323', '#6ba43c');
 
+  /* Vögel am Himmel */
+  for (var v = 0; v < 3; v++) {
+    var vx = ((t * .25 + v * 90) % 400) - 40;
+    prop('vogel', vx, 22 + v * 9 + Math.sin(t * .04 + v) * 2, .7 + v * .12);
+  }
+
+  /* Deko im Mittel- und Vordergrund */
+  prop('busch1', 292, 118, .8);
+  prop('blumen', 104, 116, .8);
+  prop('stein2', 196, 112, .9);
+  prop('stumpf', 36, 152);
+  prop('blumen', 232, 150);
+  prop('stein1', 268, 142, .9);
+  prop('farn', 88, 162);
+  prop('busch1', 300, 158);
+  prop('blumen', 150, 176);
+  prop('stein2', 58, 184);
+
   /* Büsche */
   bush(292, 104, 13, '#2f6b28');
   bush(18, 100, 11, '#356f2b');
@@ -190,6 +208,17 @@ function bgDorf(t, F) {
   /* Boden als Tilemap */
   drawTilemap(MAP_DORF, LEG, 0, 96);
   groundShade(96, 200, .28, -.05);
+
+  /* Dorfleben im Vordergrund */
+  prop('zaun', 60, 150, .9);
+  prop('laterne', 196, 158, .9);
+  prop('fass', 300, 152);
+  prop('kiste', 24, 168);
+  prop('sack', 44, 174);
+  prop('fass', 276, 182, 1.1);
+  prop('kiste', 122, 190, 1.1);
+  prop('blumen', 232, 172);
+  prop('stein2', 168, 166, .8);
 
   /* --- Wirtshaus links --- */
   R(6, 34, 96, 68, '#d8cdb0');                       /* Fachwerkwand */
@@ -291,6 +320,18 @@ function bgSumpf(t, F) {
   drawTilemap(MAP_SUMPF, LEG, 0, 92);
   groundShade(92, 200, .36, .02);
 
+  /* Moorfunde */
+  prop('fels', 26, 150, .9);
+  prop('knochen', 74, 158);
+  prop('stein1', 202, 148, .9);
+  prop('schilfbusch', 108, 174);
+  prop('schaedel', 244, 168);
+  prop('knochen', 168, 186, 1.1);
+  prop('stein2', 292, 160);
+  prop('schilfbusch', 286, 194, 1.15);
+  prop('seerose', 118, 128, .9);
+  prop('seerose', 152, 132);
+
   /* Sumpftümpel vorne */
   E(134, 126, 66, 15, '#2a3128');
   E(134, 125, 62, 13, '#17251f');
@@ -382,6 +423,16 @@ function bgHuette(t, F) {
   /* Dielenboden als Tilemap */
   drawTilemap(MAP_HUETTE, LEG, 0, 104);
   groundShade(104, 200, .36, .04);
+
+  /* Hausrat */
+  prop('besen', 296, 148, .9);
+  prop('kiste', 18, 156);
+  prop('fass', 250, 160, .9);
+  prop('buecher', 108, 150);
+  prop('kerze', 138, 146);
+  prop('truhe', 42, 190);
+  prop('buecher', 292, 192, 1.2);
+  prop('kerze', 214, 176, 1.1);
 
   /* Fenster links mit Sumpflicht */
   R(12, 20, 34, 30, '#2e2318');
@@ -507,6 +558,16 @@ function bgHoehle(t, F, lit) {
   /* Höhlenboden als Tilemap */
   drawTilemap(MAP_HOEHLE, LEG, 0, 96);
   groundShade(96, 200, .42, .10);
+
+  /* Höhlenfunde */
+  prop('kristallader', 22, 132, .9);
+  prop('stalagmit', 46, 156);
+  prop('knochen', 132, 150);
+  prop('goldhaufen', 262, 150);
+  prop('schaedel', 96, 176);
+  prop('stalagmit', 304, 182, 1.2);
+  prop('truhe', 176, 194, 1.1);
+  prop('knochen', 232, 188, 1.2);
   for (var r = 0; r < 40; r++) {
     var rx = rnd(r * 3.1) * VW, ry = 100 + rnd(r + 7) * 40;
     E(rx, ry, 2 + rnd(r + 1) * 4, 1.5 + rnd(r + 2) * 2, rnd(r + 5) > .5 ? '#5c5266' : '#382f42');
@@ -563,6 +624,17 @@ function bgSteinkreis(t, F) {
   drawTilemap(MAP_STEINKREIS, LEG, 0, 94);
   groundShade(94, 200, .44, .10);
   grassTufts(0, VW, 98, 196, 12.3, '#22331f', '#40592f');
+
+  /* Opfergaben und Gestein */
+  prop('stein1', 62, 148, .9);
+  prop('kerze', 132, 142);
+  prop('kerze', 192, 144);
+  prop('stein2', 248, 152);
+  prop('busch2', 296, 168);
+  prop('farn', 26, 178);
+  prop('kerze', 104, 186, 1.2);
+  prop('kerze', 220, 190, 1.2);
+  prop('stein1', 286, 196, 1.1);
 
   /* Steinkreis (hinten kleiner) */
   var stones = [[36, 108, 16, 44], [78, 102, 13, 36], [126, 98, 11, 30],
