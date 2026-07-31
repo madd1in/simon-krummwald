@@ -30,7 +30,7 @@ var NPC_PHASES = 4;   /* Animationsphasen je NPC */
 /* ---------- kleiner Zeilen-Packer ---------- */
 var packX = 0, packY = 0, packRow = 0;
 function packAlloc(w, h) {
-  if (packX + w > ATLAS.width) { packX = 0; packY += packRow + 1; packRow = 0; }
+  if (packX + w > ATLAS.width / RES) { packX = 0; packY += packRow + 1; packRow = 0; }
   var r = { x: packX, y: packY, w: w, h: h };
   packX += w + 1;
   if (h > packRow) packRow = h;
@@ -44,6 +44,7 @@ function bake(name, w, h, ox, oy, fn) {
   var save = g;
   g = AX;
   AX.save();
+  AX.scale(RES, RES);
   AX.translate(cell.x, cell.y);
   fn(ox, oy);
   AX.restore();
@@ -63,9 +64,10 @@ function cachedLayer(key, fn) {
   if (!c) {
     if (layerCount > 24) { LAYERCACHE = {}; layerCount = 0; }   /* Notbremse */
     c = document.createElement('canvas');
-    c.width = VW; c.height = VH;
+    c.width = VW * RES; c.height = VH * RES;
     var cx = c.getContext('2d');
-    cx.imageSmoothingEnabled = false;
+    cx.imageSmoothingEnabled = true;
+    cx.scale(RES, RES);
     var save = g;
     g = cx;
     fn();
@@ -73,7 +75,7 @@ function cachedLayer(key, fn) {
     LAYERCACHE[key] = c;
     layerCount++;
   }
-  g.drawImage(c, 0, 0);
+  g.drawImage(c, 0, 0, VW, VH);
 }
 
 function clearLayerCache() { LAYERCACHE = {}; layerCount = 0; }
@@ -87,7 +89,7 @@ function sprite(name, x, y, s, flip) {
   g.save();
   g.translate(x, y);
   if (s !== 1 || flip) g.scale(flip ? -s : s, s);
-  g.drawImage(ATLAS, f.x, f.y, f.w, f.h, -f.ox, -f.oy, f.w, f.h);
+  g.drawImage(ATLAS, f.x * RES, f.y * RES, f.w * RES, f.h * RES, -f.ox, -f.oy, f.w, f.h);
   g.restore();
 }
 
@@ -104,25 +106,26 @@ function tintedSprite(name, x, y, s, flip, light) {
 
   if (!litBuf) {
     litBuf = document.createElement('canvas');
-    litBuf.width = 96; litBuf.height = 96;
+    litBuf.width = 96 * RES; litBuf.height = 96 * RES;
     litCtx = litBuf.getContext('2d');
-    litCtx.imageSmoothingEnabled = false;
+    litCtx.imageSmoothingEnabled = true;
+    litCtx.scale(RES, RES);
   }
-  if (f.w > litBuf.width || f.h > litBuf.height) { sprite(name, x, y, s, flip); return; }
+  if (f.w > 96 || f.h > 96) { sprite(name, x, y, s, flip); return; }
 
   litCtx.clearRect(0, 0, f.w, f.h);
 
   /* 1. Lichtsaum: versetzte Silhouette, zur Lichtfarbe umgefärbt */
   if (light.rim) {
     litCtx.globalCompositeOperation = 'source-over';
-    litCtx.drawImage(ATLAS, f.x, f.y, f.w, f.h, light.dx || -1, light.dy || -1, f.w, f.h);
+    litCtx.drawImage(ATLAS, f.x * RES, f.y * RES, f.w * RES, f.h * RES, light.dx || -1, light.dy || -1, f.w, f.h);
     litCtx.globalCompositeOperation = 'source-in';
     litCtx.fillStyle = light.rim;
     litCtx.fillRect(0, 0, f.w, f.h);
   }
   /* 2. die Figur selbst darüber */
   litCtx.globalCompositeOperation = 'source-over';
-  litCtx.drawImage(ATLAS, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
+  litCtx.drawImage(ATLAS, f.x * RES, f.y * RES, f.w * RES, f.h * RES, 0, 0, f.w, f.h);
 
   /* 3. Grundton der Szene über alles, was zur Figur gehört */
   if (light.tint) {
@@ -135,7 +138,7 @@ function tintedSprite(name, x, y, s, flip, light) {
   g.save();
   g.translate(x, y);
   if (s !== 1 || flip) g.scale(flip ? -s : s, s);
-  g.drawImage(litBuf, 0, 0, f.w, f.h, -f.ox, -f.oy, f.w, f.h);
+  g.drawImage(litBuf, 0, 0, f.w * RES, f.h * RES, -f.ox, -f.oy, f.w, f.h);
   g.restore();
 }
 
@@ -500,9 +503,9 @@ function bakeIcons() {
 
 function bakeAtlas() {
   ATLAS = document.createElement('canvas');
-  ATLAS.width = 1024; ATLAS.height = 768;
+  ATLAS.width = 1024 * RES; ATLAS.height = 768 * RES;
   AX = ATLAS.getContext('2d');
-  AX.imageSmoothingEnabled = false;
+  AX.imageSmoothingEnabled = true;
   packX = 0; packY = 0; packRow = 0;
 
   /* Originalfunktionen sichern, bevor sie ersetzt werden */

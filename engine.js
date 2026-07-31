@@ -8,6 +8,9 @@
    ============================================================ */
 
 var VW = 320, VH = 200;
+/* Interne Renderauflösung: alle Grafik ist prozedural, also wird
+   sie bei höherem RES wirklich feiner statt nur hochskaliert. */
+var RES = 3;
 var world, g, cv, ctx;
 var scale = 3, cssScale = 3;
 var rotated = false;
@@ -65,8 +68,11 @@ var BTN = [
 /* ---------------- Setup ---------------- */
 
 function startEngine() {
-  world = document.createElement('canvas'); world.width = VW; world.height = VH;
+  world = document.createElement('canvas');
+  world.width = VW * RES; world.height = VH * RES;
   g = world.getContext('2d');
+  g.scale(RES, RES);                 /* ab hier wird in Spielkoordinaten gezeichnet */
+  g.imageSmoothingEnabled = true;
   cv = document.getElementById('cv');
   ctx = cv.getContext('2d');
   bakeAtlas();
@@ -118,7 +124,7 @@ function resize() {
   cssScale = s; scale = s * dpr;
   cv.width = Math.round(VW * s * dpr); cv.height = Math.round(VH * s * dpr);
   cv.style.width = (VW * s) + 'px'; cv.style.height = (VH * s) + 'px';
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
 
   /* Sichtbarer Ausschnitt in Spielkoordinaten. Oben hängen wichtige
      Dinge (Vogelnest, Mond, Regale), deshalb wird dort höchstens
@@ -373,7 +379,7 @@ function render() {
     if (!journalOpen && invOpen && state.inv.length) drawInvBarWorld();
   }
 
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
   var sh = shakeOffset();
   if (sh) {
     ctx.drawImage(world, Math.round(sh.x * scale), Math.round(sh.y * scale), cv.width, cv.height);

@@ -13,8 +13,7 @@
             -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
             overscroll-behavior:none;touch-action:none;}
   #wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-  canvas{image-rendering:pixelated;image-rendering:crisp-edges;
-         box-shadow:0 0 0 2px #2a3050, 0 0 60px #000;cursor:crosshair;
+  canvas{box-shadow:0 0 0 2px #2a3050, 0 0 60px #000;cursor:crosshair;
          background:#000;touch-action:none;display:block;}
   #hint{position:absolute;bottom:4px;left:0;right:0;text-align:center;
         font-size:12px;opacity:.4;pointer-events:none;}
@@ -30,7 +29,7 @@
      Mit "?dev" in der Adresse wird der Browser-Cache umgangen. */
   (function () {
     var files = ['audio.js', 'art.js', 'assets.js', 'scenes.js', 'engine.js', 'game.js'];
-    var BUILD = 40;   /* bei Änderungen erhöhen, damit Browser neu laden */
+    var BUILD = 41;   /* bei Änderungen erhöhen, damit Browser neu laden */
     var bust = /dev/i.test(location.href) ? '?v=' + Date.now() : '?v=' + BUILD;
     (function next(i) {
       if (i >= files.length) return;
