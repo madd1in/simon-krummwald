@@ -336,15 +336,36 @@ function drawActorTrail() {
   }
 }
 
-function postFX() {
+/* Vignette und Scanlines werden einmal pro Bildgröße vorbereitet,
+   statt jeden Frame neu erzeugt zu werden. */
+var fxCache = null;
+
+function buildPostFX() {
   var w = cv.width, h = cv.height;
   var gr = ctx.createRadialGradient(w / 2, h / 2, h * .5, w / 2, h / 2, h * 1.1);
   gr.addColorStop(0, 'rgba(0,0,0,0)');
   gr.addColorStop(1, 'rgba(0,0,0,.45)');
-  ctx.fillStyle = gr; ctx.fillRect(0, 0, w, h);
+
+  var pattern = null;
   if (cssScale >= 3) {
-    ctx.fillStyle = 'rgba(0,0,0,.05)';
-    for (var y = 0; y < h; y += Math.max(2, Math.round(scale / 2) * 2)) ctx.fillRect(0, y, w, 1);
+    var step = Math.max(2, Math.round(scale / 2) * 2);
+    var lc = document.createElement('canvas');
+    lc.width = 1; lc.height = step;
+    var lx = lc.getContext('2d');
+    lx.fillStyle = 'rgba(0,0,0,.05)';
+    lx.fillRect(0, 0, 1, 1);
+    pattern = ctx.createPattern(lc, 'repeat');
+  }
+  fxCache = { w: w, h: h, grad: gr, lines: pattern };
+}
+
+function postFX() {
+  if (!fxCache || fxCache.w !== cv.width || fxCache.h !== cv.height) buildPostFX();
+  ctx.fillStyle = fxCache.grad;
+  ctx.fillRect(0, 0, fxCache.w, fxCache.h);
+  if (fxCache.lines) {
+    ctx.fillStyle = fxCache.lines;
+    ctx.fillRect(0, 0, fxCache.w, fxCache.h);
   }
 }
 

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0b0d14">
-<title>Simon der Zauberer – Der Fluch von Krummwald</title>
+<title>Simon der Zauberer â€“ Der Fluch von Krummwald</title>
 <style>
   html,body{margin:0;padding:0;background:#07080d;height:100%;overflow:hidden;
             font-family:"Segoe UI",Tahoma,sans-serif;color:#cbd3e6;
@@ -23,14 +23,14 @@
 </head>
 <body>
   <div id="wrap"><canvas id="cv"></canvas></div>
-  <div id="hint">Linksklick = handeln &nbsp;·&nbsp; Rechtsklick = anschauen &nbsp;·&nbsp; I = Inventar &nbsp;·&nbsp; J = Tagebuch &nbsp;·&nbsp; H = Hinweis</div>
+  <div id="hint">Linksklick = handeln &nbsp;Â·&nbsp; Rechtsklick = anschauen &nbsp;Â·&nbsp; I = Inventar &nbsp;Â·&nbsp; J = Tagebuch &nbsp;Â·&nbsp; H = Hinweis</div>
 
   <script>
-  /* Lädt die Spieldateien der Reihe nach.
+  /* LÃ¤dt die Spieldateien der Reihe nach.
      Mit "?dev" in der Adresse wird der Browser-Cache umgangen. */
   (function () {
     var files = ['audio.js', 'art.js', 'assets.js', 'scenes.js', 'engine.js', 'game.js'];
-    var BUILD = 21;   /* bei Änderungen erhöhen, damit Browser neu laden */
+    var BUILD = 22;   /* bei Ã„nderungen erhÃ¶hen, damit Browser neu laden */
     var bust = /dev/i.test(location.href) ? '?v=' + Date.now() : '?v=' + BUILD;
     (function next(i) {
       if (i >= files.length) return;
