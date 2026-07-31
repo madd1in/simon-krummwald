@@ -937,20 +937,25 @@ function firstBlockerOnLine(x0, y0, x1, y1) {
   return null;
 }
 
-/* Zielpunkt aus einem Hindernis herausschieben */
+/* Punkt aus einem Hindernis herausschieben. Bevorzugt nach vorne
+   in die freie Lauffläche, weil dort weitergegangen werden kann. */
 function pushOut(x, y) {
   var b = inBlocker(x, y, 2);
   if (!b) return { x: x, y: y };
-  var cand = [
-    { x: b[0] - 4, y: y }, { x: b[0] + b[2] + 4, y: y },
-    { x: x, y: b[1] - 4 }, { x: x, y: b[1] + b[3] + 4 }
-  ];
-  var best = cand[0], bd = 1e9;
-  for (var i = 0; i < cand.length; i++) {
-    var dd = Math.hypot(cand[i].x - x, cand[i].y - y);
-    if (dd < bd && !inBlocker(cand[i].x, cand[i].y, 1)) { bd = dd; best = cand[i]; }
+  var wb = SCENES[state.scene].walk;
+  function cl(p) {
+    return { x: Math.max(wb.x1, Math.min(wb.x2, p.x)), y: Math.max(wb.y1, Math.min(wb.y2, p.y)) };
   }
-  return best;
+  var cand = [
+    cl({ x: x, y: b[1] + b[3] + 5 }),      /* nach vorne */
+    cl({ x: b[0] - 5, y: y }),             /* nach links */
+    cl({ x: b[0] + b[2] + 5, y: y }),      /* nach rechts */
+    cl({ x: x, y: b[1] - 5 })              /* nach hinten */
+  ];
+  for (var i = 0; i < cand.length; i++) {
+    if (!inBlocker(cand[i].x, cand[i].y, 1)) return cand[i];
+  }
+  return cl({ x: x, y: b[1] + b[3] + 5 });
 }
 
 /* Liefert die Wegpunkte von der Figur zum Ziel.
