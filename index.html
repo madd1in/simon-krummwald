@@ -30,7 +30,7 @@
      Mit "?dev" in der Adresse wird der Browser-Cache umgangen. */
   (function () {
     var files = ['audio.js', 'art.js', 'assets.js', 'scenes.js', 'engine.js', 'game.js'];
-    var BUILD = 37;   /* bei Änderungen erhöhen, damit Browser neu laden */
+    var BUILD = 38;   /* bei Änderungen erhöhen, damit Browser neu laden */
     var bust = /dev/i.test(location.href) ? '?v=' + Date.now() : '?v=' + BUILD;
     (function next(i) {
       if (i >= files.length) return;

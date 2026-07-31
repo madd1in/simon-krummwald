@@ -954,50 +954,56 @@ function pushOut(x, y) {
 }
 
 /* Liefert die Wegpunkte von der Figur zum Ziel.
-   Umrundet ein Hindernis über seine Ecken – erst mit einer Ecke,
-   sonst mit zweien. Reicht für rechteckige Hindernisse völlig. */
+   Baut einen kleinen Sichtbarkeitsgraphen aus den Ecken aller
+   Hindernisse und sucht darin den kürzesten Weg. Das kommt auch
+   mit mehreren, sich berührenden Hindernissen zurecht. */
 function findPath(sx, sy, tx, ty) {
-  if (!blockersOf().length) return [{ x: tx, y: ty }];
-  var b = firstBlockerOnLine(sx, sy, tx, ty);
-  if (!b) return [{ x: tx, y: ty }];
+  var bl = blockersOf();
+  if (!bl.length || !firstBlockerOnLine(sx, sy, tx, ty)) return [{ x: tx, y: ty }];
 
   var wb = SCENES[state.scene].walk, pad = 8;
   function clamp(p) {
     return { x: Math.max(wb.x1, Math.min(wb.x2, p.x)), y: Math.max(wb.y1, Math.min(wb.y2, p.y)) };
   }
-  var corners = [
-    clamp({ x: b[0] - pad, y: b[1] - pad }),
-    clamp({ x: b[0] + b[2] + pad, y: b[1] - pad }),
-    clamp({ x: b[0] - pad, y: b[1] + b[3] + pad }),
-    clamp({ x: b[0] + b[2] + pad, y: b[1] + b[3] + pad })
-  ].filter(function (c) { return !inBlocker(c.x, c.y, 1); });
 
-  var best = null, bestLen = 1e9, i, j;
-
-  /* eine Ecke */
-  for (i = 0; i < corners.length; i++) {
-    var c = corners[i];
-    if (firstBlockerOnLine(sx, sy, c.x, c.y)) continue;
-    if (firstBlockerOnLine(c.x, c.y, tx, ty)) continue;
-    var len = Math.hypot(c.x - sx, c.y - sy) + Math.hypot(tx - c.x, ty - c.y);
-    if (len < bestLen) { bestLen = len; best = [c, { x: tx, y: ty }]; }
-  }
-  if (best) return best;
-
-  /* zwei Ecken */
-  for (i = 0; i < corners.length; i++) {
-    var c1 = corners[i];
-    if (firstBlockerOnLine(sx, sy, c1.x, c1.y)) continue;
-    for (j = 0; j < corners.length; j++) {
-      if (j === i) continue;
-      var c2 = corners[j];
-      if (firstBlockerOnLine(c1.x, c1.y, c2.x, c2.y)) continue;
-      if (firstBlockerOnLine(c2.x, c2.y, tx, ty)) continue;
-      var l2 = Math.hypot(c1.x - sx, c1.y - sy) + Math.hypot(c2.x - c1.x, c2.y - c1.y) + Math.hypot(tx - c2.x, ty - c2.y);
-      if (l2 < bestLen) { bestLen = l2; best = [c1, c2, { x: tx, y: ty }]; }
+  /* Knoten: Start, alle freien Hindernisecken, Ziel */
+  var nodes = [{ x: sx, y: sy }];
+  for (var i = 0; i < bl.length; i++) {
+    var b = bl[i];
+    var cs = [
+      { x: b[0] - pad, y: b[1] - pad }, { x: b[0] + b[2] + pad, y: b[1] - pad },
+      { x: b[0] - pad, y: b[1] + b[3] + pad }, { x: b[0] + b[2] + pad, y: b[1] + b[3] + pad }
+    ];
+    for (var c = 0; c < cs.length; c++) {
+      var p = clamp(cs[c]);
+      if (!inBlocker(p.x, p.y, 1)) nodes.push(p);
     }
   }
-  return best || [{ x: tx, y: ty }];
+  nodes.push({ x: tx, y: ty });
+  var goal = nodes.length - 1;
+
+  /* Dijkstra über sichtbare Verbindungen */
+  var dist = [], prev = [], done = [], n = nodes.length, k, m;
+  for (k = 0; k < n; k++) { dist.push(Infinity); prev.push(-1); done.push(false); }
+  dist[0] = 0;
+
+  for (var step = 0; step < n; step++) {
+    var cur = -1, cd = Infinity;
+    for (k = 0; k < n; k++) if (!done[k] && dist[k] < cd) { cd = dist[k]; cur = k; }
+    if (cur < 0 || cur === goal) break;
+    done[cur] = true;
+    for (m = 0; m < n; m++) {
+      if (done[m] || m === cur) continue;
+      if (firstBlockerOnLine(nodes[cur].x, nodes[cur].y, nodes[m].x, nodes[m].y)) continue;
+      var nd = dist[cur] + Math.hypot(nodes[m].x - nodes[cur].x, nodes[m].y - nodes[cur].y);
+      if (nd < dist[m]) { dist[m] = nd; prev[m] = cur; }
+    }
+  }
+
+  if (dist[goal] === Infinity) return [{ x: tx, y: ty }];   /* nichts gefunden: direkt */
+  var out = [], at = goal;
+  while (at > 0) { out.unshift(nodes[at]); at = prev[at]; }
+  return out.length ? out : [{ x: tx, y: ty }];
 }
 
 function walkTo(x, y) {
