@@ -53,6 +53,58 @@ function bake(name, w, h, ox, oy, fn) {
   FRAMES[name] = { x: cell.x, y: cell.y, w: w, h: h, ox: ox, oy: oy };
 }
 
+/* Backt eine Figur mit dunkler Kontur: erst die Silhouette in
+   acht Richtungen versetzt, dann die Figur darüber. Das hebt die
+   Figuren sauber vom Hintergrund ab. */
+var outBufA = null, outCtxA = null, outBufB = null, outCtxB = null;
+
+function bakeOutlined(name, w, h, ox, oy, fn, col, th) {
+  col = col || 'rgba(18,14,26,.85)';
+  th = (th || 1) / RES * 2;
+
+  if (!outBufA) {
+    outBufA = document.createElement('canvas'); outCtxA = outBufA.getContext('2d');
+    outBufB = document.createElement('canvas'); outCtxB = outBufB.getContext('2d');
+  }
+  var pw = Math.ceil(w * RES), ph = Math.ceil(h * RES);
+  if (outBufA.width !== pw || outBufA.height !== ph) {
+    outBufA.width = pw; outBufA.height = ph;
+    outBufB.width = pw; outBufB.height = ph;
+  }
+  outCtxA.setTransform(1, 0, 0, 1, 0, 0); outCtxA.clearRect(0, 0, pw, ph);
+  outCtxB.setTransform(1, 0, 0, 1, 0, 0); outCtxB.clearRect(0, 0, pw, ph);
+  outCtxA.imageSmoothingEnabled = true;
+  outCtxB.imageSmoothingEnabled = true;
+
+  /* Figur in Puffer A */
+  var save = g;
+  g = outCtxA;
+  outCtxA.save(); outCtxA.scale(RES, RES);
+  fn(ox, oy);
+  outCtxA.restore();
+  g = save;
+
+  /* Silhouette in Puffer B einfärben */
+  outCtxB.drawImage(outBufA, 0, 0);
+  outCtxB.globalCompositeOperation = 'source-in';
+  outCtxB.fillStyle = col;
+  outCtxB.fillRect(0, 0, pw, ph);
+  outCtxB.globalCompositeOperation = 'source-over';
+
+  /* in den Atlas: acht versetzte Silhouetten, dann die Figur */
+  var cell = packAlloc(w, h);
+  AX.save();
+  AX.scale(RES, RES);
+  AX.translate(cell.x, cell.y);
+  var d = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
+  for (var i = 0; i < d.length; i++) {
+    AX.drawImage(outBufB, d[i][0] * th, d[i][1] * th, w, h);
+  }
+  AX.drawImage(outBufA, 0, 0, w, h);
+  AX.restore();
+  FRAMES[name] = { x: cell.x, y: cell.y, w: w, h: h, ox: ox, oy: oy };
+}
+
 /* ---------- Ebenen-Cache ----------
    Unbewegte Bildteile werden einmal in ein eigenes Canvas
    gezeichnet und danach nur noch geblittet. Das spart pro Frame
@@ -150,12 +202,20 @@ function tilePixels(kind, seed) {
   var i, x, y, r;
   switch (kind) {
     case 'gras':
-      R(0, 0, TILE, TILE, '#4a8531');
-      for (i = 0; i < 60; i++) {
-        r = rnd(seed + i * 3.7); x = r * TILE; y = rnd(seed + i * 1.3) * TILE;
-        R(x, y, PX * 1.4, PX * 1.4, r > .5 ? '#457c2d' : '#508d36');
+      R(0, 0, TILE, TILE, '#437b2c');
+      /* Grundflecken für Tiefe */
+      for (i = 0; i < 10; i++) {
+        x = rnd(seed + i * 5.1) * TILE; y = rnd(seed + i * 2.3) * TILE;
+        E(x, y, 2 + rnd(seed + i) * 2.4, 1.4 + rnd(seed + i * 3) * 1.6, i % 2 ? '#3d7228' : '#4d8b33');
       }
-      for (i = 0; i < 9; i++) { x = rnd(seed + i * 9.1) * TILE; y = rnd(seed + i * 5.5) * TILE; R(x, y, PX * 1.4, PX * 2.6, '#57953b'); }
+      /* einzelne Halme mit Neigung und heller Spitze */
+      for (i = 0; i < 34; i++) {
+        var gs = seed + i * 1.9;
+        x = rnd(gs) * TILE; y = 2 + rnd(gs + 1) * (TILE - 2);
+        var gh = 1.8 + rnd(gs + 2) * 2.8, gl = (rnd(gs + 3) - .5) * 1.8;
+        L(x, y, x + gl, y - gh, rnd(gs + 4) > .5 ? '#356624' : '#4f9134', PX);
+        R(x + gl, y - gh, PX * 1.2, PX * 1.2, '#63a83f');
+      }
       break;
     case 'gras_dunkel':
       R(0, 0, TILE, TILE, '#3f7129');
@@ -167,21 +227,48 @@ function tilePixels(kind, seed) {
       for (i = 0; i < 9; i++) { x = rnd(seed + i * 7.3) * TILE; y = rnd(seed + i * 8.1) * TILE; E(x, y, 1.4, 1, '#9a8354'); }
       break;
     case 'kopfstein':
-      R(0, 0, TILE, TILE, '#6f6a5d');
-      for (i = 0; i < 24; i++) {
-        x = (i % 3) * 5 + (Math.floor(i / 3) % 2) * 2, y = Math.floor(i / 3) * 5;
-        R(x + 1, y + 1, 4, 4, rnd(seed + i * 3.3) > .5 ? '#7a7365' : '#6d675b');
-        R(x + 1, y + 1, 4, 1, '#847d6e');
+      R(0, 0, TILE, TILE, '#585349');                       /* Fugenmörtel */
+      for (i = 0; i < 9; i++) {
+        var col = i % 3, row = Math.floor(i / 3);
+        var sx2 = col * 5.4 + (row % 2) * 2.2 - 1, sy2 = row * 5.4;
+        var sw2 = 4.6 + rnd(seed + i) * .8, sh2 = 4.4 + rnd(seed + i * 2) * .7;
+        var base = rnd(seed + i * 3.3) > .5 ? '#7e7768' : '#736c5e';
+        E(sx2 + sw2 / 2, sy2 + sh2 / 2, sw2 / 2, sh2 / 2, base);
+        E(sx2 + sw2 / 2 - .5, sy2 + sh2 / 2 - .6, sw2 / 2.6, sh2 / 3.2, shade(base, 1.16));
+        E(sx2 + sw2 / 2 + .6, sy2 + sh2 / 2 + .9, sw2 / 3, sh2 / 4, shade(base, .82));
       }
       break;
     case 'holzboden':
-      R(0, 0, TILE, TILE, '#6e5637');
-      R(0, 5, TILE, 1, '#4d3a24'); R(0, 11, TILE, 1, '#4d3a24');
-      for (i = 0; i < 42; i++) { x = rnd(seed + i * 4.7) * TILE; y = rnd(seed + i * 2.1) * TILE; R(x, y, PX * 2.6, PX * 1.4, rnd(seed + i) > .5 ? '#7d6340' : '#5f4a2f'); }
+      R(0, 0, TILE, TILE, '#6b5335');
+      for (i = 0; i < 3; i++) {
+        var by = i * 5.4;
+        R(0, by, TILE, 5, i % 2 ? '#6f5738' : '#654e32');
+        R(0, by + 5, TILE, .6, '#42321f');                  /* Fuge */
+        /* Maserung */
+        for (var mg = 0; mg < 7; mg++) {
+          var mx = rnd(seed + i * 4 + mg) * TILE, ml = 2 + rnd(seed + mg) * 5;
+          L(mx, by + 1 + rnd(seed + mg * 2) * 3, mx + ml, by + 1 + rnd(seed + mg * 3) * 3,
+            rnd(seed + mg * 5) > .5 ? '#5b452c' : '#7d6340', PX);
+        }
+      }
+      /* Astloch */
+      if (rnd(seed) > .55) {
+        var ax2 = 3 + rnd(seed + 9) * 10, ay2 = 2 + rnd(seed + 11) * 11;
+        E(ax2, ay2, 1.3, .9, '#4a3820'); E(ax2, ay2, .7, .5, '#3a2b18');
+      }
       break;
     case 'fels':
-      R(0, 0, TILE, TILE, '#4a4152');
-      for (i = 0; i < 54; i++) { x = rnd(seed + i * 3.1) * TILE; y = rnd(seed + i * 5.7) * TILE; E(x, y, 1 + rnd(seed + i) * 2, 1, rnd(seed + i * 2) > .5 ? '#5c5266' : '#3a3244'); }
+      R(0, 0, TILE, TILE, '#453d50');
+      for (i = 0; i < 5; i++) {
+        var ly = i * 3.4 + rnd(seed + i) * 1.2;
+        P([0, ly, TILE, ly - 1 + rnd(seed + i * 2) * 2, TILE, ly + 2.6, 0, ly + 3.2],
+          i % 2 ? '#4b4257' : '#3f3849');
+        L(0, ly, TILE, ly - 1 + rnd(seed + i * 2) * 2, '#584e64', PX);
+      }
+      for (i = 0; i < 8; i++) {
+        x = rnd(seed + i * 3.1) * TILE; y = rnd(seed + i * 5.7) * TILE;
+        E(x, y, .6 + rnd(seed + i) * 1.2, .5, rnd(seed + i * 2) > .5 ? '#5f5570' : '#332d3d');
+      }
       break;
     case 'moor':
       R(0, 0, TILE, TILE, '#4b5439');
@@ -423,7 +510,7 @@ function bakeCharacters() {
     for (var b = 0; b < 2; b++) {
       for (var f = 0; f < poses.length; f++) {
         (function (hat, blink, pose) {
-          bake('simonpose_' + hat + '_' + blink + '_' + pose, 30, 66, 15, 64, function (ox, oy) {
+          bakeOutlined('simonpose_' + hat + '_' + blink + '_' + pose, 30, 66, 15, 64, function (ox, oy) {
             if (_rawSimonPose) _rawSimonPose(ox, oy, 1, pose, 1, !!hat, !!blink);
             else _rawSimon(ox, oy, 1, pose === 'walk1' ? 1 : (pose === 'walk4' ? 3 : 0), 1, !!hat, !!blink);
           });
@@ -435,16 +522,16 @@ function bakeCharacters() {
   for (var p = 0; p < NPC_PHASES; p++) {
     (function (ph) {
       var t = ph * 40;
-      bake('bruno_' + ph, 34, 48, 15, 46, function (ox, oy) { _rawBruno(ox, oy, t); });
-      bake('mathilda_' + ph, 28, 56, 13, 54, function (ox, oy) { _rawMathilda(ox, oy, t); });
-      bake('grombold_' + ph, 46, 56, 23, 54, function (ox, oy) { _rawTroll(ox, oy, t); });
-      bake('grete_' + ph, 28, 46, 13, 44, function (ox, oy) { _rawGrete(ox, oy, t); });
-      bake('elster_' + ph, 26, 18, 13, 9, function (ox, oy) { _rawElster(ox, oy, t, 1); });
+      bakeOutlined('bruno_' + ph, 34, 48, 15, 46, function (ox, oy) { _rawBruno(ox, oy, t); });
+      bakeOutlined('mathilda_' + ph, 28, 56, 13, 54, function (ox, oy) { _rawMathilda(ox, oy, t); });
+      bakeOutlined('grombold_' + ph, 46, 56, 23, 54, function (ox, oy) { _rawTroll(ox, oy, t); });
+      bakeOutlined('grete_' + ph, 28, 46, 13, 44, function (ox, oy) { _rawGrete(ox, oy, t); });
+      bakeOutlined('elster_' + ph, 26, 18, 13, 9, function (ox, oy) { _rawElster(ox, oy, t, 1); });
     })(p);
   }
   for (var d = 0; d < NPC_PHASES; d++) {
     (function (ph) {
-      bake('drache_' + ph, 120, 60, 62, 58, function (ox, oy) { _rawDrache(ox, oy, ph * 40, true); });
+      bakeOutlined('drache_' + ph, 120, 60, 62, 58, function (ox, oy) { _rawDrache(ox, oy, ph * 40, true); });
     })(d);
   }
 }
