@@ -624,16 +624,24 @@ function drawJournal() {
 function drawBubble() {
   var pos = speakerPos(bubble.who);
   var col = (SPEAKERS[bubble.who] || {}).color || '#ffffff';
-  var lines = wrap(bubble.text, 216, 8);
-  var lh = 10;
+  var size = isTouch ? 9.5 : 8;
+  /* Umbruch und Breite nur einmal je Satz berechnen, nicht pro Bild –
+     das Messen von Text ist teuer und lief bisher 60-mal pro Sekunde. */
+  if (!bubble.lay || bubble.lay.scale !== scale || bubble.lay.size !== size) {
+    var ls = wrap(bubble.text, isTouch ? 236 : 216, size);
+    var wm = 0;
+    for (var m = 0; m < ls.length; m++) wm = Math.max(wm, measure(ls[m], size));
+    bubble.lay = { lines: ls, wMax: wm, scale: scale, size: size };
+  }
+  var lines = bubble.lay.lines, wMax = bubble.lay.wMax;
+  var lh = size + 2;
   var y0 = bubble.who === 'narrator' ? 12 : Math.max(4, pos.y - lines.length * lh - 4);
-  var wMax = 0; for (var i = 0; i < lines.length; i++) wMax = Math.max(wMax, measure(lines[i], 8));
   var x = Math.max(4 + wMax / 2, Math.min(VW - 4 - wMax / 2, pos.x));
   if (bubble.who === 'narrator') {
     ctx.fillStyle = 'rgba(8,6,14,.66)';
     ctx.fillRect((x - wMax / 2 - 6) * scale, (y0 - 4) * scale, (wMax + 12) * scale, (lines.length * lh + 6) * scale);
   }
-  for (var l = 0; l < lines.length; l++) txt(x, y0 + l * lh, lines[l], col, 'center', 8);
+  for (var l = 0; l < lines.length; l++) txt(x, y0 + l * lh, lines[l], col, 'center', size);
 }
 
 function speakerPos(who) {
