@@ -608,10 +608,16 @@ function handleClick(p, right) {
     sfx('click');
     if (right) { run(doAction('schau', ref, null)); return; }
     if (pending) {
-      if (pending.kind === 'item' && pending.id === id) { pending = null; return; }
+      /* Erneuter Klick auf dasselbe Stück: benutzen (lesen, anzünden, …) */
+      if (pending.kind === 'item' && pending.id === id) {
+        pending = null;
+        if (ITEMS[id].use) run(doAction('benutze', ref, null));
+        return;
+      }
       var a = pending; pending = null; run(doAction('benutze', a, ref)); return;
     }
     pending = ref;
+    if (ITEMS[id].use) showToast('Nochmal klicken zum Benutzen');
     return;
   }
   if (slot >= 0) return;

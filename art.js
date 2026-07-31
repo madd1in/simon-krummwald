@@ -313,6 +313,168 @@ function drawDrache(x, y, t, sleeping) {
 }
 
 /* ============================================================
+   DEKO-PROPS
+   Tabelle aus Objekten, die assets.js automatisch in den
+   Sprite-Atlas backt. Ursprung ist jeweils unten mittig (ox,oy),
+   gezeichnet wird relativ dazu.
+   ============================================================ */
+
+var PROPS = {
+
+  /* --- Pflanzen --- */
+  busch1: { w: 30, h: 22, ox: 15, oy: 21, draw: function (x, y) {
+    E(x, y - 5, 13, 7, '#2b5a22'); E(x - 6, y - 9, 8, 6, '#356f2b');
+    E(x + 6, y - 8, 7, 5, '#3d7b30'); E(x, y - 13, 7, 5, '#428533');
+    R(x - 2, y - 3, 1, 3, '#2a4a1c');
+  } },
+  busch2: { w: 24, h: 18, ox: 12, oy: 17, draw: function (x, y) {
+    E(x, y - 4, 10, 5, '#25501e'); E(x - 4, y - 8, 6, 5, '#2f6626');
+    E(x + 5, y - 7, 6, 4, '#38762c'); E(x, y - 11, 5, 4, '#3d7b30');
+  } },
+  farn: { w: 26, h: 20, ox: 13, oy: 19, draw: function (x, y) {
+    for (var i = -3; i <= 3; i++) {
+      var a = i * 0.28, len = 13 - Math.abs(i) * 1.6;
+      L(x, y, x + Math.sin(a) * len, y - Math.cos(a) * len, '#2f6b26', 1);
+      for (var j = 1; j < 5; j++) {
+        var px = x + Math.sin(a) * len * j / 5, py = y - Math.cos(a) * len * j / 5;
+        R(px - 1, py, 3, 1, i % 2 ? '#3a7d2e' : '#336f28');
+      }
+    }
+  } },
+  blumen: { w: 22, h: 14, ox: 11, oy: 13, draw: function (x, y) {
+    var cols = ['#e8d24a', '#e07ab0', '#f2f2f2', '#e8d24a'];
+    for (var i = 0; i < 5; i++) {
+      var bx = x - 8 + i * 4 + (i % 2) * 1.5, bh = 5 + (i % 3) * 2;
+      L(bx, y, bx, y - bh, '#3d7b30', 1);
+      E(bx, y - bh - 1, 1.8, 1.6, cols[i % cols.length]);
+      R(bx - .5, y - bh - 1.5, 1, 1, '#fff8c8');
+    }
+  } },
+  schilfbusch: { w: 22, h: 26, ox: 11, oy: 25, draw: function (x, y) {
+    for (var i = 0; i < 7; i++) {
+      var sx = x - 7 + i * 2.4, h = 14 + (i % 4) * 4;
+      L(sx, y, sx + (i - 3) * .8, y - h, '#7d8a4a', 1);
+      E(sx + (i - 3) * .8, y - h - 1, 1.2, 3, '#6b5a2e');
+    }
+  } },
+  seerose: { w: 18, h: 8, ox: 9, oy: 7, draw: function (x, y) {
+    E(x, y - 2, 8, 3.4, '#3f7a34'); E(x - 2, y - 2.6, 5, 2.2, '#4d9040');
+    P([x + 2, y - 4, x + 8, y - 1, x + 3, y - 1], '#2f5f28');
+    E(x + 3, y - 4, 2, 1.6, '#f0e6f5');
+  } },
+
+  /* --- Holz & Stein --- */
+  stumpf: { w: 26, h: 18, ox: 13, oy: 17, draw: function (x, y) {
+    R(x - 9, y - 12, 18, 12, '#5b3d20'); R(x - 9, y - 12, 4, 12, '#6d4a27');
+    E(x, y - 12, 9, 3.4, '#7d5a2e'); E(x, y - 12, 6, 2.2, '#8f6a36');
+    E(x, y - 12, 2.4, 1, '#6b4a26');
+    P([x + 8, y - 4, x + 13, y, x + 8, y], '#4a3119');
+  } },
+  stein1: { w: 20, h: 14, ox: 10, oy: 13, draw: function (x, y) {
+    P([x - 8, y, x + 8, y, x + 6, y - 7, x - 2, y - 10, x - 7, y - 6], '#6d6a63');
+    P([x - 7, y - 6, x - 2, y - 10, x, y - 5], '#83807a');
+    E(x, y, 8, 2, 'rgba(0,0,0,.22)');
+  } },
+  stein2: { w: 13, h: 9, ox: 6, oy: 8, draw: function (x, y) {
+    P([x - 5, y, x + 5, y, x + 3, y - 5, x - 3, y - 5], '#7a766e');
+    R(x - 3, y - 5, 3, 2, '#918d85');
+  } },
+  fels: { w: 40, h: 28, ox: 20, oy: 27, draw: function (x, y) {
+    P([x - 17, y, x + 17, y, x + 13, y - 14, x + 2, y - 21, x - 11, y - 15], '#5e5b56');
+    P([x - 11, y - 15, x + 2, y - 21, x + 4, y - 11, x - 6, y - 8], '#75716a');
+    P([x + 8, y - 12, x + 13, y - 14, x + 15, y], '#4a4742');
+    E(x, y, 17, 3.4, 'rgba(0,0,0,.25)');
+  } },
+  fass: { w: 20, h: 26, ox: 10, oy: 25, draw: function (x, y) {
+    P([x - 7, y, x + 7, y, x + 8, y - 18, x - 8, y - 18], '#7d5a2e');
+    R(x - 8, y - 15, 16, 2, '#4a3a28'); R(x - 8, y - 6, 16, 2, '#4a3a28');
+    E(x, y - 18, 8, 3, '#8f6a36'); E(x, y - 18, 6, 2, '#6b4f2a');
+    R(x - 7, y - 17, 2, 16, '#8f6a36');
+  } },
+  kiste: { w: 22, h: 20, ox: 11, oy: 19, draw: function (x, y) {
+    R(x - 9, y - 14, 18, 14, '#6b4f2a');
+    R(x - 9, y - 14, 18, 2, '#8a6a3a'); R(x - 9, y - 8, 18, 2, '#54401f');
+    L(x - 9, y - 14, x + 9, y, '#54401f', 1); L(x + 9, y - 14, x - 9, y, '#54401f', 1);
+  } },
+  sack: { w: 18, h: 20, ox: 9, oy: 19, draw: function (x, y) {
+    P([x - 7, y, x + 7, y, x + 6, y - 11, x - 6, y - 11], '#b9ac8e');
+    E(x, y - 12, 6, 3, '#c9bc9e');
+    R(x - 2, y - 16, 4, 4, '#a89b7d'); R(x - 3, y - 14, 6, 1, '#7d7460');
+  } },
+  zaun: { w: 34, h: 20, ox: 17, oy: 19, draw: function (x, y) {
+    for (var i = -1; i <= 1; i++) { R(x + i * 12 - 1.5, y - 15, 3, 15, '#7d5a2e'); P([x + i * 12 - 1.5, y - 15, x + i * 12 + 1.5, y - 15, x + i * 12, y - 18], '#8f6a36'); }
+    R(x - 15, y - 12, 30, 2, '#6b4f2a'); R(x - 15, y - 6, 30, 2, '#6b4f2a');
+  } },
+  laterne: { w: 16, h: 40, ox: 8, oy: 39, draw: function (x, y) {
+    R(x - 1.5, y - 30, 3, 30, '#3a3830'); E(x, y, 5, 2, '#2e2c26');
+    R(x - 5, y - 40, 10, 10, '#4a4740');
+    R(x - 4, y - 39, 8, 8, 'rgba(255,210,110,.85)');
+    P([x - 6, y - 40, x + 6, y - 40, x, y - 45], '#3a3830');
+    E(x, y - 35, 9, 9, 'rgba(255,200,90,.14)');
+  } },
+  besen: { w: 12, h: 34, ox: 6, oy: 33, draw: function (x, y) {
+    L(x + 2, y - 33, x - 1, y - 9, '#8a5a2b', 2);
+    P([x - 4, y - 10, x + 3, y - 10, x + 4, y, x - 5, y], '#c9a24a');
+    for (var i = 0; i < 5; i++) L(x - 4 + i * 2, y - 9, x - 5 + i * 2.2, y, '#a8842f', 1);
+  } },
+  buecher: { w: 20, h: 14, ox: 10, oy: 13, draw: function (x, y) {
+    var c = ['#6b2f7a', '#2f5a7a', '#7a3a2f'];
+    for (var i = 0; i < 3; i++) { R(x - 8 + i, y - 4 - i * 4, 16 - i * 2, 4, c[i]); R(x - 8 + i, y - 4 - i * 4, 16 - i * 2, 1, 'rgba(255,255,255,.18)'); }
+  } },
+  kerze: { w: 10, h: 16, ox: 5, oy: 15, draw: function (x, y) {
+    R(x - 2, y - 9, 4, 9, '#e8e0cb'); E(x, y, 4, 1.6, '#c9c0a8');
+    R(x - .5, y - 11, 1, 2, '#8a8272');
+    E(x, y - 12, 1.6, 2.6, '#ffb43c'); E(x, y - 12.6, .9, 1.5, '#fff3a8');
+    E(x, y - 11, 6, 6, 'rgba(255,190,80,.13)');
+  } },
+  truhe: { w: 28, h: 22, ox: 14, oy: 21, draw: function (x, y) {
+    R(x - 11, y - 12, 22, 12, '#6b4f2a');
+    P([x - 11, y - 12, x + 11, y - 12, x + 11, y - 17, x - 11, y - 17], '#7d5a2e');
+    E(x, y - 17, 11, 4, '#7d5a2e');
+    R(x - 11, y - 13, 22, 2, '#c8a44a'); R(x - 2, y - 10, 4, 5, '#c8a44a');
+    R(x - 1, y - 8, 2, 2, '#3a2c1e');
+  } },
+
+  /* --- Höhle --- */
+  knochen: { w: 20, h: 8, ox: 10, oy: 7, draw: function (x, y) {
+    R(x - 7, y - 3, 14, 2, '#d8d2c0');
+    E(x - 7, y - 3.5, 2, 2, '#e8e2cf'); E(x - 7, y - 1.5, 2, 2, '#e8e2cf');
+    E(x + 7, y - 3.5, 2, 2, '#e8e2cf'); E(x + 7, y - 1.5, 2, 2, '#e8e2cf');
+  } },
+  schaedel: { w: 16, h: 14, ox: 8, oy: 13, draw: function (x, y) {
+    E(x, y - 6, 6, 5.5, '#ddd7c4'); R(x - 4, y - 4, 8, 5, '#ddd7c4');
+    R(x - 3, y - 1, 6, 2, '#c9c2ae');
+    E(x - 2.4, y - 6, 1.8, 2, '#2a2620'); E(x + 2.4, y - 6, 1.8, 2, '#2a2620');
+    R(x - .8, y - 3.6, 1.6, 2, '#2a2620');
+    for (var i = 0; i < 4; i++) R(x - 3 + i * 2, y - 1, 1, 2, '#8f8a78');
+  } },
+  stalagmit: { w: 16, h: 26, ox: 8, oy: 25, draw: function (x, y) {
+    P([x - 5, y, x + 5, y, x + 1, y - 24], '#4a4152');
+    P([x - 2, y, x + 2, y, x + .5, y - 20], '#5c5266');
+    E(x, y, 5, 1.8, 'rgba(0,0,0,.3)');
+  } },
+  kristallader: { w: 18, h: 20, ox: 9, oy: 19, draw: function (x, y) {
+    P([x - 6, y, x - 2, y - 12, x + 1, y], '#7a4cc0');
+    P([x - 4, y, x - 2, y - 12, x - 1, y], '#a877f0');
+    P([x + 1, y, x + 4, y - 8, x + 6, y], '#7a4cc0');
+    E(x - 2, y - 12, 2.4, 2.4, 'rgba(200,160,255,.4)');
+  } },
+  goldhaufen: { w: 30, h: 12, ox: 15, oy: 11, draw: function (x, y) {
+    for (var i = 0; i < 16; i++) {
+      var gx = x - 12 + rnd(i * 3.1) * 24, gy = y - rnd(i * 1.7) * 7;
+      E(gx, gy, 2.4, 1.7, rnd(i + 5) > .5 ? '#e9b54a' : '#c98a30');
+    }
+    E(x - 4, y - 6, 2.4, 1.7, '#f4d888');
+  } },
+
+  /* --- Himmel --- */
+  vogel: { w: 14, h: 8, ox: 7, oy: 4, draw: function (x, y) {
+    L(x - 6, y, x - 2, y - 3, '#2a2a32', 1); L(x - 2, y - 3, x + 2, y, '#2a2a32', 1);
+    L(x + 2, y, x + 6, y - 3, '#2a2a32', 1);
+  } }
+};
+
+/* ============================================================
    INVENTAR-ICONS  (20x20 Feld, Ursprung links oben)
    ============================================================ */
 

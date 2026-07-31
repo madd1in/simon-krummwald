@@ -818,15 +818,15 @@ function questSteps() {
     { key: 'brunnen', title: 'Herausfinden, wie die Hütte im Sumpf aufgeht', done: function () { return F.zauberwort; }, texts: [
       'Im Dorf gibt es etwas zu lesen. Alte Steine sind gesprächiger, als man denkt.',
       'Schau dir den Brunnen in Krummwald genauer an. Jemand hat etwas in den Rand geritzt.',
-      'Verb "Schau an" auf den Brunnen im Dorf — dort steht das Zauberwort für die Hüttentür.' ] },
+      'Klicke den Brunnen im Dorf an (oder Rechtsklick zum Anschauen) — dort steht das Zauberwort für die Hüttentür.' ] },
     { key: 'huette', title: 'Die Hütte des Zauberers betreten', done: function () { return F.huetteOffen; }, texts: [
       'Die Hütte im Sumpf will begrüßt werden, nicht aufgebrochen.',
       'Das Wort vom Brunnenrand gehört an die Hüttentür.',
-      '"Benutze" die Hüttentür im Sumpf — Simon spricht dann das Zauberwort KRIBBELKRABBEL.' ] },
+      'Klicke die Hüttentür im Sumpf an — Simon spricht dann das Zauberwort KRIBBELKRABBEL.' ] },
     { key: 'buch', title: 'Das Zauberbuch lesen', done: function () { return F.buchGelesen; }, texts: [
       'In der Hütte liegt Lesestoff. Ein Zauberer notiert alles.',
       'Nimm das Zauberbuch vom Tisch und lies es.',
-      'Buch nehmen, dann im Inventar "Benutze Zauberbuch" — darin stehen Trollrätsel und Kesselrezept.' ] },
+      'Buch anklicken, dann unten im Inventar zweimal auf das Buch klicken — der zweite Klick liest es. Darin stehen Trollrätsel und Kesselrezept.' ] },
     { key: 'troll', title: 'Grombolds Rätsel lösen', done: function () { return F.trollWeg; }, texts: [
       'Der Troll auf der Brücke will nur eines: eine Antwort.',
       'Rede mit Grombold, sobald du das Zauberbuch gelesen hast.',
@@ -834,7 +834,7 @@ function questSteps() {
     { key: 'krug', title: 'Bruno seinen Bierkrug zurückbringen', done: function () { return F.krugAbgegeben; }, texts: [
       'Jemand im Dorf vermisst etwas, das jetzt in deiner Tasche steckt.',
       'Bruno will seinen Bierkrug zurück — und zahlt dafür.',
-      '"Gib Bierkrug an Bruno" vor dem Wirtshaus. Es gibt Münzen und ein Käsebrot.' ] },
+      'Bierkrug im Inventar anklicken, dann auf Bruno klicken. Es gibt Münzen und ein Käsebrot.' ] },
     { key: 'knopf', title: 'Etwas Glänzendes für die Elster besorgen', done: function () { return F.knopfWeg; }, texts: [
       'Für den Vogel brauchst du etwas, das viel zu sehr glänzt.',
       'Mathilda verkauft einen glänzenden Knopf — für genau fünf Kupfermünzen.',
@@ -842,35 +842,35 @@ function questSteps() {
     { key: 'zahnrad', title: 'Ein Zahnrad auftreiben', done: function () { return F.zahnradWeg; }, texts: [
       'Etwas in der Hütte tickt, obwohl es niemanden interessiert.',
       'Die Standuhr in der Hütte hat mehr Zahnräder, als sie braucht.',
-      '"Benutze" die Standuhr in der Hütte und nimm das Zahnrad heraus.' ] },
+      'Klicke die Standuhr in der Hütte an und nimm das Zahnrad heraus.' ] },
     { key: 'eimer', title: 'Den Brunnen reparieren und den Eimer holen', done: function () { return F.eimerWeg; }, texts: [
       'Der Brunnen kann mehr, wenn man ihn repariert.',
       'Die Brunnenkurbel fehlt ein Zahnrad.',
-      '"Benutze Zahnrad mit Brunnen", danach den Brunnen benutzen — du bekommst den Eimer.' ] },
+      'Zahnrad im Inventar anklicken, dann auf den Brunnen klicken. Danach den Brunnen nochmal anklicken — du bekommst den Eimer.' ] },
     { key: 'trank', title: 'Den Schlaftrank brauen', done: function () { return F.kesselFertig; }, texts: [
       'Der Kessel in der Hütte will gefüttert werden. Das Buch verrät die Reihenfolge.',
       'Sumpfwasser (mit dem Eimer schöpfen), dann Fliegenpilz, dann Käsebrot — in den Kessel.',
-      'Eimer am Sumpftümpel füllen, Pilz im Sumpf nehmen; dann nacheinander Eimer mit Sumpfwasser, Fliegenpilz und Käsebrot mit dem Kessel benutzen.' ] },
+      'Eimer im Inventar anklicken und auf den Tümpel klicken. Dann nacheinander Sumpfwasser, Fliegenpilz und Käsebrot anklicken und jeweils auf den Kessel klicken.' ] },
     { key: 'fackel', title: 'Licht für die Höhle machen', done: function () { return has('fackel_an'); }, texts: [
       'In der Höhle ist es dunkel. Du hast alle Teile für eine Lösung dabei.',
       'Stock und Lumpen ergeben eine Fackel. Feuerstein macht daraus Licht.',
-      'Im Inventar: "Benutze Stock mit Lumpen", dann "Benutze Feuerstein mit Fackel".' ] },
+      'Im Inventar den Stock anklicken, dann die Lumpen — das ergibt die Fackel. Danach Feuerstein anklicken und auf die Fackel klicken.' ] },
     { key: 'drache', title: 'Den Drachen tief schlafen legen', done: function () { return F.drachenSchlaf; }, texts: [
       'Der Drache schläft zu leicht für deinen Geschmack.',
       'Der Schlaftrank aus dem Kessel ist genau dafür gemacht.',
-      '"Benutze Schlaftrank mit Drache" in der Höhle.' ] },
+      'Schlaftrank im Inventar anklicken, dann auf den Drachen klicken.' ] },
     { key: 'kristall', title: 'Den Kristall an sich nehmen', done: function () { return F.kristallWeg; }, texts: [
       'Jetzt kannst du dir nehmen, was auf dem Felssockel liegt.',
       'Nimm den violetten Kristall in der Höhle.',
-      'Verb "Nimm" auf den Kristall links in der Drachenhöhle.' ] },
+      'Klicke den Kristall links in der Drachenhöhle an.' ] },
     { key: 'hut', title: 'Den Hut von der Elster zurückholen', done: function () { return F.hut; }, texts: [
       'Die Elster tauscht. Sie handelt nur nicht mit Geld.',
       'Gib der Elster den glänzenden Knopf.',
-      '"Gib glänzender Knopf an Elster" auf der Lichtung — sie lässt den Hut fallen.' ] },
+      'Knopf im Inventar anklicken, dann auf die Elster im Baum klicken — sie lässt den Hut fallen.' ] },
     { key: 'altar', title: 'Den Kristall auf den Altar legen', done: function () { return F.kristallPlatziert; }, texts: [
       'Der Steinkreis im Norden hat eine sehr passgenaue Mulde.',
       'Lege den Kristall auf den Altar im Steinkreis.',
-      '"Benutze Kristall mit Altar" im Steinkreis.' ] },
+      'Kristall im Inventar anklicken, dann auf den Altar klicken.' ] },
     { key: 'finale', title: 'Das Portal öffnen und nach Hause gehen', done: function () { return false; }, texts: [
       'Alles liegt bereit. Es fehlt nur noch das Wort.',
       'Benutze den Altar und sprich das Zauberwort.',
