@@ -237,8 +237,8 @@ function drawSimonPose(x, y, s, poseId, face, hat, blink) {
     P(o, c);
   }
 
-  /* Schatten */
-  E(x, y, 8.5 * s, 2.6 * s, 'rgba(0,0,0,.3)');
+  /* kein Schatten im Sprite – der wird in der Szene gezeichnet,
+     damit er der Lichtrichtung folgen kann */
 
   /* --- Umhang hinter dem Körper --- */
   QP([-2, -31 + lf, -8 - P0.cape, -14 + lf, -7 - P0.cape * 1.4, -4 + lf, 1, -12 + lf], CAPE);

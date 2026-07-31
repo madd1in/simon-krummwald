@@ -30,6 +30,7 @@ var toast = null;
 var sceneEnteredAt = 0;
 var revealUntil = 0;
 var touchHoldStart = 0, tapPulse = null;
+var exitMarkers = [];      /* anklickbare Ausgangspfeile */
 
 var state = { scene: 'lichtung', verb: 'gehe', inv: [], flags: {} };
 
@@ -211,6 +212,20 @@ function update(dt, nowMs) {
   invOpen = !!want;
 }
 
+/* Schatten der Figur: Richtung und Laenge folgen dem Szenenlicht */
+function drawActorShadow(sc) {
+  var s = actorScale();
+  var li = sc && sc.light ? sc.light : null;
+  var dx = li ? -(li.dx || 0) : 0;
+  var dy = li ? (li.dy || 0) : 0;
+  /* Licht von unten (Fackel) wirft den Schatten kurz und nach hinten */
+  var len = 1 + Math.min(.7, Math.abs(dx) * .22);
+  var off = dx * 1.6 * s;
+  var dark = li && li.rim ? .34 : .3;
+  E(actor.x + off, actor.y, 8.5 * s * len, 2.6 * s * (dy > 0 ? .7 : 1), 'rgba(0,0,0,' + dark + ')');
+  E(actor.x + off * .5, actor.y, 5.5 * s, 1.8 * s, 'rgba(0,0,0,.16)');
+}
+
 function actorScale() {
   var sc = SCENES[state.scene];
   var b = sc && sc.walk ? sc.walk : { y1: 100, y2: 186 };
@@ -231,6 +246,7 @@ function render() {
     sc.draw(T, state.flags);
     drawSceneAccents(T);
     if (actor.moving) drawActorTrail();
+    if (actor.visible) drawActorShadow(sc);
     if (actor.visible) {
       var f = 0, bob = 0, blink = false;
       if (actor.bendUntil > performance.now()) {
@@ -572,20 +588,22 @@ function drawExitGuides() {
     txt(SAFE.x0 + 14, SAFE.y0 + 9, sc.name, 'rgba(255,238,184,' + la + ')', 'left', 7.5);
   }
 
+  exitMarkers.length = 0;
   for (var i = 0; i < sc.hotspots.length; i++) {
     var h = sc.hotspots[i];
     if (!h.exit || (h.when && !h.when())) continue;
     var r = h.rect, cx = r[0] + r[2] / 2, cy = r[1] + r[3] / 2;
     var dir = h.exitDir || (cx < 42 ? 'left' : (cx > 278 ? 'right' : (cy < 116 ? 'up' : 'down')));
     var x = cx, y = cy;
-    if (dir === 'left') x = Math.max(7, r[0] + 7);
-    if (dir === 'right') x = Math.min(VW - 7, r[0] + r[2] - 7);
+    if (dir === 'left') x = Math.max(SAFE.x0 + 8, r[0] + 7);
+    if (dir === 'right') x = Math.min(SAFE.x1 - 8, r[0] + r[2] - 7);
     if (dir === 'up') y = Math.max(SAFE.y0 + 20, r[1] + 7);
     if (dir === 'down') y = Math.min(SAFE.y1 - 30, r[1] + r[3] - 7);
     /* nie unter der Werkzeugleiste oder hinter der Inventarleiste verstecken */
     if (underToolbar(x, y)) y = toolbarBottom() + 12;
     if (invOpen && state.inv.length && y > INVBAR.y - 6) y = INVBAR.y - 10;
 
+    exitMarkers.push({ x: x, y: y, hs: h });
     var hot = hoverObj === h, pulse = .72 + Math.sin(T * .08 + i) * .16;
     ctx.fillStyle = hot ? 'rgba(89,57,132,.92)' : 'rgba(8,7,14,.66)';
     ctx.fillRect((x - 6) * scale, (y - 6) * scale, 12 * scale, 12 * scale);
@@ -897,7 +915,18 @@ function slotAt(x, y) {
   return invScroll + i;
 }
 
+/* Liegt der Punkt auf einem Ausgangspfeil? */
+function exitMarkerAt(x, y) {
+  for (var i = 0; i < exitMarkers.length; i++) {
+    var m = exitMarkers[i];
+    if (Math.abs(x - m.x) <= 8 && Math.abs(y - m.y) <= 8) return m.hs;
+  }
+  return null;
+}
+
 function objAt(x, y) {
+  var marker = exitMarkerAt(x, y);
+  if (marker) return marker;
   var sc = SCENES[state.scene];
   var i, h, r;
   /* exakter Treffer zuerst */
@@ -994,6 +1023,11 @@ function handleClick(p, right) {
     if (actor.moving) { actor.x = actor.tx; actor.y = actor.ty; }
     return;
   }
+
+  /* Ausgangspfeil direkt anklickbar – wichtig, wenn der Ausgang
+     selbst im abgeschnittenen Randbereich liegt */
+  var em = exitMarkerAt(p.x, p.y);
+  if (em && !right) { sfx('click'); run(doAction('gehe', { kind: 'hs', hs: em, name: em.name }, null)); return; }
 
   /* Inventar */
   var slot = slotAt(p.x, p.y);
