@@ -928,7 +928,7 @@ function inBlocker(x, y, pad) {
 
 /* Erstes Hindernis auf der Strecke (grobe Abtastung reicht bei 320x200) */
 function firstBlockerOnLine(x0, y0, x1, y1) {
-  var d = Math.hypot(x1 - x0, y1 - y0), steps = Math.max(2, Math.ceil(d / 3));
+  var d = Math.hypot(x1 - x0, y1 - y0), steps = Math.max(2, Math.ceil(d / 4));
   for (var i = 1; i <= steps; i++) {
     var t = i / steps;
     var b = inBlocker(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, 1);
@@ -960,6 +960,7 @@ function pushOut(x, y) {
 function findPath(sx, sy, tx, ty) {
   var bl = blockersOf();
   if (!bl.length || !firstBlockerOnLine(sx, sy, tx, ty)) return [{ x: tx, y: ty }];
+  if (inBlocker(tx, ty, 0)) { var g0 = pushOut(tx, ty); tx = g0.x; ty = g0.y; }
 
   var wb = SCENES[state.scene].walk, pad = 8;
   function clamp(p) {
@@ -967,7 +968,9 @@ function findPath(sx, sy, tx, ty) {
   }
 
   /* Knoten: Start, alle freien Hindernisecken, Ziel */
-  var nodes = [{ x: sx, y: sy }];
+  /* Steht die Figur selbst im Hindernis, zuerst herausschieben */
+  var st = inBlocker(sx, sy, 0) ? pushOut(sx, sy) : { x: sx, y: sy };
+  var nodes = [st];
   for (var i = 0; i < bl.length; i++) {
     var b = bl[i];
     var cs = [

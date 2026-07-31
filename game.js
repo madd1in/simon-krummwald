@@ -395,7 +395,7 @@ async function giveMathilda(item) {
 /* --------------------- WIRTSHAUS (innen) --------------------- */
 SCENES.wirtshaus = {
   name: 'Zum Krummen Krug',
-  blockers: [[8, 116, 106, 32], [130, 150, 44, 20]],
+  blockers: [[8, 126, 106, 20], [130, 152, 44, 18]],
   light: { tint: 'rgba(255,150,60,.13)', rim: 'rgba(255,170,80,.7)', dx: 2, dy: -1 },
   ground: 'holz',
   walk: { x1: 14, x2: 300, y1: 128, y2: 152 },
